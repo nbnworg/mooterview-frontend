@@ -2,7 +2,7 @@ nav {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1.5vw 5vw;
+  padding: 1vw 5vw;
 }
 
 .navMenu {
@@ -19,8 +19,33 @@ nav {
   font-family: "Cascadia Code";
 }
 
-.navMenuLinks {
+.navMenuLinks,
+.navMenuLinksButton {
   text-decoration: none;
   color: var(--text);
   font-size: 1vw;
+}
+
+.profileAvatar {
+  width: 3vw;
+  height: 3vw;
+  border-radius: 50%;
+  background-color: transparent;
+  cursor: pointer;
+  border: none;
+}
+
+.profileAvatarImage {
+  width: 100%;
+  height: 100%;
+}
+
+.navMenuLinksButton {
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1vw;
 }

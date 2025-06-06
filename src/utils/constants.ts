@@ -1,6 +1,12 @@
 export const BASE_URL =
   "https://w7eo1zzql3.execute-api.us-east-1.amazonaws.com/sandbox";
 
+export const levelColor = {
+  Easy: "#10b981",
+  Medium: "#f59e0b",
+  Hard: "#ff3f33",
+};
+
 export const exceptionMap: Record<string, { message: string; stepId: string }> =
   {
     UsernameExistsException: {

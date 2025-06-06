@@ -1,0 +1,63 @@
+.homepage {
+  display: grid;
+  gap: 1.5rem;
+  padding: 2vw 5vw;
+  grid-template-columns: repeat(1, 1fr);
+}
+
+.problemCard {
+  height: 100%;
+  padding: 0.5vw 1vw;
+  border: 0.2vw solid var(--border);
+  border-radius: 0.5vw;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.problemSummaryContainer {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-self: start;
+  gap: 1vw;
+}
+
+.problemTitle {
+  font-size: 1.2vw;
+}
+
+.problemLevel {
+  font-size: 1vw;
+  padding: 0.5vw;
+  width: fit-content;
+  border-radius: 0.3vw;
+  color: var(--background);
+}
+
+.startInterviewButton {
+  min-width: 3vw;
+  height: 3vw;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0.5vw;
+  border-radius: 50%;
+  border: none;
+  background-color: var(--secondary);
+  color: var(--background);
+  cursor: pointer;
+}
+
+@media (min-width: 600px) {
+  .homepage {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .homepage {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
