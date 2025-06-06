@@ -1,13 +1,15 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { BASE_URL } from "../utils/constants";
+import { BASE_URL, exceptionMap } from "../utils/constants";
 import type {
   ChatMessage,
   AuthStep,
   AuthFormData,
 } from "../utils/types/auth.types";
 import { jwtDecode } from "jwt-decode";
+import { useAuth } from "../contexts/AuthContext";
 
 interface UseChatAuthProps {
   steps: AuthStep[];
@@ -34,6 +36,8 @@ export const useChatAuth = ({
   const [formData, setFormData] = useState<AuthFormData>(initialFormData);
   const [introComplete, setIntroComplete] = useState(false);
   const [finalSubmissionComplete, setFinalSubmissionComplete] = useState(false);
+
+  const { login } = useAuth();
 
   const chatEndRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
@@ -100,12 +104,40 @@ export const useChatAuth = ({
       }
 
       localStorage.setItem("userData", JSON.stringify({ id: resUserId }));
+      login();
 
       setChat((prev) => [...prev, { from: "Moo", text: successMessage }]);
       setFinalSubmissionComplete(true);
-    } catch (error) {
+    } catch (error: any) {
       console.error("API Error:", error);
-      setChat((prev) => [...prev, { from: "Moo", text: errorMessage }]);
+      const message = error.response?.data || "";
+      const exceptionMatch = message.match(/(\w+Exception)/);
+      const exceptionName = exceptionMatch ? exceptionMatch[1] : null;
+
+      console.log(message);
+      console.log(exceptionName);
+
+      let userMessage = errorMessage;
+      let resetStepId = "";
+
+      if (exceptionName && exceptionMap[exceptionName]) {
+        const { message: userMsg, stepId } = exceptionMap[exceptionName];
+        userMessage = userMsg;
+        resetStepId = stepId;
+      }
+
+      setChat((prev) => [...prev, { from: "Moo", text: userMessage }]);
+
+      if (resetStepId) {
+        const index = steps.findIndex((step) => step.id === resetStepId);
+        if (index !== -1) {
+          setStepIndex(index);
+          setFormData((prev) => ({
+            ...prev,
+            [resetStepId]: "",
+          }));
+        }
+      }
     }
   };
 

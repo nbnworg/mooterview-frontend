@@ -1,13 +1,13 @@
 import React from "react";
 import Navbar from "../../components/navbar/Navbar";
 
-const Homepage = () => {
+const LandingPage = () => {
   return (
     <div>
       <Navbar />
-      <h1>Mooterview frontend</h1>
+      <h1>Mooterview Landing page</h1>
     </div>
   );
 };
 
-export default Homepage;
+export default LandingPage;

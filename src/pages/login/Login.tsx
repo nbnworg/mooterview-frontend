@@ -6,7 +6,7 @@ import "../signup/singup.css";
 const loginSteps = [
   {
     id: "email",
-    question: "Hey there 👋 Can you tell me the email you used to sign up?",
+    question: "Can you tell me the email you used to sign up?",
   },
   {
     id: "password",
@@ -31,7 +31,7 @@ const Login: React.FC = () => {
         apiEndpoint="/users/login"
         successMessage="✅ Logged in successfully! Taking you to your dashboard..."
         errorMessage="❌ Hmm... login failed. Please double-check your credentials and try again."
-        redirectPath="/"
+        redirectPath="/home"
         initialFormData={{
           email: "",
           password: "",

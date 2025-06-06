@@ -1,0 +1,26 @@
+nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5vw 5vw;
+}
+
+.navMenu {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 3vw;
+}
+
+.brandName {
+  color: var(--primary);
+  font-size: 1.5vw;
+  font-weight: 700;
+  font-family: "Cascadia Code";
+}
+
+.navMenuLinks {
+  text-decoration: none;
+  color: var(--text);
+  font-size: 1vw;
+}
