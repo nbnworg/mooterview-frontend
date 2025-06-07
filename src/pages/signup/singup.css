@@ -5,6 +5,16 @@
   justify-content: center;
   align-items: center;
   font-family: "montserrat";
+  position: relative;
+}
+
+.goToHomeButton {
+  position: absolute;
+  top: 2vw;
+  left: 2vw;
+  font-size: 2vw;
+  text-decoration: none;
+  color: var(--background);
 }
 
 .authContainer {

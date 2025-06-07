@@ -45,7 +45,7 @@ const Signup: React.FC = () => {
         apiEndpoint="/users/"
         successMessage="🎉🎊All done! Your account has been created successfully, Click the below button to start the interviews"
         errorMessage="❌ Oops! Something went wrong while creating your account. Please try again."
-        redirectPath="/"
+        redirectPath="/home"
         initialFormData={{
           fullName: "",
           username: "",

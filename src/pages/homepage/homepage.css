@@ -1,0 +1,104 @@
+.homepage {
+  display: grid;
+  gap: 1.5rem;
+  padding: 2vw 5vw;
+  grid-template-columns: repeat(1, 1fr);
+}
+
+.filterContainer {
+  margin: 1vw 5vw;
+}
+.filterContainer select {
+  padding: 0.4rem 0.8rem;
+  margin-left: 0.5rem;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+.problemCard {
+  height: 100%;
+  padding: 0.5vw 1vw;
+  border: 0.2vw solid var(--border);
+  border-radius: 0.5vw;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.problemSummaryContainer {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-self: start;
+  gap: 1vw;
+}
+
+.problemTitle {
+  font-size: 1.2vw;
+}
+
+.problemLevel {
+  font-size: 1vw;
+  padding: 0.5vw;
+  width: fit-content;
+  border-radius: 0.3vw;
+  color: var(--background);
+}
+
+.startInterviewButton {
+  min-width: 3vw;
+  height: 3vw;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0.5vw;
+  border-radius: 50%;
+  border: none;
+  background-color: var(--secondary);
+  color: var(--background);
+  cursor: pointer;
+}
+
+.loaderContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100vw;
+}
+
+.loader {
+  width: 60px;
+  aspect-ratio: 2;
+  --_g: no-repeat
+    radial-gradient(circle closest-side, var(--primary) 90%, #0000);
+  background: var(--_g) 0% 50%, var(--_g) 50% 50%, var(--_g) 100% 50%;
+  background-size: calc(100% / 3) 50%;
+  animation: l3 1s infinite linear;
+}
+@keyframes l3 {
+  20% {
+    background-position: 0% 0%, 50% 50%, 100% 50%;
+  }
+  40% {
+    background-position: 0% 100%, 50% 0%, 100% 50%;
+  }
+  60% {
+    background-position: 0% 50%, 50% 100%, 100% 0%;
+  }
+  80% {
+    background-position: 0% 50%, 50% 50%, 100% 100%;
+  }
+}
+
+@media (min-width: 600px) {
+  .homepage {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .homepage {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}

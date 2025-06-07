@@ -1,0 +1,14 @@
+.problemSection {
+  display: flex;
+  gap: 1vw;
+  height: 89vh;
+  padding: 2vw;
+}
+
+.problemDetailContainer {
+  flex: 1;
+}
+
+.verticalLine {
+  border: 0.1vw solid black;
+}
