@@ -26,3 +26,17 @@ export const exceptionMap: Record<string, { message: string; stepId: string }> =
       stepId: "email",
     },
   };
+
+export const languageLabels: Record<string, string> = {
+  javascript: "JavaScript",
+  python: "Python",
+  java: "Java",
+  cpp: "C++",
+};
+
+export const initialCode: Record<string, string> = {
+  javascript: "// Write JavaScript code",
+  python: "# Write Python code",
+  java: "// Write Java code",
+  cpp: "// Write C++ code",
+};

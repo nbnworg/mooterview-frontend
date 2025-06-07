@@ -1,0 +1,51 @@
+.codeEditorContainer {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.languageAndTimerContainer {
+  padding: 0vw 1vw;
+  display: flex;
+  justify-content: space-between;
+}
+
+.languageSelect {
+  width: fit-content;
+  padding: 0.4rem 0.8rem;
+  margin-left: 0.5rem;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+.timerContainer {
+  font-size: 1.2vw;
+  font-family: "montserrat";
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.codeEditor {
+  flex: 1;
+  overflow: auto;
+  white-space: pre;
+  word-wrap: normal;
+  font-family: "Cascadia Code", monospace;
+  font-size: 0.8vw;
+  margin-top: 0.5vw;
+  color: var(--text);
+  background-color: var(--background);
+  padding: 0.5vw;
+  resize: none;
+  min-height: 300px;
+}
+
+.editor {
+  min-height: 100%;
+  border: 0.1vw solid var(--border);
+  border-radius: 0.5vw;
+  outline: none;
+}
