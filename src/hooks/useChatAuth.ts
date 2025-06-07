@@ -78,7 +78,13 @@ export const useChatAuth = ({
     if (!input.trim()) return;
 
     const currentStep = steps[stepIndex];
-    setChat((prev) => [...prev, { from: "You", text: input.trim() }]);
+
+    const displayText =
+      currentStep.id === "password"
+        ? "*".repeat(input.trim().length)
+        : input.trim();
+
+    setChat((prev) => [...prev, { from: "You", text: displayText }]);
 
     setFormData((prev) => ({
       ...prev,
