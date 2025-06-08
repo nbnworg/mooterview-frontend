@@ -52,3 +52,6 @@ export default tseslint.config({
   },
 })
 ```
+
+See [Frontend Developer Guide](FRONTEND_DEVELOPER_GUIDE.md) for project details.
+
