@@ -100,7 +100,6 @@ export const useChatAuth = ({
       let resUserId = "";
 
       const response = await axios.post(`${BASE_URL}${apiEndpoint}`, formData);
-      console.log("API Response:", response.data);
       if (apiEndpoint === "/users/login") {
         const idToken = response.data.AuthenticationResult.IdToken;
         const decodedToken = jwtDecode<{ sub: string }>(idToken);
@@ -115,13 +114,10 @@ export const useChatAuth = ({
       setChat((prev) => [...prev, { from: "Moo", text: successMessage }]);
       setFinalSubmissionComplete(true);
     } catch (error: any) {
-      console.error("API Error:", error);
       const message = error.response?.data || "";
       const exceptionMatch = message.match(/(\w+Exception)/);
       const exceptionName = exceptionMatch ? exceptionMatch[1] : null;
 
-      console.log(message);
-      console.log(exceptionName);
 
       let userMessage = errorMessage;
       let resetStepId = "";
