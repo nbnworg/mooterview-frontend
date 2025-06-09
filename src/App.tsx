@@ -6,6 +6,8 @@ import Login from "./pages/login/Login";
 import LandingPage from "./pages/landingPage/LandingPage";
 import AuthRedirect from "./components/auth/AuthRedirect";
 import Problem from "./pages/problem/Problem";
+import CreateProblem from "./pages/createProblem/CreateProblem";
+
 
 function App() {
   return (
@@ -17,6 +19,7 @@ function App() {
         <Route path={"/landing"} element={<LandingPage />} />
         <Route path={"/home"} element={<Homepage />} />
         <Route path={"/problem/:title"} element={<Problem />} />
+        <Route path={"/create-a-problem"} element={<CreateProblem />} />
       </Routes>
     </>
   );

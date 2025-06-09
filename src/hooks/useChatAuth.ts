@@ -118,7 +118,6 @@ export const useChatAuth = ({
       const exceptionMatch = message.match(/(\w+Exception)/);
       const exceptionName = exceptionMatch ? exceptionMatch[1] : null;
 
-
       let userMessage = errorMessage;
       let resetStepId = "";
 
