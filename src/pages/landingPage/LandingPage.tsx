@@ -1,12 +1,17 @@
-import React from "react";
+import HeroSection from "../../components/landingPage/heroSection/HeroSection";
+import HowItWorks from "../../components/landingPage/howItWorks/HowItWorks";
 import Navbar from "../../components/navbar/Navbar";
+import "./landingPage.css";
 
 const LandingPage = () => {
   return (
-    <div>
+    <>
       <Navbar />
-      <h1>Mooterview Landing page</h1>
-    </div>
+      <div className="LandingPageContainer">
+        <HeroSection />
+        <HowItWorks />
+      </div>
+    </>
   );
 };
 
