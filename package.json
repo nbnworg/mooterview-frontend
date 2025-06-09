@@ -10,7 +10,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@gsap/react": "^2.1.2",
     "axios": "^1.9.0",
+    "gsap": "^3.13.0",
     "jwt-decode": "^4.0.0",
     "mooterview-client": "^0.0.1",
     "react": "^19.1.0",

@@ -1,0 +1,58 @@
+.howItWorksSection {
+  padding: 2vw 5vw;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 2vw;
+}
+
+.howItWorksSection h1 {
+  font-size: 3vw;
+  color: var(--primary);
+}
+
+.stepsContainer {
+  position: relative;
+}
+
+.verticalLine {
+  position: absolute;
+  top: 2vw;
+  left: 2.3vw;
+  width: 0.3vw;
+  background-color: var(--primary);
+  z-index: -1;
+  height: 0;
+  transition: height 0.3s ease;
+}
+
+.steps {
+  display: flex;
+  flex-direction: column;
+  gap: 5vw;
+}
+
+.step {
+  display: flex;
+  gap: 2vw;
+  align-items: center;
+}
+
+.step h5 {
+  font-size: 2vw;
+  font-family: "Cascadia Code";
+  background-color: var(--primary);
+  color: #fff;
+  width: 5vw;
+  height: 5vw;
+  display: flex;
+  justify-content: center;
+  text-align: center;
+  align-items: center;
+  border-radius: 50%;
+}
+
+.step p {
+  font-size: 1.2vw;
+}
