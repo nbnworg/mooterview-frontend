@@ -10,6 +10,7 @@ import { useNavigate } from "react-router-dom";
 
 const Homepage = () => {
   const [problems, setProblems] = useState([]);
+  const [problems, setProblems] = useState<ProblemSummary[]>([]);
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
