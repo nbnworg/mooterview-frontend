@@ -5,7 +5,7 @@ import Signup from "./pages/signup/Signup";
 import Login from "./pages/login/Login";
 import LandingPage from "./pages/landingPage/LandingPage";
 import AuthRedirect from "./components/auth/AuthRedirect";
-import Problem from "./pages/problem/problem";
+import Problem from "./pages/problem/Problem";
 
 function App() {
   return (
