@@ -5,8 +5,8 @@ import Signup from "./pages/signup/Signup";
 import Login from "./pages/login/Login";
 import LandingPage from "./pages/landingPage/LandingPage";
 import AuthRedirect from "./components/auth/AuthRedirect";
-import Problem from "./pages/problem/Problem";
 import CreateProblem from "./pages/createProblem/CreateProblem";
+import Problempage from "./pages/problem/Problempage";
 
 
 function App() {
@@ -18,7 +18,7 @@ function App() {
         <Route path={"/log-in"} element={<Login />} />
         <Route path={"/landing"} element={<LandingPage />} />
         <Route path={"/home"} element={<Homepage />} />
-        <Route path={"/problem/:title"} element={<Problem />} />
+        <Route path={"/problem/:title"} element={<Problempage />} />
         <Route path={"/create-a-problem"} element={<CreateProblem />} />
       </Routes>
     </>
