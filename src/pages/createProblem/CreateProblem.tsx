@@ -5,6 +5,7 @@ import axios from "axios";
 import { BASE_URL } from "../../utils/constants";
 import { IoIosCloseCircleOutline } from "react-icons/io";
 import { useNavigate } from "react-router-dom";
+import Navbar from "../../components/navbar/Navbar";
 
 const CreateProblem = () => {
   const [formData, setFormData] = useState({
@@ -58,86 +59,89 @@ const CreateProblem = () => {
   };
 
   return (
-    <section className="CreateProblemSection">
-      <h1>Create A Problem</h1>
-      {error && (
-        <div className="errorMessage">
-          <p>{error}</p>
-          <button onClick={() => setError("")}>
-            <IoIosCloseCircleOutline />
-          </button>
-        </div>
-      )}
+    <>
+      <Navbar />
+      <section className="CreateProblemSection">
+        <h1>Create A Problem</h1>
+        {error && (
+          <div className="errorMessage">
+            <p>{error}</p>
+            <button onClick={() => setError("")}>
+              <IoIosCloseCircleOutline />
+            </button>
+          </div>
+        )}
 
-      {success && (
-        <div className="successMessage">
-          <p>{success}</p>
-          <button onClick={() => setSuccess("")}>
-            <IoIosCloseCircleOutline />
-          </button>
-        </div>
-      )}
+        {success && (
+          <div className="successMessage">
+            <p>{success}</p>
+            <button onClick={() => setSuccess("")}>
+              <IoIosCloseCircleOutline />
+            </button>
+          </div>
+        )}
 
-      <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          name="title"
-          id="title"
-          placeholder="Enter Problem Title"
-          value={formData.title}
-          onChange={handleInputChange}
-        />
-        <textarea
-          name="problemStatement"
-          id="statement"
-          rows={5}
-          placeholder="Enter Problem Statement"
-          value={formData.problemStatement}
-          onChange={handleInputChange}
-        />
-        <textarea
-          name="problemDescription"
-          id="description"
-          rows={5}
-          placeholder="Enter Problem description"
-          value={formData.problemDescription}
-          onChange={handleInputChange}
-        />
-        <select
-          name="level"
-          id="level"
-          value={formData.level}
-          onChange={handleInputChange}
-          required
-        >
-          <option value="" disabled>
-            Select Difficulty Level
-          </option>
-          <option value="Easy">Easy</option>
-          <option value="Medium">Medium</option>
-          <option value="Hard">Hard</option>
-        </select>
-        <input
-          type="text"
-          name="averageSolveTime"
-          id="averageSolveTime"
-          placeholder="Enter Average problem time"
-          value={formData.averageSolveTime}
-          onChange={handleInputChange}
-        />
-        <input
-          type="text"
-          name="totalUsersAttempted"
-          id="totalUserAttempted"
-          placeholder="Enter Total number of user attempted"
-          value={formData.totalUsersAttempted}
-          onChange={handleInputChange}
-        />
-        <button type="submit" className="submitButton">
-          {loading ? <div className="loader"></div> : "Create problem"}
-        </button>
-      </form>
-    </section>
+        <form onSubmit={handleSubmit}>
+          <input
+            type="text"
+            name="title"
+            id="title"
+            placeholder="Enter Problem Title"
+            value={formData.title}
+            onChange={handleInputChange}
+          />
+          <textarea
+            name="problemStatement"
+            id="statement"
+            rows={3}
+            placeholder="Enter Problem Statement"
+            value={formData.problemStatement}
+            onChange={handleInputChange}
+          />
+          <textarea
+            name="problemDescription"
+            id="description"
+            rows={4}
+            placeholder="Enter Problem description"
+            value={formData.problemDescription}
+            onChange={handleInputChange}
+          />
+          <select
+            name="level"
+            id="level"
+            value={formData.level}
+            onChange={handleInputChange}
+            required
+          >
+            <option value="" disabled>
+              Select Difficulty Level
+            </option>
+            <option value="Easy">Easy</option>
+            <option value="Medium">Medium</option>
+            <option value="Hard">Hard</option>
+          </select>
+          <input
+            type="text"
+            name="averageSolveTime"
+            id="averageSolveTime"
+            placeholder="Enter Average problem time"
+            value={formData.averageSolveTime}
+            onChange={handleInputChange}
+          />
+          <input
+            type="text"
+            name="totalUsersAttempted"
+            id="totalUserAttempted"
+            placeholder="Enter Total number of user attempted"
+            value={formData.totalUsersAttempted}
+            onChange={handleInputChange}
+          />
+          <button type="submit" className="submitButton">
+            {loading ? <div className="loader"></div> : "Create problem"}
+          </button>
+        </form>
+      </section>
+    </>
   );
 };
 
