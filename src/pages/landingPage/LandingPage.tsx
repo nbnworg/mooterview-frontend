@@ -1,3 +1,4 @@
+import Footer from "../../components/footer/Footer";
 import HeroSection from "../../components/landingPage/heroSection/HeroSection";
 import HowItWorks from "../../components/landingPage/howItWorks/HowItWorks";
 import Navbar from "../../components/navbar/Navbar";
@@ -10,6 +11,7 @@ const LandingPage = () => {
       <div className="LandingPageContainer">
         <HeroSection />
         <HowItWorks />
+        <Footer />
       </div>
     </>
   );

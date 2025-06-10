@@ -52,6 +52,12 @@
   cursor: pointer;
 }
 
+.signupForFreeButton:hover {
+  background-color: var(--background);
+  border: 0.2vw solid var(--primary);
+  color: var(--primary);
+}
+
 .heroImageContainer img {
   width: 28vw;
 }
