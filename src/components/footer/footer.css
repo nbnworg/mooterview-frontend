@@ -1,0 +1,50 @@
+footer {
+  background-color: var(--primary);
+  padding: 3vw 5vw;
+}
+
+.footerContent {
+  display: flex;
+  gap: 2vw;
+  justify-content: space-between;
+  margin-bottom: 2vw;
+}
+
+.footerHeader {
+  flex: 1;
+}
+
+.footerHeading {
+  font-family: "Cascadia Code";
+  color: #fff;
+  font-size: 3vw;
+  font-weight: 400;
+}
+
+.footerSubheading {
+  color: #fff;
+}
+
+.footerLinks {
+  flex: 1;
+  display: flex;
+  gap: 5vw;
+}
+
+.footerLink {
+  display: flex;
+  flex-direction: column;
+  gap: 1vw;
+}
+
+.footerLink p {
+  font-size: 1vw;
+  color: #fff;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.copyrightText {
+  text-align: end;
+  color: #fff;
+}

@@ -8,7 +8,6 @@ import AuthRedirect from "./components/auth/AuthRedirect";
 import CreateProblem from "./pages/createProblem/CreateProblem";
 import Problempage from "./pages/problem/Problempage";
 
-
 function App() {
   return (
     <>
