@@ -4,6 +4,7 @@ import "./createProblem.css";
 import axios from "axios";
 import { BASE_URL } from "../../utils/constants";
 import { IoIosCloseCircleOutline } from "react-icons/io";
+import { useNavigate } from "react-router-dom";
 
 const CreateProblem = () => {
   const [formData, setFormData] = useState({
@@ -17,6 +18,8 @@ const CreateProblem = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+
+  const navigate = useNavigate();
 
   const handleInputChange = (
     e: React.ChangeEvent<
@@ -43,6 +46,8 @@ const CreateProblem = () => {
         averageSolveTime: "",
         totalUsersAttempted: "",
       });
+
+      navigate("/home");
     } catch (error: any) {
       setError(
         error.response?.data || "Server Is busy, Can't Fetch problem right now."
@@ -103,7 +108,11 @@ const CreateProblem = () => {
           id="level"
           value={formData.level}
           onChange={handleInputChange}
+          required
         >
+          <option value="" disabled>
+            Select Difficulty Level
+          </option>
           <option value="Easy">Easy</option>
           <option value="Medium">Medium</option>
           <option value="Hard">Hard</option>

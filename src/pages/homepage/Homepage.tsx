@@ -52,18 +52,34 @@ const Homepage = () => {
     <>
       <Navbar />
       <div className="filterContainer">
-        <label htmlFor="levelFilter">Filter by Level: </label>
-        <select
-          id="levelFilter"
-          value={selectedLevel}
-          onChange={(e) => setSelectedLevel(e.target.value)}
+        <div className="filterLeft">
+          <label htmlFor="levelFilter">Filter by Level: </label>
+          <select
+            id="levelFilter"
+            value={selectedLevel}
+            onChange={(e) => setSelectedLevel(e.target.value)}
+          >
+            <option value="All">All</option>
+            <option value="Easy">Easy</option>
+            <option value="Medium">Medium</option>
+            <option value="Hard">Hard</option>
+          </select>
+        </div>
+        <button
+          className="createProblemButton"
+          onClick={() => {
+            const confirm = window.confirm(
+              "This will redirect you to create your own problem.\nOnly do this if the problem you want doesn't exist."
+            );
+            if (confirm) {
+              navigate("/create-a-problem");
+            }
+          }}
         >
-          <option value="All">All</option>
-          <option value="Easy">Easy</option>
-          <option value="Medium">Medium</option>
-          <option value="Hard">Hard</option>
-        </select>
+          Practice New Problem
+        </button>
       </div>
+
       <section className="homepage" id="homePage">
         {loading ? (
           <div className="loaderContainer">
