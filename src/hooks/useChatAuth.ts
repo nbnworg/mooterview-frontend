@@ -36,7 +36,6 @@ export const useChatAuth = ({
   const [formData, setFormData] = useState<AuthFormData>(initialFormData);
   const [introComplete, setIntroComplete] = useState(false);
   const [finalSubmissionComplete, setFinalSubmissionComplete] = useState(false);
-  const [loading, setLoading] = useState(false);
 
   const { login } = useAuth();
 
@@ -97,7 +96,6 @@ export const useChatAuth = ({
   };
 
   const handleFinalSubmit = async () => {
-    setLoading(true);
     try {
       let resUserId = "";
 
@@ -141,8 +139,6 @@ export const useChatAuth = ({
           }));
         }
       }
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -161,6 +157,5 @@ export const useChatAuth = ({
     handleSubmit,
     handleFinalSubmit,
     handleRouteToHome,
-    loading,
   };
 };
