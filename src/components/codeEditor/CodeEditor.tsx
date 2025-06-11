@@ -1,23 +1,33 @@
-import React, { useEffect, useRef, useState } from "react";
-import { initialCode, languageLabels } from "../../utils/constants";
-import Editor from "react-simple-code-editor";
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import React, { useEffect, useRef } from "react";
+import { languageLabels } from "../../utils/constants";
+import Editor from "@monaco-editor/react";
+
 import "./codeEditor.css";
 
-const CodeEditor = () => {
-  const [language, setLanguage] = useState("cpp");
-  const [code, setCode] = useState(initialCode);
+interface CodeEditorProps {
+  averageSolveTime?: number;
+  code: { [lang: string]: string };
+  setCode: React.Dispatch<React.SetStateAction<{ [lang: string]: string }>>;
+  language: string;
+  setLanguage: React.Dispatch<React.SetStateAction<string>>;
+  timeLeft: number;
+  setTimeLeft: React.Dispatch<React.SetStateAction<number>>;
+}
+
+const CodeEditor: React.FC<CodeEditorProps> = ({
+  averageSolveTime,
+  code,
+  setCode,
+  language,
+  setLanguage,
+  timeLeft,
+  setTimeLeft,
+}) => {
   const editorRef = useRef<HTMLDivElement>(null);
-  const [timeLeft, setTimeLeft] = useState(15 * 60);
 
   const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setLanguage(e.target.value);
-  };
-
-  const handleCodeChange = (updatedCode: string) => {
-    setCode((prev) => ({
-      ...prev,
-      [language]: updatedCode,
-    }));
   };
 
   useEffect(() => {
@@ -28,7 +38,7 @@ const CodeEditor = () => {
     }, 1000);
 
     return () => clearInterval(intervalId);
-  }, [timeLeft]);
+  }, [timeLeft, setTimeLeft]);
 
   useEffect(() => {
     if (editorRef.current) {
@@ -41,6 +51,8 @@ const CodeEditor = () => {
     const secs = String(seconds % 60).padStart(2, "0");
     return `${mins}:${secs}`;
   };
+
+  console.log(averageSolveTime)
 
   return (
     <div className="codeEditorContainer">
@@ -67,12 +79,13 @@ const CodeEditor = () => {
 
       <div ref={editorRef} className="codeEditor">
         <Editor
-          className="editor"
+          height="60vh"
+          defaultLanguage={language}
           value={code[language]}
-          onValueChange={handleCodeChange}
-          highlight={(code) => code}
-          padding={12}
-          aria-label={`${languageLabels[language]} Code Editor`}
+          theme="vs-dark"
+          onChange={(value) =>
+            setCode((prev) => ({ ...prev, [language]: value || "" }))
+          }
         />
       </div>
     </div>

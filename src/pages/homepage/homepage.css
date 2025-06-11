@@ -7,12 +7,38 @@
 
 .filterContainer {
   margin: 1vw 5vw;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
 }
+
+.filterLeft {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .filterContainer select {
   padding: 0.4rem 0.8rem;
   margin-left: 0.5rem;
   border-radius: 6px;
   border: 1px solid #ccc;
+}
+
+.createProblemButton {
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  border: none;
+  background-color: var(--secondary);
+  color: var(--background);
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.3s ease;
+}
+
+.createProblemButton:hover {
+  background-color: var(--primary);
 }
 
 .problemCard {

@@ -17,7 +17,7 @@ const Navbar = () => {
   return (
     <nav>
       <div className="logoContainer">
-        <h1 className="brandName">Mooterview</h1>
+        <a href="/" className="brandName">Mooterview</a>
       </div>
       {isLoggedIn ? (
         <div className="navMenu">
