@@ -15,6 +15,7 @@
     "axios": "^1.9.0",
     "gsap": "^3.13.0",
     "jwt-decode": "^4.0.0",
+    "monaco-editor": "^0.52.2",
     "mooterview-client": "^0.0.1",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
