@@ -78,30 +78,30 @@ const ChatBox: React.FC<ChatBoxProps> = ({ problem, code, elapsedTime }) => {
       const response = await getPromptResponse({
         actor: Actor.INTERVIEWER,
         context: `The candidate has just started working on the following coding problem:\n\n${problem.problemDescription}`,
-        prompt: `Please explain this problem directly and clearly, like you're the candidate's interviewer. No extra greetings or framing. Just jump into the explanation. For example: For a two sum problem , you will say something like - Here is your problem for today's interview, you are given an array and a target sum, you will have to find me pairs in the array having that sum.`,
+        prompt: `
+You're a calm, confident human interviewer. The candidate has just received this problem:
+
+"${problem.problemDescription}"
+
+Introduce the problem in a direct and natural way, as if you're speaking to the candidate live. Don’t over-explain — your goal is to clearly present the core task.
+
+Examples of tone:
+- "Here’s the problem for today..."
+- "You’re given X and Y — figure out how to Z."
+
+Strict guidelines:
+- DO NOT greet or say things like “Hi” or “Welcome.”
+- DO NOT say “I’m your interviewer” or “I’m here to help.”
+- Just state the problem in a straightforward, conversational way — as if the candidate asked “What’s the task?”
+
+Now speak directly to the candidate:
+`,
       });
       await addBotMessage(response);
     };
 
     explainProblem();
   }, [problem]);
-
-  // ✅ Load existing chat messages from session
-  useEffect(() => {
-    const fetchInitialChats = async () => {
-      try {
-        const res = await fetch(`${BASE_URL}/sessions/${sessionId}`);
-        const data = await res.json();
-        if (data?.chatsQueue?.length) {
-          setMessages(data.chatsQueue);
-        }
-      } catch (err) {
-        console.error("Failed to load previous chat messages", err);
-      }
-    };
-
-    if (sessionId) fetchInitialChats();
-  }, [sessionId]);
 
   // ✅ Auto-tip every 5 mins (checks every 10s)
   useEffect(() => {
@@ -113,28 +113,31 @@ const ChatBox: React.FC<ChatBoxProps> = ({ problem, code, elapsedTime }) => {
 
         const codeSnapshot = codeRef.current?.trim() || "";
         const autoPrompt = `
-You're an experienced coding interviewer.
+You are acting as a human coding interviewer.
 
-The candidate has been working on the problem for ${Math.floor(
+It’s been ${Math.floor(
           elapsed / 60
-        )} minutes.
-Here is their current code (incomplete code or blank is also valid input):
+        )} minutes since the interview started. The candidate is working on the following problem:
 
+"${problem.title}"
+
+Their current code is:
 ${codeSnapshot || "[No code written yet]"}
 
-Your job is to give **one clear next step**, using a natural, human tone like:
-- "You should start by writing a function signature."
-- "Try breaking this into smaller helper functions."
-- "Can you think about how to handle edge cases?"
-- "Right now, the code is missing the core logic..."
+Give ONE clear next step — in a natural, human tone — like you're observing them live and want to guide without giving away the full solution.
 
-Strict instructions:
-- If the code is empty or just boilerplate, give constructive guidance on how to get started.
-- If the code is wrong or incomplete, give a direct and actionable tip.
-- DO NOT say “you’re on the right track” if there’s no real progress.
-- NEVER say you’re an AI, interviewer, assistant etc. Just give human, concise, helpful advice.
+Examples:
+- “Try starting with the base case first.”
+- “It looks like your loop isn’t handling duplicates correctly.”
+- “Have you thought about using a set instead of a map?”
 
-Now respond:
+Rules:
+- If code is missing or boilerplate, give a gentle but specific nudge to start.
+- Don’t be vague or overly polite.
+- Don’t say you’re an AI or assistant.
+- Never say “Let’s focus on the problem.” Be practical and helpful.
+
+Now give a natural next-step prompt to the candidate:
 `;
 
         getPromptResponse({
@@ -168,17 +171,24 @@ Now respond:
         actor: Actor.USER,
         context: `Problem: ${problem.title}\n\n${problem.problemDescription}\n\nCurrent code:\n${codeRef.current}`,
         prompt: `
-You're acting as a human interviewer in a live coding interview.
+You're acting as a calm, professional human interviewer in a live coding interview.
 
-Strict instructions:
-- If the candidate asks anything unrelated to the problem (e.g. "How’s the weather?", "What’s your name?", "Can I go to the washroom?"), reply very briefly with something like:
-  "Let's focus on the problem for now."
-- If they ask anything directly or indirectly related to the current coding problem, give a clear, direct, human-like explanation or hint — like you would in a real tech interview.
+Your job is to evaluate and guide the candidate. Respond in a natural, human tone based on the candidate’s message.
 
-Be professional at all times. Don't use any phrases like "As an AI" or "I'm just an assistant". Speak naturally like a human interviewer.
+👉 Instructions:
+1. **If the candidate is asking a technical question** (like time complexity, TLE, code issue), answer clearly and concisely — like a peer engineer would.
+2. **If they want to end**, you can allow it, or redirect if it's too early — but never say “Let’s focus on the problem” in a robotic way. Example:
+   - "You can, but take a final look — anything else you might want to improve?"
+3. **If they ask what's next**, give an honest answer:
+   - "We'll stop here for now — but practicing X would help you next."
+   - Or redirect politely if not finished.
+4. **Never use phrases like** “Feel free to ask” or “Happy to help.” Be natural and straight to the point.
+5. **Keep it short** (1-2 sentences max). Don't summarize what they already know. End with purpose, not politeness.
 
-Now respond to the candidate's message:
+Candidate's message:
 "${input}"
+
+Now write your reply as a human interviewer:
 `,
       });
 
