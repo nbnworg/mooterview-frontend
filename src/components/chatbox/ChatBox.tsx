@@ -7,7 +7,6 @@ import { getPromptResponse } from "../../utils/handlers/getPromptResponse";
 import { updateSessionById } from "../../utils/handlers/updateSessionById";
 import { Actor, type Problem } from "mooterview-client";
 import { useNavigate } from "react-router-dom";
-import { BASE_URL } from "../../utils/constants";
 
 interface ChatBoxProps {
   problem: Problem;
@@ -103,7 +102,7 @@ Now speak directly to the candidate:
     explainProblem();
   }, [problem]);
 
-  // ✅ Auto-tip every 5 mins (checks every 10s)
+  // Auto-tip every 5 mins
   useEffect(() => {
     const interval = setInterval(() => {
       const elapsed = elapsedTimeRef.current;
@@ -129,13 +128,14 @@ Give ONE clear next step — in a natural, human tone — like you're observing 
 Examples:
 - “Try starting with the base case first.”
 - “It looks like your loop isn’t handling duplicates correctly.”
-- “Have you thought about using a set instead of a map?”
+- “Have you thought about using a set instead of a map?, Have you tried covering this testcase? Can you dry run this to me?”
 
 Rules:
 - If code is missing or boilerplate, give a gentle but specific nudge to start.
 - Don’t be vague or overly polite.
 - Don’t say you’re an AI or assistant.
 - Never say “Let’s focus on the problem.” Be practical and helpful.
+- anything technical related to the problem and the code, you will answer it.
 
 Now give a natural next-step prompt to the candidate:
 `;
@@ -153,7 +153,7 @@ Now give a natural next-step prompt to the candidate:
     return () => clearInterval(interval);
   }, [problem]);
 
-  // ✅ User sends manual message
+  // User sends manual message
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim()) return;
@@ -175,15 +175,21 @@ You're acting as a calm, professional human interviewer in a live coding intervi
 
 Your job is to evaluate and guide the candidate. Respond in a natural, human tone based on the candidate’s message.
 
-👉 Instructions:
-1. **If the candidate is asking a technical question** (like time complexity, TLE, code issue), answer clearly and concisely — like a peer engineer would.
-2. **If they want to end**, you can allow it, or redirect if it's too early — but never say “Let’s focus on the problem” in a robotic way. Example:
-   - "You can, but take a final look — anything else you might want to improve?"
-3. **If they ask what's next**, give an honest answer:
-   - "We'll stop here for now — but practicing X would help you next."
-   - Or redirect politely if not finished.
-4. **Never use phrases like** “Feel free to ask” or “Happy to help.” Be natural and straight to the point.
-5. **Keep it short** (1-2 sentences max). Don't summarize what they already know. End with purpose, not politeness.
+1. If the candidate is asking a technical question, answer clearly and briefly — like an experienced peer helping out.
+
+2. If the candidate wants to stop or tends to stop or says things like "I can't think of anything" or "I'll stop here":
+   - **Acknowledge it** calmly.
+   - **Ask once** if they’d like to take a final look or add anything.
+   - If they confirm “no” or say “I’m done”, **end confidently.**
+   - Examples:
+     - "Alright, let’s stop here then. Good effort overall — hope this gave you some useful practice."
+     - "Sounds good. Take care and keep practicing — you’re getting there."
+
+3. If they ask what to do next, suggest practice tips or tell them to wrap up the code cleanly.
+
+4. Never say you're an AI or assistant. Don't be overly polite or robotic. No greetings or closings like "Feel free to ask" or "Happy to help."
+
+5. Keep your response short — ideally 1-2 sentences max.
 
 Candidate's message:
 "${input}"
