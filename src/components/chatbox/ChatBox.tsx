@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect, useRef } from "react";
 
@@ -6,23 +5,27 @@ import "./Chatbox.css";
 import { getPromptResponse } from "../../utils/handlers/getPromptResponse";
 import { updateSessionById } from "../../utils/handlers/updateSessionById";
 import { Actor, type Problem } from "mooterview-client";
-import { useNavigate } from "react-router-dom";
 import { BASE_URL } from "../../utils/constants";
 
 interface ChatBoxProps {
   problem: Problem;
   code: string;
   elapsedTime: number;
+  endSession: () => void;
 }
 
-const ChatBox: React.FC<ChatBoxProps> = ({ problem, code, elapsedTime }) => {
+const ChatBox: React.FC<ChatBoxProps> = ({
+  problem,
+  code,
+  elapsedTime,
+  endSession,
+}) => {
   const [messages, setMessages] = useState<any[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const lastAutoTimeRef = useRef(0);
   const elapsedTimeRef = useRef(elapsedTime);
   const codeRef = useRef(code);
-  const navigate = useNavigate();
   const messagesRef = useRef<HTMLDivElement | null>(null);
 
   const sessionId = localStorage.getItem("mtv-sessionId");
@@ -58,19 +61,19 @@ const ChatBox: React.FC<ChatBoxProps> = ({ problem, code, elapsedTime }) => {
     }
   };
 
-  const endSession = async () => {
-    if (!sessionId) return;
-    try {
-      await updateSessionById({
-        sessionId,
-        endTime: new Date().toISOString(),
-      });
-      alert("Session ended successfully.");
-      navigate("/home");
-    } catch (err) {
-      console.error("Failed to end session", err);
-    }
-  };
+  // const endSession = async () => {
+  //   if (!sessionId) return;
+  //   try {
+  //     await updateSessionById({
+  //       sessionId,
+  //       endTime: new Date().toISOString(),
+  //     });
+  //     alert("Session ended successfully.");
+  //     navigate("/home");
+  //   } catch (err) {
+  //     console.error("Failed to end session", err);
+  //   }
+  // };
 
   // ✅ Initial problem explanation
   useEffect(() => {

@@ -7,6 +7,7 @@ import LandingPage from "./pages/landingPage/LandingPage";
 import AuthRedirect from "./components/auth/AuthRedirect";
 import CreateProblem from "./pages/createProblem/CreateProblem";
 import Problempage from "./pages/problem/Problempage";
+import PrivateRoute from "./privateRoute";
 
 function App() {
   return (
@@ -16,9 +17,30 @@ function App() {
         <Route path={"/sign-up"} element={<Signup />} />
         <Route path={"/log-in"} element={<Login />} />
         <Route path={"/landing"} element={<LandingPage />} />
-        <Route path={"/home"} element={<Homepage />} />
-        <Route path={"/problem/:title"} element={<Problempage />} />
-        <Route path={"/create-a-problem"} element={<CreateProblem />} />
+        <Route
+          path={"/home"}
+          element={
+            <PrivateRoute>
+              <Homepage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path={"/problem/:title"}
+          element={
+            <PrivateRoute>
+              <Problempage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path={"/create-a-problem"}
+          element={
+            <PrivateRoute>
+              <CreateProblem />
+            </PrivateRoute>
+          }
+        />
       </Routes>
     </>
   );

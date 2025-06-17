@@ -108,7 +108,13 @@ export const useChatAuth = ({
         resUserId = response.data.userId;
       }
 
-      localStorage.setItem("userData", JSON.stringify({ id: resUserId }));
+      localStorage.setItem(
+        "userData",
+        JSON.stringify({
+          id: resUserId,
+          accessToken: response.data.AuthenticationResult.AccessToken,
+        })
+      );
       login();
 
       setChat((prev) => [...prev, { from: "Moo", text: successMessage }]);
