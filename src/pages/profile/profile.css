@@ -1,0 +1,18 @@
+.profileSection {
+  padding: 1rem;
+}
+
+.profileMetrics {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.metricCard {
+  flex: 1;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  background-color: #fff;
+  text-align: center;
+}

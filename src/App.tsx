@@ -1,6 +1,7 @@
 import { Route, Routes } from "react-router-dom";
 import "./App.css";
 import Homepage from "./pages/homepage/Homepage";
+import Profile from "./pages/profile/Profile";
 import Signup from "./pages/signup/Signup";
 import Login from "./pages/login/Login";
 import LandingPage from "./pages/landingPage/LandingPage";
@@ -19,6 +20,7 @@ function App() {
         <Route path={"/log-in"} element={<Login />} />
         <Route path={"/landing"} element={<LandingPage />} />
         <Route path={"/home"} element={<Homepage />} />
+        <Route path={"/profile"} element={<Profile />} />
         <Route path={"/problem/:title"} element={<Problempage />} />
         <Route path={"/create-a-problem"} element={<CreateProblem />} />
         <Route path={"/session/:id"} element={<SessionSummary />} />

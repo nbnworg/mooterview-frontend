@@ -21,13 +21,13 @@ const Navbar = () => {
       </div>
       {isLoggedIn ? (
         <div className="navMenu">
-          <button className="profileAvatar">
+          <Link to="/profile" className="profileAvatar">
             <img
               className="profileAvatarImage"
               src={avatar}
               alt="User avatar"
             />
-          </button>
+          </Link>
           <button onClick={handleLogout} className="navMenuLinksButton">
             Logout
             <FiLogOut />

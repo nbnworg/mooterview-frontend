@@ -55,3 +55,21 @@ export default tseslint.config({
 
 See [Frontend Developer Guide](FRONTEND_DEVELOPER_GUIDE.md) for project details.
 
+
+## User Stats API
+
+The profile page calls a `GET /users/:id/stats` endpoint. The endpoint should return a JSON object with these fields:
+
+- `totalSolved` – number of problems the user has solved.
+- `totalSessions` – total interview sessions taken.
+- `averageSolveTime` – average time (in minutes) spent solving a problem.
+
+Example response:
+
+```json
+{
+  "totalSolved": 10,
+  "totalSessions": 15,
+  "averageSolveTime": 12.5
+}
+```
