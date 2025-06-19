@@ -8,6 +8,7 @@ import AuthRedirect from "./components/auth/AuthRedirect";
 import CreateProblem from "./pages/createProblem/CreateProblem";
 import Problempage from "./pages/problem/Problempage";
 import SessionSummary from "./pages/sessionSummary/SessionSummary";
+import NotFound from "./pages/notFound/NotFound";
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
         <Route path={"/problem/:title"} element={<Problempage />} />
         <Route path={"/create-a-problem"} element={<CreateProblem />} />
         <Route path={"/session/:id"} element={<SessionSummary />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </>
   );
