@@ -172,17 +172,15 @@ Now give a natural next-step prompt to the candidate:
     if (!input.trim()) return;
 
     const userMsg = { actor: Actor.USER, message: input };
-    let updatedUserMessages: any[] = [];
+    let pendingMessages: any[] = [];
 
     setMessages((prev) => {
-      updatedUserMessages = [...prev, userMsg];
-      return updatedUserMessages;
+      pendingMessages = [...prev, userMsg];
+      return pendingMessages;
     });
 
     setInput("");
     setLoading(true);
-
-    await updateChatsInSession(updatedUserMessages);
 
     try {
       const aiResponse = await getPromptResponse({
@@ -217,27 +215,25 @@ Now write your reply as a human interviewer:
       });
 
       const botMsg = { actor: Actor.INTERVIEWER, message: aiResponse };
-      let updatedFinalMessages: any[] = [];
 
       setMessages((prev) => {
-        updatedFinalMessages = [...prev, botMsg];
-        return updatedFinalMessages;
+        pendingMessages = [...prev, botMsg];
+        return pendingMessages;
       });
 
-      await updateChatsInSession(updatedFinalMessages);
+      await updateChatsInSession(pendingMessages);
     } catch {
       const errorMsg = {
         actor: Actor.AI,
         message: "Sorry, I couldn't process that.",
       };
-      let fallbackMessages: any[] = [];
 
       setMessages((prev) => {
-        fallbackMessages = [...prev, errorMsg];
-        return fallbackMessages;
+        pendingMessages = [...prev, errorMsg];
+        return pendingMessages;
       });
 
-      await updateChatsInSession(fallbackMessages);
+      await updateChatsInSession(pendingMessages);
     }
 
     setLoading(false);
