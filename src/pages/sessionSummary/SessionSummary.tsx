@@ -3,7 +3,9 @@ import { useEffect, useState } from "react";
 import { useLocation, useParams } from "react-router-dom";
 import Navbar from "../../components/navbar/Navbar";
 import { getSessionById } from "../../utils/handlers/getSessionById";
-import type { Session } from "mooterview-client";
+import { getProblemById } from "../../utils/handlers/getProblemById";
+import type { Session, Problem } from "mooterview-client";
+import { getSampleSolutions, type SolutionSnippet } from "../../data/sampleSolutions";
 import "./sessionSummary.css";
 
 const formatDuration = (seconds: number) => {
@@ -20,6 +22,8 @@ const SessionSummary = () => {
   const { finalCode } = (location.state as { finalCode?: string }) || {};
   const [session, setSession] = useState<Session | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [problem, setProblem] = useState<Problem | null>(null);
+  const [solutions, setSolutions] = useState<SolutionSnippet[]>([]);
 
   useEffect(() => {
     if (!id) return;
@@ -27,12 +31,23 @@ const SessionSummary = () => {
       try {
         const data = await getSessionById(id);
         setSession(data);
+
+        if (data.problemId) {
+          try {
+            const prob = await getProblemById(data.problemId);
+            setProblem(prob);
+            const sols = await getSampleSolutions(prob.problemDescription || "");
+            setSolutions(sols);
+          } catch (err) {
+            console.error('Failed to fetch problem details', err);
+          }
+        }
       } catch (err: any) {
         setError(err.message || "Failed to load session.");
       }
     };
 
-    fetchSession();
+    void fetchSession();
   }, [id]);
 
   if (error) {
@@ -67,6 +82,7 @@ const SessionSummary = () => {
       <section className="sessionSummarySection">
         <h1>Session Summary</h1>
         <p>Duration: {formatDuration(durationSec)}</p>
+        {problem && <h2>{problem.title}</h2>}
         {finalCode && (
           <div>
             <h2>Final Code</h2>
@@ -82,6 +98,17 @@ const SessionSummary = () => {
             </p>
           ))}
         </div>
+        {solutions.length > 0 && (
+          <div>
+            <h2>Example Solutions</h2>
+            {solutions.map((sol, idx) => (
+              <div key={idx} className="solutionSnippet">
+                <h3>{sol.language}</h3>
+                <pre>{sol.code}</pre>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
     </>
   );

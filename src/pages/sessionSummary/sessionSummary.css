@@ -7,3 +7,10 @@
   padding: 1rem;
   overflow-x: auto;
 }
+
+.solutionSnippet {
+  margin-top: 1rem;
+}
+.solutionSnippet pre {
+  background: #1b1b1b;
+}
