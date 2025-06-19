@@ -5,6 +5,7 @@ import React, { useState, useEffect, useRef } from "react";
 import "./Chatbox.css";
 import { getPromptResponse } from "../../utils/handlers/getPromptResponse";
 import { updateSessionById } from "../../utils/handlers/updateSessionById";
+import { getSessionById } from "../../utils/handlers/getSessionById";
 import { Actor, type Problem } from "mooterview-client";
 import { useNavigate } from "react-router-dom";
 
@@ -25,6 +26,20 @@ const ChatBox: React.FC<ChatBoxProps> = ({ problem, code, elapsedTime }) => {
   const messagesRef = useRef<HTMLDivElement | null>(null);
 
   const sessionId = localStorage.getItem("mtv-sessionId");
+
+  useEffect(() => {
+    const fetchPreviousChats = async () => {
+      if (!sessionId) return;
+      try {
+        const session = await getSessionById(sessionId);
+        setMessages(session.chatsQueue ?? []);
+      } catch (err) {
+        console.error("Failed to load previous chats", err);
+      }
+    };
+
+    fetchPreviousChats();
+  }, [sessionId]);
 
   useEffect(() => {
     elapsedTimeRef.current = elapsedTime;
@@ -73,6 +88,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({ problem, code, elapsedTime }) => {
 
   // ✅ Initial problem explanation
   useEffect(() => {
+    if (messages.length > 0) return;
     const explainProblem = async () => {
       const response = await getPromptResponse({
         actor: Actor.INTERVIEWER,
@@ -100,7 +116,7 @@ Now speak directly to the candidate:
     };
 
     explainProblem();
-  }, [problem]);
+  }, [problem, messages.length]);
 
   // Auto-tip every 5 mins
   useEffect(() => {
