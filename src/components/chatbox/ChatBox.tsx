@@ -59,6 +59,9 @@ const ChatBox: React.FC<ChatBoxProps> = ({ problem, code, elapsedTime }) => {
 
   const endSession = async () => {
     if (!sessionId) return;
+    const confirmEnd = window.confirm("Are you sure you want to end the session?");
+    if (!confirmEnd) return;
+
     try {
       await updateSessionById({
         sessionId,
