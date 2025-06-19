@@ -62,10 +62,16 @@ const ChatBox: React.FC<ChatBoxProps> = ({ problem, code, elapsedTime }) => {
     try {
       await updateSessionById({
         sessionId,
+        chatsQueue: messages,
         endTime: new Date().toISOString(),
       });
-      alert("Session ended successfully.");
-      navigate("/home");
+      navigate(`/session/${sessionId}`, {
+        state: {
+          finalCode: codeRef.current,
+          chats: messages,
+          duration: elapsedTimeRef.current,
+        },
+      });
     } catch (err) {
       console.error("Failed to end session", err);
     }

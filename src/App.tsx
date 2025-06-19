@@ -7,6 +7,7 @@ import LandingPage from "./pages/landingPage/LandingPage";
 import AuthRedirect from "./components/auth/AuthRedirect";
 import CreateProblem from "./pages/createProblem/CreateProblem";
 import Problempage from "./pages/problem/Problempage";
+import SessionSummary from "./pages/sessionSummary/SessionSummary";
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
         <Route path={"/home"} element={<Homepage />} />
         <Route path={"/problem/:title"} element={<Problempage />} />
         <Route path={"/create-a-problem"} element={<CreateProblem />} />
+        <Route path={"/session/:id"} element={<SessionSummary />} />
       </Routes>
     </>
   );
