@@ -21,6 +21,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({ problem, code, elapsedTime }) => {
   const lastAutoTimeRef = useRef(0);
   const elapsedTimeRef = useRef(elapsedTime);
   const codeRef = useRef(code);
+  const hasExplainedRef = useRef(false);
   const navigate = useNavigate();
   const messagesRef = useRef<HTMLDivElement | null>(null);
 
@@ -39,9 +40,18 @@ const ChatBox: React.FC<ChatBoxProps> = ({ problem, code, elapsedTime }) => {
   }, [code]);
 
   const addBotMessage = async (text: string) => {
-    const newMessage = { actor: Actor.INTERVIEWER, message: text };
-    const updatedMessages = [...messages, newMessage];
-    setMessages(updatedMessages);
+    let updatedMessages: any[] = [];
+
+    setMessages((prev) => {
+      const lastMsg = prev[prev.length - 1];
+      if (lastMsg?.actor === Actor.INTERVIEWER && lastMsg.message === text) {
+        updatedMessages = prev;
+        return prev;
+      }
+      updatedMessages = [...prev, { actor: Actor.INTERVIEWER, message: text }];
+      return updatedMessages;
+    });
+
     await updateChatsInSession(updatedMessages);
   };
 
@@ -73,6 +83,9 @@ const ChatBox: React.FC<ChatBoxProps> = ({ problem, code, elapsedTime }) => {
 
   // ✅ Initial problem explanation
   useEffect(() => {
+    if (!problem || hasExplainedRef.current) return;
+    hasExplainedRef.current = true;
+
     const explainProblem = async () => {
       const response = await getPromptResponse({
         actor: Actor.INTERVIEWER,
@@ -159,8 +172,13 @@ Now give a natural next-step prompt to the candidate:
     if (!input.trim()) return;
 
     const userMsg = { actor: Actor.USER, message: input };
-    const updatedUserMessages = [...messages, userMsg];
-    setMessages(updatedUserMessages);
+    let updatedUserMessages: any[] = [];
+
+    setMessages((prev) => {
+      updatedUserMessages = [...prev, userMsg];
+      return updatedUserMessages;
+    });
+
     setInput("");
     setLoading(true);
 
@@ -199,16 +217,26 @@ Now write your reply as a human interviewer:
       });
 
       const botMsg = { actor: Actor.INTERVIEWER, message: aiResponse };
-      const updatedFinalMessages = [...updatedUserMessages, botMsg];
-      setMessages(updatedFinalMessages);
+      let updatedFinalMessages: any[] = [];
+
+      setMessages((prev) => {
+        updatedFinalMessages = [...prev, botMsg];
+        return updatedFinalMessages;
+      });
+
       await updateChatsInSession(updatedFinalMessages);
     } catch {
       const errorMsg = {
         actor: Actor.AI,
         message: "Sorry, I couldn't process that.",
       };
-      const fallbackMessages = [...updatedUserMessages, errorMsg];
-      setMessages(fallbackMessages);
+      let fallbackMessages: any[] = [];
+
+      setMessages((prev) => {
+        fallbackMessages = [...prev, errorMsg];
+        return fallbackMessages;
+      });
+
       await updateChatsInSession(fallbackMessages);
     }
 
