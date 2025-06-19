@@ -12,3 +12,15 @@
 .verticalLine {
   border: 0.1vw solid black;
 }
+
+.timeUpMessage {
+  position: fixed;
+  top: 10vh;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 1rem 2rem;
+  border-radius: 8px;
+  z-index: 1000;
+}
