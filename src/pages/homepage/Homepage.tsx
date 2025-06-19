@@ -15,6 +15,7 @@ const Homepage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedLevel, setSelectedLevel] = useState<string>("All");
+  const [searchTerm, setSearchTerm] = useState<string>("");
 
   useEffect(() => {
     console.log("before problems");
@@ -40,13 +41,15 @@ const Homepage = () => {
   }, []);
   console.log("problems: ", problems);
 
-  const filterProblems =
-    selectedLevel === "All"
-      ? problems
-      : problems.filter(
-          (problem: ProblemSummary) =>
-            problem.level?.toLowerCase() === selectedLevel.toLowerCase()
-        );
+  const filterProblems = problems?.filter((problem: ProblemSummary) => {
+    const matchesLevel =
+      selectedLevel === "All" ||
+      problem.level?.toLowerCase() === selectedLevel.toLowerCase();
+    const matchesSearch = problem.title
+      ?.toLowerCase()
+      .includes(searchTerm.toLowerCase());
+    return matchesLevel && matchesSearch;
+  });
 
   return (
     <>
@@ -64,6 +67,12 @@ const Homepage = () => {
             <option value="Medium">Medium</option>
             <option value="Hard">Hard</option>
           </select>
+          <input
+            type="text"
+            placeholder="Search problems..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
         </div>
         <button
           className="createProblemButton"
