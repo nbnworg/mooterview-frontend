@@ -19,7 +19,7 @@ const ProblemPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [code, setCode] = useState<{ [lang: string]: string }>(initialCode);
   const [language, setLanguage] = useState("python");
-  const [timeLeft, setTimeLeft] = useState(15 * 60);
+  const [timeLeft, setTimeLeft] = useState(15);
   const [timeUpModalOpen, setTimeUpModalOpen] = useState(false);
   const [refreshModalOpen, setRefreshModalOpen] = useState(false);
 
@@ -33,7 +33,7 @@ const ProblemPage = () => {
       try {
         const fetchedProblem = await getProblemById(problemId);
         setProblem(fetchedProblem);
-        const fullTime = Number(fetchedProblem.averageSolveTime ?? 15) * 60;
+        const fullTime = Number(fetchedProblem.averageSolveTime ?? 15);
         setTimeLeft(fullTime);
       } catch (err: any) {
         setError(err.message || "Failed to load problem.");
@@ -55,7 +55,7 @@ const ProblemPage = () => {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [timeLeft]);
+  }, []);
 
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -120,7 +120,7 @@ const ProblemPage = () => {
           <ChatBox
             problem={problem}
             code={code[language]}
-            elapsedTime={(problem.averageSolveTime ?? 15) * 60 - timeLeft}
+            elapsedTime={(problem.averageSolveTime ?? 15) - timeLeft}
             endSession={endSession}
           />
         </div>
