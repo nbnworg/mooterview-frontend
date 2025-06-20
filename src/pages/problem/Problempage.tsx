@@ -19,11 +19,11 @@ const ProblemPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [code, setCode] = useState<{ [lang: string]: string }>(initialCode);
   const [language, setLanguage] = useState("python");
-  const [timeLeft, setTimeLeft] = useState(15);
-  const [timeUpModalOpen, setTimeUpModalOpen] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(15 * 60);
+  const [timeUpModalOpen, _setTimeUpModalOpen] = useState(false);
   const [refreshModalOpen, setRefreshModalOpen] = useState(false);
 
-  const [timeUp, setTimeUp] = useState(false);
+  const [timeUp, _setTimeUp] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -33,7 +33,7 @@ const ProblemPage = () => {
       try {
         const fetchedProblem = await getProblemById(problemId);
         setProblem(fetchedProblem);
-        const fullTime = Number(fetchedProblem.averageSolveTime ?? 15);
+        const fullTime = Number(fetchedProblem.averageSolveTime ?? 15) * 60;
         setTimeLeft(fullTime);
       } catch (err: any) {
         setError(err.message || "Failed to load problem.");
@@ -43,35 +43,6 @@ const ProblemPage = () => {
     fetchProblem();
   }, [problemId]);
 
-  useEffect(() => {
-    if (timeLeft <= 0) {
-      setTimeUpModalOpen(true);
-      setTimeUp(true);
-      return;
-    }
-
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => prev - 1);
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, []);
-
-  useEffect(() => {
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (timeLeft > 0) {
-        e.preventDefault();
-
-        setRefreshModalOpen(true);
-        return "";
-      }
-    };
-
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => {
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-    };
-  }, [timeLeft]);
 
   const endSession = async () => {
     const sessionId = localStorage.getItem("mtv-sessionId");
@@ -120,7 +91,7 @@ const ProblemPage = () => {
           <ChatBox
             problem={problem}
             code={code[language]}
-            elapsedTime={(problem.averageSolveTime ?? 15) - timeLeft}
+            elapsedTime={(problem.averageSolveTime ?? 15) * 60 - timeLeft}
             endSession={endSession}
           />
         </div>
@@ -136,7 +107,6 @@ const ProblemPage = () => {
         />
       </section>
 
-      {/* Modal for time up */}
       {timeUpModalOpen && (
         <Modal
           title="Interview Time Over"
@@ -147,7 +117,6 @@ const ProblemPage = () => {
         />
       )}
 
-      {/* Modal for refresh attempt */}
       {refreshModalOpen && (
         <Modal
           title="Session Warning"
