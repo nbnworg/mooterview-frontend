@@ -3,7 +3,7 @@ import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import Navbar from "../../components/navbar/Navbar";
 import "./problem.css";
 import CodeEditor from "../../components/codeEditor/CodeEditor";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getProblemById } from "../../utils/handlers/getProblemById";
 import type { Problem } from "mooterview-client";
 import { updateSessionById } from "../../utils/handlers/updateSessionById";
@@ -22,6 +22,8 @@ const ProblemPage = () => {
   const [timeLeft, setTimeLeft] = useState(15 * 60);
   const [timeUpModalOpen, setTimeUpModalOpen] = useState(false);
   const [refreshModalOpen, setRefreshModalOpen] = useState(false);
+
+  const verifySolutionRef = useRef<() => void | null>(null);
 
   const [timeUp, setTimeUp] = useState(false);
   const navigate = useNavigate();
@@ -122,18 +124,27 @@ const ProblemPage = () => {
             code={code[language]}
             elapsedTime={(problem.averageSolveTime ?? 15) * 60 - timeLeft}
             endSession={endSession}
+            onVerifyRef={verifySolutionRef}
           />
         </div>
         <div className="verticalLine"></div>
-        <CodeEditor
-          averageSolveTime={Number(problem.averageSolveTime)}
-          code={code}
-          setCode={setCode}
-          language={language}
-          setLanguage={setLanguage}
-          timeLeft={timeLeft}
-          setTimeLeft={setTimeLeft}
-        />
+        <div className="codeEditorAndOptionsContainer">
+          <CodeEditor
+            averageSolveTime={Number(problem.averageSolveTime)}
+            code={code}
+            setCode={setCode}
+            language={language}
+            setLanguage={setLanguage}
+            timeLeft={timeLeft}
+            setTimeLeft={setTimeLeft}
+          />
+          <button
+            className="verifyCodeButton"
+            onClick={() => verifySolutionRef.current?.()}
+          >
+            Verify Code
+          </button>
+        </div>
       </section>
 
       {/* Modal for time up */}

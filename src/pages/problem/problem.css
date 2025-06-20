@@ -9,6 +9,12 @@
   flex: 1;
 }
 
+.codeEditorAndOptionsContainer {
+  flex: auto;
+  display: flex;
+  flex-direction: column;
+}
+
 .verticalLine {
   border: 0.1vw solid black;
 }
@@ -23,4 +29,9 @@
   padding: 1rem 2rem;
   border-radius: 8px;
   z-index: 1000;
+}
+
+.verifyCodeButton {
+  width: fit-content;
+  padding: 0.5vw 1.5vw;
 }
