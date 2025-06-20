@@ -26,6 +26,13 @@
   border: 1px solid #ccc;
 }
 
+.filterContainer input[type="text"] {
+  padding: 0.4rem 0.8rem;
+  margin-left: 0.5rem;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
 .createProblemButton {
   padding: 0.4rem 0.8rem;
   border-radius: 6px;

@@ -1,0 +1,9 @@
+.sessionSummarySection {
+  padding: 1rem;
+}
+.sessionSummarySection pre {
+  background: #222;
+  color: #fff;
+  padding: 1rem;
+  overflow-x: auto;
+}

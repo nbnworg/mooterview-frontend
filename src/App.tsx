@@ -8,6 +8,8 @@ import AuthRedirect from "./components/auth/AuthRedirect";
 import CreateProblem from "./pages/createProblem/CreateProblem";
 import Problempage from "./pages/problem/Problempage";
 import PrivateRoute from "./privateRoute";
+import SessionSummary from "./pages/sessionSummary/SessionSummary";
+import NotFound from "./pages/notFound/NotFound";
 
 function App() {
   return (
@@ -41,6 +43,15 @@ function App() {
             </PrivateRoute>
           }
         />
+        <Route
+          path={"/session/:id"}
+          element={
+            <PrivateRoute>
+              <SessionSummary />
+            </PrivateRoute>
+          }
+        />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </>
   );

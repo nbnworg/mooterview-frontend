@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import Navbar from "../../components/navbar/Navbar";
@@ -6,10 +7,10 @@ import CodeEditor from "../../components/codeEditor/CodeEditor";
 import { useEffect, useState } from "react";
 import { getProblemById } from "../../utils/handlers/getProblemById";
 import type { Problem } from "mooterview-client";
+import { updateSessionById } from "../../utils/handlers/updateSessionById";
 import ChatBox from "../../components/chatbox/ChatBox";
 import { initialCode } from "../../utils/constants";
-import Modal from "../../components/modal/Modal"; // 💡 create a basic reusable Modal component
-import { updateSessionById } from "../../utils/handlers/updateSessionById";
+import Modal from "../../components/modal/Modal";
 
 const ProblemPage = () => {
   const location = useLocation();
@@ -23,6 +24,7 @@ const ProblemPage = () => {
   const [timeUpModalOpen, setTimeUpModalOpen] = useState(false);
   const [refreshModalOpen, setRefreshModalOpen] = useState(false);
 
+  const [timeUp, setTimeUp] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -112,6 +114,7 @@ const ProblemPage = () => {
   return (
     <>
       <Navbar />
+      {timeUp && <div className="timeUpMessage">Time is up!</div>}
       <section className="problemSection" id="problemSection">
         <div className="problemDetailAndChatContainer">
           <h1>{problem.title}</h1>

@@ -86,16 +86,23 @@ export const useChatAuth = ({
 
     setChat((prev) => [...prev, { from: "You", text: displayText }]);
 
-    setFormData((prev) => ({
-      ...prev,
+    const updatedFormData = {
+      ...formData,
       [currentStep.id]: input.trim(),
-    }));
+    };
+
+    setFormData(updatedFormData);
 
     setInput("");
-    setStepIndex((prev) => prev + 1);
+    const nextIndex = stepIndex + 1;
+    setStepIndex(nextIndex);
+
+    if (nextIndex === steps.length) {
+      void handleFinalSubmit(updatedFormData);
+    }
   };
 
-  const handleFinalSubmit = async () => {
+  const handleFinalSubmit = async (data: AuthFormData = formData) => {
     try {
       let resUserId = "";
       let tokens: {
@@ -104,7 +111,7 @@ export const useChatAuth = ({
         refreshToken?: string;
       } = {};
 
-      const response = await axios.post(`${BASE_URL}${apiEndpoint}`, formData);
+      const response = await axios.post(`${BASE_URL}${apiEndpoint}`, data);
       if (apiEndpoint === "/users/login") {
         const result = response.data.AuthenticationResult;
 
@@ -140,6 +147,7 @@ export const useChatAuth = ({
 
       setChat((prev) => [...prev, { from: "Moo", text: successMessage }]);
       setFinalSubmissionComplete(true);
+      setTimeout(handleRouteToHome, 1000);
     } catch (error: any) {
       const message = error.response?.data || "";
       const exceptionMatch = message.match(/(\w+Exception)/);

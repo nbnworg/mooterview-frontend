@@ -1,0 +1,17 @@
+.not-found-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 80vh;
+  text-align: center;
+}
+
+.not-found-container h1 {
+  margin-bottom: 1rem;
+}
+
+.not-found-container a {
+  color: var(--primary);
+  text-decoration: underline;
+}
