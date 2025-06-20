@@ -105,17 +105,44 @@ export const useChatAuth = ({
   const handleFinalSubmit = async (data: AuthFormData = formData) => {
     try {
       let resUserId = "";
+      let tokens: {
+        accessToken?: string;
+        idToken?: string;
+        refreshToken?: string;
+      } = {};
 
       const response = await axios.post(`${BASE_URL}${apiEndpoint}`, data);
       if (apiEndpoint === "/users/login") {
-        const idToken = response.data.AuthenticationResult.IdToken;
-        const decodedToken = jwtDecode<{ sub: string }>(idToken);
+        const result = response.data.AuthenticationResult;
+
+        tokens = {
+          accessToken: result.AccessToken,
+          idToken: result.IdToken,
+          refreshToken: result.RefreshToken,
+        };
+
+        const decodedToken = jwtDecode<{ sub: string }>(result.IdToken);
         resUserId = decodedToken.sub;
       } else {
         resUserId = response.data.userId;
+        tokens = {
+          accessToken:
+            response.data.loginResponse.AuthenticationResult.accessToken,
+          idToken: response.data.loginResponse.AuthenticationResult.idToken,
+          refreshToken:
+            response.data.loginResponse.AuthenticationResult.refreshToken,
+        };
       }
 
-      localStorage.setItem("userData", JSON.stringify({ id: resUserId }));
+      localStorage.setItem(
+        "userData",
+        JSON.stringify({
+          id: resUserId,
+          accessToken: tokens.accessToken,
+          idToken: tokens.idToken,
+          refreshToken: tokens.refreshToken,
+        })
+      );
       login();
 
       setChat((prev) => [...prev, { from: "Moo", text: successMessage }]);

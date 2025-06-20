@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect, useRef } from "react";
 
@@ -6,22 +5,26 @@ import "./Chatbox.css";
 import { getPromptResponse } from "../../utils/handlers/getPromptResponse";
 import { updateSessionById } from "../../utils/handlers/updateSessionById";
 import { Actor, type Problem } from "mooterview-client";
-import { useNavigate } from "react-router-dom";
 
 interface ChatBoxProps {
   problem: Problem;
   code: string;
   elapsedTime: number;
+  endSession: () => void;
 }
 
-const ChatBox: React.FC<ChatBoxProps> = ({ problem, code, elapsedTime }) => {
+const ChatBox: React.FC<ChatBoxProps> = ({
+  problem,
+  code,
+  elapsedTime,
+  endSession,
+}) => {
   const [messages, setMessages] = useState<any[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const lastAutoTimeRef = useRef(0);
   const elapsedTimeRef = useRef(elapsedTime);
   const codeRef = useRef(code);
-  const navigate = useNavigate();
   const messagesRef = useRef<HTMLDivElement | null>(null);
 
   const sessionId = localStorage.getItem("mtv-sessionId");
@@ -57,28 +60,19 @@ const ChatBox: React.FC<ChatBoxProps> = ({ problem, code, elapsedTime }) => {
     }
   };
 
-  const endSession = async () => {
-    if (!sessionId) return;
-    const confirmEnd = window.confirm("Are you sure you want to end the session?");
-    if (!confirmEnd) return;
-
-    try {
-      await updateSessionById({
-        sessionId,
-        chatsQueue: messages,
-        endTime: new Date().toISOString(),
-      });
-      navigate(`/session/${sessionId}`, {
-        state: {
-          finalCode: codeRef.current,
-          chats: messages,
-          duration: elapsedTimeRef.current,
-        },
-      });
-    } catch (err) {
-      console.error("Failed to end session", err);
-    }
-  };
+  // const endSession = async () => {
+  //   if (!sessionId) return;
+  //   try {
+  //     await updateSessionById({
+  //       sessionId,
+  //       endTime: new Date().toISOString(),
+  //     });
+  //     alert("Session ended successfully.");
+  //     navigate("/home");
+  //   } catch (err) {
+  //     console.error("Failed to end session", err);
+  //   }
+  // };
 
   // ✅ Initial problem explanation
   useEffect(() => {
@@ -87,23 +81,23 @@ const ChatBox: React.FC<ChatBoxProps> = ({ problem, code, elapsedTime }) => {
         actor: Actor.INTERVIEWER,
         context: `The candidate has just started working on the following coding problem:\n\n${problem.problemDescription}`,
         prompt: `
-You're a calm, confident human interviewer. The candidate has just received this problem:
+        You're a calm, confident human interviewer. The candidate has just received this problem:
 
-"${problem.problemDescription}"
+        "${problem.problemDescription}"
 
-Introduce the problem in a direct and natural way, as if you're speaking to the candidate live. Don’t over-explain — your goal is to clearly present the core task.
+        Introduce the problem in a direct and natural way, as if you're speaking to the candidate live. Don’t over-explain — your goal is to clearly present the core task.
 
-Examples of tone:
-- "Here’s the problem for today..."
-- "You’re given X and Y — figure out how to Z."
+        Examples of tone:
+        - "Here’s the problem for today..."
+        - "You’re given X and Y — figure out how to Z."
 
-Strict guidelines:
-- DO NOT greet or say things like “Hi” or “Welcome.”
-- DO NOT say “I’m your interviewer” or “I’m here to help.”
-- Just state the problem in a straightforward, conversational way — as if the candidate asked “What’s the task?”
+        Strict guidelines:
+        - DO NOT greet or say things like “Hi” or “Welcome.”
+        - DO NOT say “I’m your interviewer” or “I’m here to help.”
+        - Just state the problem in a straightforward, conversational way — as if the candidate asked “What’s the task?”
 
-Now speak directly to the candidate:
-`,
+        Now speak directly to the candidate:
+        `,
       });
       await addBotMessage(response);
     };
@@ -121,33 +115,33 @@ Now speak directly to the candidate:
 
         const codeSnapshot = codeRef.current?.trim() || "";
         const autoPrompt = `
-You are acting as a human coding interviewer.
+          You are acting as a human coding interviewer.
 
-It’s been ${Math.floor(
-          elapsed / 60
-        )} minutes since the interview started. The candidate is working on the following problem:
+          It’s been ${Math.floor(
+                    elapsed / 60
+                  )} minutes since the interview started. The candidate is working on the following problem:
 
-"${problem.title}"
+          "${problem.title}"
 
-Their current code is:
-${codeSnapshot || "[No code written yet]"}
+          Their current code is:
+          ${codeSnapshot || "[No code written yet]"}
 
-Give ONE clear next step — in a natural, human tone — like you're observing them live and want to guide without giving away the full solution.
+          Give ONE clear next step — in a natural, human tone — like you're observing them live and want to guide without giving away the full solution.
 
-Examples:
-- “Try starting with the base case first.”
-- “It looks like your loop isn’t handling duplicates correctly.”
-- “Have you thought about using a set instead of a map?, Have you tried covering this testcase? Can you dry run this to me?”
+          Examples:
+          - “Try starting with the base case first.”
+          - “It looks like your loop isn’t handling duplicates correctly.”
+          - “Have you thought about using a set instead of a map?, Have you tried covering this testcase? Can you dry run this to me?”
 
-Rules:
-- If code is missing or boilerplate, give a gentle but specific nudge to start.
-- Don’t be vague or overly polite.
-- Don’t say you’re an AI or assistant.
-- Never say “Let’s focus on the problem.” Be practical and helpful.
-- anything technical related to the problem and the code, you will answer it.
+          Rules:
+          - If code is missing or boilerplate, give a gentle but specific nudge to start.
+          - Don’t be vague or overly polite.
+          - Don’t say you’re an AI or assistant.
+          - Never say “Let’s focus on the problem.” Be practical and helpful.
+          - anything technical related to the problem and the code, you will answer it.
 
-Now give a natural next-step prompt to the candidate:
-`;
+          Now give a natural next-step prompt to the candidate:
+          `;
 
         getPromptResponse({
           actor: Actor.INTERVIEWER,
@@ -180,31 +174,31 @@ Now give a natural next-step prompt to the candidate:
         actor: Actor.USER,
         context: `Problem: ${problem.title}\n\n${problem.problemDescription}\n\nCurrent code:\n${codeRef.current}`,
         prompt: `
-You're acting as a calm, professional human interviewer in a live coding interview.
+        You're acting as a calm, professional human interviewer in a live coding interview.
 
-Your job is to evaluate and guide the candidate. Respond in a natural, human tone based on the candidate’s message.
+        Your job is to evaluate and guide the candidate. Respond in a natural, human tone based on the candidate’s message.
 
-1. If the candidate is asking a technical question, answer clearly and briefly — like an experienced peer helping out.
+        1. If the candidate is asking a technical question, answer clearly and briefly — like an experienced peer helping out.
 
-2. If the candidate wants to stop or tends to stop or says things like "I can't think of anything" or "I'll stop here":
-   - **Acknowledge it** calmly.
-   - **Ask once** if they’d like to take a final look or add anything.
-   - If they confirm “no” or say “I’m done”, **end confidently.**
-   - Examples:
-     - "Alright, let’s stop here then. Good effort overall — hope this gave you some useful practice."
-     - "Sounds good. Take care and keep practicing — you’re getting there."
+        2. If the candidate wants to stop or tends to stop or says things like "I can't think of anything" or "I'll stop here":
+          - **Acknowledge it** calmly.
+          - **Ask once** if they’d like to take a final look or add anything.
+          - If they confirm “no” or say “I’m done”, **end confidently.**
+          - Examples:
+            - "Alright, let’s stop here then. Good effort overall — hope this gave you some useful practice."
+            - "Sounds good. Take care and keep practicing — you’re getting there."
 
-3. If they ask what to do next, suggest practice tips or tell them to wrap up the code cleanly.
+        3. If they ask what to do next, suggest practice tips or tell them to wrap up the code cleanly.
 
-4. Never say you're an AI or assistant. Don't be overly polite or robotic. No greetings or closings like "Feel free to ask" or "Happy to help."
+        4. Never say you're an AI or assistant. Don't be overly polite or robotic. No greetings or closings like "Feel free to ask" or "Happy to help."
 
-5. Keep your response short — ideally 1-2 sentences max.
+        5. Keep your response short — ideally 1-2 sentences max.
 
-Candidate's message:
-"${input}"
+        Candidate's message:
+        "${input}"
 
-Now write your reply as a human interviewer:
-`,
+        Now write your reply as a human interviewer:
+        `,
       });
 
       const botMsg = { actor: Actor.INTERVIEWER, message: aiResponse };

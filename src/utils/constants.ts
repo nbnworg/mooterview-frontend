@@ -1,6 +1,16 @@
 export const BASE_URL =
-  // "https://w7eo1zzql3.execute-api.us-east-1.amazonaws.com/sandbox"; // sandbox
-  "https://4yf5536i0g.execute-api.us-east-1.amazonaws.com/production"; // production
+  "https://w7eo1zzql3.execute-api.us-east-1.amazonaws.com/sandbox"; // sandbox
+// "https://4yf5536i0g.execute-api.us-east-1.amazonaws.com/production"; // production
+
+export const getTokenData = () => {
+  const raw = localStorage.getItem("userData");
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+};
 
 export const levelColor = {
   Easy: "#10b981",

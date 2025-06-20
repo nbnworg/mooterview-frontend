@@ -6,12 +6,12 @@ import CodeEditor from "../../components/codeEditor/CodeEditor";
 import { useEffect, useState } from "react";
 import { getProblemById } from "../../utils/handlers/getProblemById";
 import type { Problem } from "mooterview-client";
-import { ProblemStatus } from "mooterview-client";
 import { updateSessionById } from "../../utils/handlers/updateSessionById";
 import ChatBox from "../../components/chatbox/ChatBox";
 import { initialCode } from "../../utils/constants";
+import Modal from "../../components/modal/Modal";
 
-const Problempage = () => {
+const ProblemPage = () => {
   const location = useLocation();
   const problemId = location.state?.problemId;
 
@@ -20,6 +20,9 @@ const Problempage = () => {
   const [code, setCode] = useState<{ [lang: string]: string }>(initialCode);
   const [language, setLanguage] = useState("python");
   const [timeLeft, setTimeLeft] = useState(15 * 60);
+  const [timeUpModalOpen, setTimeUpModalOpen] = useState(false);
+  const [refreshModalOpen, setRefreshModalOpen] = useState(false);
+
   const [timeUp, setTimeUp] = useState(false);
   const navigate = useNavigate();
 
@@ -41,35 +44,51 @@ const Problempage = () => {
   }, [problemId]);
 
   useEffect(() => {
-    if (timeLeft > 0 || timeUp) return;
-
-    const sessionId = localStorage.getItem("mtv-sessionId");
-    const endInterview = async () => {
-      if (sessionId) {
-        try {
-          await updateSessionById({
-            sessionId,
-            endTime: new Date().toISOString(),
-            problemStatus: ProblemStatus.COMPLETED,
-          });
-        } catch (err) {
-          console.error("Failed to update session", err);
-        }
-      }
-
+    if (timeLeft <= 0) {
+      setTimeUpModalOpen(true);
       setTimeUp(true);
+      return;
+    }
 
-      setTimeout(() => {
-        if (sessionId) {
-          navigate(`/session/${sessionId}`);
-        } else {
-          navigate("/home");
-        }
-      }, 2000);
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => prev - 1);
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [timeLeft]);
+
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (timeLeft > 0) {
+        e.preventDefault();
+
+        setRefreshModalOpen(true);
+        return "";
+      }
     };
 
-    endInterview();
-  }, [timeLeft, timeUp, navigate]);
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [timeLeft]);
+
+  const endSession = async () => {
+    const sessionId = localStorage.getItem("mtv-sessionId");
+    if (!sessionId) return;
+
+    try {
+      await updateSessionById({
+        sessionId,
+        endTime: new Date().toISOString(),
+      });
+      alert("Session ended successfully.");
+    } catch (err) {
+      console.error("Failed to end session", err);
+    } finally {
+      navigate("/home");
+    }
+  };
 
   if (!problemId) {
     return <Navigate to="/home" replace />;
@@ -101,7 +120,8 @@ const Problempage = () => {
           <ChatBox
             problem={problem}
             code={code[language]}
-            elapsedTime={((problem.averageSolveTime ?? 15) * 60) - timeLeft}
+            elapsedTime={(problem.averageSolveTime ?? 15) * 60 - timeLeft}
+            endSession={endSession}
           />
         </div>
         <div className="verticalLine"></div>
@@ -115,8 +135,31 @@ const Problempage = () => {
           setTimeLeft={setTimeLeft}
         />
       </section>
+
+      {/* Modal for time up */}
+      {timeUpModalOpen && (
+        <Modal
+          title="Interview Time Over"
+          description="Your interview session has ended."
+          confirmText="Proceed"
+          onConfirm={endSession}
+          onClose={() => {}}
+        />
+      )}
+
+      {/* Modal for refresh attempt */}
+      {refreshModalOpen && (
+        <Modal
+          title="Session Warning"
+          description="You are trying to refresh. This will end your interview session. Are you sure?"
+          confirmText="Proceed"
+          cancelText="Cancel"
+          onConfirm={endSession}
+          onClose={() => setRefreshModalOpen(false)}
+        />
+      )}
     </>
   );
 };
 
-export default Problempage;
+export default ProblemPage;
