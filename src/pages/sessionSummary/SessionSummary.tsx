@@ -36,7 +36,10 @@ const SessionSummary = () => {
           try {
             const prob = await getProblemById(data.problemId);
             setProblem(prob);
-            const sols = await getSampleSolutions(prob.problemDescription || "");
+            const sols = await getSampleSolutions(
+              prob.problemDescription || "",
+              data.problemId
+            );
             setSolutions(sols);
           } catch (err) {
             console.error('Failed to fetch problem details', err);
@@ -98,16 +101,20 @@ const SessionSummary = () => {
             </p>
           ))}
         </div>
-        {solutions.length > 0 && (
-          <div>
-            <h2>Example Solutions</h2>
-            {solutions.map((sol, idx) => (
-              <div key={idx} className="solutionSnippet">
-                <h3>{sol.language}</h3>
-                <pre>{sol.code}</pre>
-              </div>
-            ))}
-          </div>
+        {problem && (
+          solutions.length > 0 ? (
+            <div>
+              <h2>Example Solutions</h2>
+              {solutions.map((sol, idx) => (
+                <div key={idx} className="solutionSnippet">
+                  <h3>{sol.language}</h3>
+                  <pre>{sol.code}</pre>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p>No example solutions available.</p>
+          )
         )}
       </section>
     </>
