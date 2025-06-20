@@ -130,7 +130,6 @@ const Homepage = () => {
                         problemId: problem.problemId || "",
                       });
 
-                      // Store sessionId in localStorage (or context if preferred)
                       localStorage.setItem("mtv-sessionId", sessionId);
 
                       navigate(

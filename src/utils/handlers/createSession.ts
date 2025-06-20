@@ -35,12 +35,10 @@ export const createSession = async ({
 
     return res.data.sessionId;
   } catch (error: any) {
-    // If token expired, attempt to refresh
     if (error?.response?.data?.error === "Invalid or expired token") {
       try {
         const newAccessToken = await refreshAccessToken();
 
-        // Retry the request with new token
         const res = await axios.post(`${BASE_URL}/sessions/`, payload, {
           headers: {
             Authorization: `Bearer ${newAccessToken}`,

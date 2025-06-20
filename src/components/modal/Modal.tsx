@@ -1,5 +1,5 @@
 import React from "react";
-import "./modal.css"; // style it with your CSS or use Tailwind
+import "./modal.css";
 
 interface ModalProps {
   title: string;

@@ -17,7 +17,6 @@ export const getProblemById = async (problemId: string): Promise<Problem> => {
 
     return response.data;
   } catch (error: any) {
-    // Handle expired token and retry
     if (error?.response?.data?.error === "Invalid or expired token") {
       try {
         const newAccessToken = await refreshAccessToken();

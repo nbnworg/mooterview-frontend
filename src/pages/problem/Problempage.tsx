@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import Navbar from "../../components/navbar/Navbar";
@@ -44,10 +43,10 @@ const ProblemPage = () => {
     fetchProblem();
   }, [problemId]);
 
-  // Timer logic to show modal when time is up
   useEffect(() => {
     if (timeLeft <= 0) {
       setTimeUpModalOpen(true);
+      setTimeUp(true);
       return;
     }
 
@@ -58,7 +57,6 @@ const ProblemPage = () => {
     return () => clearInterval(timer);
   }, [timeLeft]);
 
-  // Refresh warning logic
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (timeLeft > 0) {
