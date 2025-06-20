@@ -20,6 +20,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({ problem, code, elapsedTime }) => {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const lastAutoTimeRef = useRef(0);
+  const has15SecTriggered = useRef(false);
   const elapsedTimeRef = useRef(elapsedTime);
   const codeRef = useRef(code);
   const navigate = useNavigate();
@@ -103,7 +104,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({ problem, code, elapsedTime }) => {
     if (sessionId) fetchInitialChats();
   }, [sessionId]);
 
-  // ✅ Auto-tip every 5 mins (checks every 10s)
   useEffect(() => {
     const interval = setInterval(() => {
       const elapsed = elapsedTimeRef.current;
@@ -150,54 +150,146 @@ Now respond:
     return () => clearInterval(interval);
   }, [problem]);
 
-  // ✅ User sends manual message
+  const [waitingForHintResponse, setWaitingForHintResponse] = useState(false);
+
+  useEffect(() => {
+  const interval = setInterval(() => {
+    const elapsed = elapsedTimeRef.current;
+    console.log('elapsed', elapsed)
+    
+    if (Math.floor(elapsed) >= 900 && !has15SecTriggered.current) {
+      has15SecTriggered.current = true;
+      
+      const codeSnapshot = codeRef.current?.trim() || "";
+      const autoPrompt = `
+        You're acting as a human interviewer in a live coding interview.
+
+        Here is the current problem:
+        ${problem.problemDescription}
+
+        The candidate has been working on this problem for about 15 minutes.
+        Here is their current code:
+
+        ${codeSnapshot || "[No code written yet]"}
+
+        Now, based on the candidate's code, respond with ONE of the following:
+
+        ---
+
+        **IF THE CODE IS CORRECT:**
+        - Congratulate them very briefly.
+        - Ask them to explain their thought process.
+        Example: "Nice work! That looks like a correct solution. Can you walk me through your approach?"
+
+        **IF THE CODE IS INCOMPLETE OR INCORRECT (including no code):**
+        - DO NOT give any hint yet.
+        - You must ONLY ask the candidate if they would like a hint — without giving any suggestion, advice, or solution.
+        - Example: "We're about 15 minutes in. Would you like a hint to help you move forward?"
+
+        IMPORTANT:
+        - Do NOT include any hints, advice, or nudges.
+        - Do NOT say things like “Consider doing X” or “You might want to try…”.
+        - Your job right now is ONLY to ask if they want a hint. Wait for their response before saying anything else.
+
+        Never say you're an AI or assistant. Speak naturally, like a human interviewer.
+
+        Now respond:
+        `;
+
+      getPromptResponse({
+        actor: Actor.INTERVIEWER,
+        context: `Problem: ${problem.title}\n\n${problem.problemDescription}`,
+        prompt: autoPrompt,
+      }).then(async (response) => {
+        await addBotMessage(response);
+        setWaitingForHintResponse(true);
+      });
+      console.log("functioncclled");
+      
+    }
+  }, 1000);
+
+  return () => clearInterval(interval);
+}, []);
+
+
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim()) return;
+  e.preventDefault();
+  if (!input.trim()) return;
 
-    const userMsg = { actor: Actor.USER, message: input };
-    const updatedUserMessages = [...messages, userMsg];
-    setMessages(updatedUserMessages);
-    setInput("");
-    setLoading(true);
+  const userMsg = { actor: Actor.USER, message: input };
+  const updatedUserMessages = [...messages, userMsg];
+  setMessages(updatedUserMessages);
+  setInput("");
+  setLoading(true);
 
-    await updateChatsInSession(updatedUserMessages);
+  await updateChatsInSession(updatedUserMessages);
 
-    try {
-      const aiResponse = await getPromptResponse({
+  try {
+    let aiResponse;
+    
+    if (waitingForHintResponse) {
+      const wantsHint = /yes|yeah|sure|okay|ok|hint|help|please/i.test(input);
+      
+      if (wantsHint) {
+        aiResponse = await getPromptResponse({
+          actor: Actor.USER,
+          context: `Problem: ${problem.title}\n\n${problem.problemDescription}\n\nCurrent code:\n${codeRef.current}`,
+          prompt: `
+            The candidate just asked for a hint about this coding problem.
+
+            **Give them ONE clear, actionable hint that:**
+            - Helps them move forward without solving the entire problem
+            - Is specific to their current code state
+            - Guides them toward the right approach
+
+            Current code state:
+            ${codeRef.current?.trim() || "[No code written yet]"}
+
+            Respond like a human interviewer giving a helpful hint.
+            `,
+        });
+      } else {
+        aiResponse = "No problem! Feel free to ask if you need help later.";
+      }
+      
+      setWaitingForHintResponse(false);
+    } else {
+      aiResponse = await getPromptResponse({
         actor: Actor.USER,
         context: `Problem: ${problem.title}\n\n${problem.problemDescription}\n\nCurrent code:\n${codeRef.current}`,
         prompt: `
-You're acting as a human interviewer in a live coding interview.
+          You're acting as a human interviewer in a live coding interview.
 
-Strict instructions:
-- If the candidate asks anything unrelated to the problem (e.g. "How’s the weather?", "What’s your name?", "Can I go to the washroom?"), reply very briefly with something like:
-  "Let's focus on the problem for now."
-- If they ask anything directly or indirectly related to the current coding problem, give a clear, direct, human-like explanation or hint — like you would in a real tech interview.
+         Strict instructions:
+           - If the candidate asks anything unrelated to the problem (e.g. "How’s the weather?", "What’s your name?", "Can I go to the washroom?"), reply very briefly with something like:
+             "Let's focus on the problem for now."
+           - If they ask anything directly or indirectly related to the current coding problem, give a clear, direct, human-like explanation or hint — like you would in a real tech interview.
 
-Be professional at all times. Don't use any phrases like "As an AI" or "I'm just an assistant". Speak naturally like a human interviewer.
+           Be professional at all times. Don't use any phrases like "As an AI" or "I'm just an assistant". Speak naturally like a human interviewer.
 
-Now respond to the candidate's message:
-"${input}"
-`,
+          Now respond to the candidate's message:
+          "${input}"
+          `,
       });
-
-      const botMsg = { actor: Actor.INTERVIEWER, message: aiResponse };
-      const updatedFinalMessages = [...updatedUserMessages, botMsg];
-      setMessages(updatedFinalMessages);
-      await updateChatsInSession(updatedFinalMessages);
-    } catch {
-      const errorMsg = {
-        actor: Actor.AI,
-        message: "Sorry, I couldn't process that.",
-      };
-      const fallbackMessages = [...updatedUserMessages, errorMsg];
-      setMessages(fallbackMessages);
-      await updateChatsInSession(fallbackMessages);
     }
 
-    setLoading(false);
-  };
+    const botMsg = { actor: Actor.INTERVIEWER, message: aiResponse };
+    const updatedFinalMessages = [...updatedUserMessages, botMsg];
+    setMessages(updatedFinalMessages);
+    await updateChatsInSession(updatedFinalMessages);
+  } catch {
+    const errorMsg = {
+      actor: Actor.AI,
+      message: "Sorry, I couldn't process that.",
+    };
+    const fallbackMessages = [...updatedUserMessages, errorMsg];
+    setMessages(fallbackMessages);
+    await updateChatsInSession(fallbackMessages);
+  }
+
+  setLoading(false);
+};
 
   return (
     <div className="chatbox">
