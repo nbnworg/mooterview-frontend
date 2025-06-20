@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import "./createProblem.css";
 import axios from "axios";
-import { BASE_URL } from "../../utils/constants";
+import { BASE_URL, getTokenData } from "../../utils/constants";
 import { IoIosCloseCircleOutline } from "react-icons/io";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../../components/navbar/Navbar";
@@ -35,9 +35,17 @@ const CreateProblem = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    console.log("Form Data:", formData);
+    const endpoint = `${BASE_URL}/problems`;
     try {
-      await axios.post(`${BASE_URL}/problems`, formData);
+      const tokenData = getTokenData();
+      if (!tokenData) throw new Error("No token found");
+
+      await axios.post(endpoint, formData, {
+        headers: {
+          Authorization: `Bearer ${tokenData.accessToken}`,
+        },
+      });
+
       setSuccess("Problem created successfully!");
       setFormData({
         title: "",
