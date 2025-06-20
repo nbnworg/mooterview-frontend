@@ -1,4 +1,7 @@
-import type { SolutionSnippet } from "./sampleSolutions";
+export interface SolutionSnippet {
+  language: string;
+  code: string;
+}
 
 export const offlineSampleSolutions: Record<string, SolutionSnippet[]> = {
   "two-sum": [

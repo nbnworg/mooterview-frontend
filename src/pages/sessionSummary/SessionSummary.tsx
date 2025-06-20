@@ -5,7 +5,7 @@ import Navbar from "../../components/navbar/Navbar";
 import { getSessionById } from "../../utils/handlers/getSessionById";
 import { getProblemById } from "../../utils/handlers/getProblemById";
 import type { Session, Problem } from "mooterview-client";
-import { getSampleSolutions, type SolutionSnippet } from "../../data/sampleSolutions";
+import { getSampleSolutions } from "../../data/sampleSolutions";
 import "./sessionSummary.css";
 
 const formatDuration = (seconds: number) => {
@@ -23,7 +23,7 @@ const SessionSummary = () => {
   const [session, setSession] = useState<Session | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [problem, setProblem] = useState<Problem | null>(null);
-  const [solutions, setSolutions] = useState<SolutionSnippet[]>([]);
+  const [solutions, setSolutions] = useState<string>("");
 
   useEffect(() => {
     if (!id) return;
@@ -102,15 +102,10 @@ const SessionSummary = () => {
           ))}
         </div>
         {problem && (
-          solutions.length > 0 ? (
-            <div>
+          solutions ? (
+            <div className="solutionSnippet">
               <h2>Example Solutions</h2>
-              {solutions.map((sol, idx) => (
-                <div key={idx} className="solutionSnippet">
-                  <h3>{sol.language}</h3>
-                  <pre>{sol.code}</pre>
-                </div>
-              ))}
+              <pre>{solutions}</pre>
             </div>
           ) : (
             <p>No example solutions available.</p>

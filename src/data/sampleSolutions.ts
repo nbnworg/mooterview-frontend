@@ -10,29 +10,37 @@ export interface SolutionSnippet {
 /**
  * Request example solutions from the backend using the same prompt service
  * that powers the chat interface.
+ *
+ * The API often responds with a plain text block rather than structured JSON,
+ * so we return the raw string and only fall back to the offline dataset when
+ * necessary.
  */
 export const getSampleSolutions = async (
   problemDescription: string,
   problemId?: string
-): Promise<SolutionSnippet[]> => {
+): Promise<string> => {
   try {
     const responseText = await getPromptResponse({
       actor: Actor.SYSTEM,
-      context: "", // no additional context needed
-      prompt: `Give two short optimal solution snippets in Python and JavaScript for the following coding problem. Respond as a JSON array of objects with "language" and "code" keys.\n\n${problemDescription}`,
+      context: "",
+      prompt:
+        "Give two short optimal solution snippets in Python and JavaScript for the following coding problem:" +
+        "\n\n" +
+        problemDescription,
     });
 
-    const parsed = JSON.parse(responseText) as SolutionSnippet[];
-    if (Array.isArray(parsed) && parsed.length > 0) {
-      return parsed;
+    if (responseText.trim()) {
+      return responseText.trim();
     }
   } catch (err) {
     console.error("Failed to generate sample solutions", err);
   }
 
   if (problemId && offlineSampleSolutions[problemId]) {
-    return offlineSampleSolutions[problemId];
+    return offlineSampleSolutions[problemId]
+      .map((s) => `${s.language}:\n${s.code}`)
+      .join("\n\n");
   }
 
-  return [];
+  return "";
 };
