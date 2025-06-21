@@ -9,7 +9,6 @@ import type { Problem } from "mooterview-client";
 import { updateSessionById } from "../../utils/handlers/updateSessionById";
 import ChatBox from "../../components/chatbox/ChatBox";
 import { initialCode } from "../../utils/constants";
-import Modal from "../../components/modal/Modal";
 
 const ProblemPage = () => {
   const location = useLocation();
@@ -20,12 +19,9 @@ const ProblemPage = () => {
   const [code, setCode] = useState<{ [lang: string]: string }>(initialCode);
   const [language, setLanguage] = useState("python");
   const [timeLeft, setTimeLeft] = useState(15 * 60);
-  const [timeUpModalOpen, setTimeUpModalOpen] = useState(false);
-  const [refreshModalOpen, setRefreshModalOpen] = useState(false);
 
   const verifySolutionRef = useRef<() => void | null>(null);
 
-  const [timeUp, setTimeUp] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -44,38 +40,6 @@ const ProblemPage = () => {
 
     fetchProblem();
   }, [problemId]);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          setTimeUpModalOpen(true);
-          setTimeUp(true);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, []);
-
-  useEffect(() => {
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (timeLeft > 0) {
-        e.preventDefault();
-
-        setRefreshModalOpen(true);
-        return "";
-      }
-    };
-
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => {
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-    };
-  }, [timeLeft]);
 
   const endSession = async () => {
     const sessionId = localStorage.getItem("mtv-sessionId");
@@ -116,7 +80,7 @@ const ProblemPage = () => {
   return (
     <>
       <Navbar />
-      {timeUp && <div className="timeUpMessage">Time is up!</div>}
+      {/* {timeUp && <div className="timeUpMessage">Time is up!</div>} */}
       <section className="problemSection" id="problemSection">
         <div className="problemDetailAndChatContainer">
           <h1>{problem.title}</h1>
@@ -148,29 +112,6 @@ const ProblemPage = () => {
           </button>
         </div>
       </section>
-
-      {/* Modal for time up */}
-      {timeUpModalOpen && (
-        <Modal
-          title="Interview Time Over"
-          description="Your interview session has ended."
-          confirmText="Proceed"
-          onConfirm={endSession}
-          onClose={() => {}}
-        />
-      )}
-
-      {/* Modal for refresh attempt */}
-      {refreshModalOpen && (
-        <Modal
-          title="Session Warning"
-          description="You are trying to refresh. This will end your interview session. Are you sure?"
-          confirmText="Proceed"
-          cancelText="Cancel"
-          onConfirm={endSession}
-          onClose={() => setRefreshModalOpen(false)}
-        />
-      )}
     </>
   );
 };
