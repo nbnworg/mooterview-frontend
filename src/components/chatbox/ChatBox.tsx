@@ -10,6 +10,7 @@ interface ChatBoxProps {
   code: string;
   elapsedTime: number;
   endSession: () => void;
+  onVerifyRef?: React.MutableRefObject<(() => void) | null>;
 }
 
 const ChatBox: React.FC<ChatBoxProps> = ({
@@ -17,6 +18,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
   code,
   elapsedTime,
   endSession,
+  onVerifyRef,
 }) => {
   const [messages, setMessages] = useState<any[]>([]);
   const [input, setInput] = useState("");
@@ -27,6 +29,10 @@ const ChatBox: React.FC<ChatBoxProps> = ({
   const elapsedTimeRef = useRef(elapsedTime);
   const codeRef = useRef(code);
   const messagesRef = useRef<HTMLDivElement | null>(null);
+  const hasExplainedRef = useRef(false);
+  const [isSolutionVerifiedCorrect, setIsSolutionVerifiedCorrect] =
+    useState(false);
+  const isSolutionVerifiedCorrectRef = useRef(false);
 
   const sessionId = localStorage.getItem("mtv-sessionId");
 
@@ -35,18 +41,25 @@ const ChatBox: React.FC<ChatBoxProps> = ({
   }, [elapsedTime]);
 
   useEffect(() => {
-    messagesRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
-  useEffect(() => {
     codeRef.current = code;
   }, [code]);
 
+  useEffect(() => {
+    isSolutionVerifiedCorrectRef.current = isSolutionVerifiedCorrect;
+  }, [isSolutionVerifiedCorrect]);
+
+  useEffect(() => {
+    messagesRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
   const addBotMessage = async (text: string) => {
     const newMessage = { actor: Actor.INTERVIEWER, message: text };
-    const updatedMessages = [...messages, newMessage];
-    setMessages(updatedMessages);
-    await updateChatsInSession(updatedMessages);
+
+    setMessages((prevMessages) => {
+      const updated = [...prevMessages, newMessage];
+      updateChatsInSession(updated);
+      return updated;
+    });
   };
 
   const updateChatsInSession = async (newChats: any[]) => {
@@ -78,6 +91,10 @@ const ChatBox: React.FC<ChatBoxProps> = ({
   // ✅ Initial problem explanation
   useEffect(() => {
     const explainProblem = async () => {
+      if (hasExplainedRef.current) return;
+      hasExplainedRef.current = true;
+      console.log("called");
+
       const response = await getPromptResponse({
         actor: Actor.INTERVIEWER,
         context: `The candidate has just started working on the following coding problem:\n\n${problem.problemDescription}`,
@@ -111,7 +128,10 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     const interval = setInterval(() => {
       const elapsed = elapsedTimeRef.current;
 
-      if (elapsed - lastAutoTimeRef.current >= 300) {
+      if (
+        !isSolutionVerifiedCorrectRef.current &&
+        elapsed - lastAutoTimeRef.current >= 180
+      ) {
         lastAutoTimeRef.current = elapsed;
 
         const codeSnapshot = codeRef.current?.trim() || "";
@@ -119,8 +139,8 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           You are acting as a human coding interviewer.
 
           It’s been ${Math.floor(
-                    elapsed / 60
-                  )} minutes since the interview started. The candidate is working on the following problem:
+            elapsed / 60
+          )} minutes since the interview started. The candidate is working on the following problem:
 
           "${problem.title}"
 
@@ -311,6 +331,71 @@ const ChatBox: React.FC<ChatBoxProps> = ({
   setLoading(false);
 };
 
+
+  useEffect(() => {
+    if (onVerifyRef) {
+      onVerifyRef.current = handleVerifyCode;
+    }
+  }, [code, problem]);
+
+  const handleVerifyCode = async () => {
+    const currentCode = codeRef.current;
+
+    const prompt = `
+    You are a human coding interviewer evaluating a submitted solution.
+
+    Start your response with exactly one of the following two lines:
+    - "Correct"
+    - "Incorrect"
+
+    Then follow up naturally as you would in a mock interview.
+
+    Problem: ${problem.title}
+    Description: ${problem.problemStatement}
+
+    Candidate's solution code:
+    ${currentCode || "[No code provided]"}
+
+    Your job is to evaluate the code and do **one** of the following:
+
+    1. ❌ If the solution is **incorrect** or **missing**:
+      - Respond naturally as a live interviewer.
+      - Give only **one specific and helpful tip**.
+      - No lists or generic phrases — give one realistic nudge like:
+        - “Looks like you haven't handled the loop correctly — try stepping through an example.”
+
+    2. ✅ If the solution is **correct**:
+      - Begin a realistic **back-and-forth conversation** with the candidate.
+      - Start with a thoughtful follow-up question like:
+        - “Can you walk me through your approach?”
+      - Then imagine the candidate responds briefly.
+      - Then you ask another deeper question.
+      - Repeat for 3 to 4 rounds.
+      - Keep it casual, like a real mock interview.
+
+    Rules:
+    - Speak naturally, like a calm, focused interviewer.
+    - Avoid robotic phrases like “Correct solution.” or “Incorrect solution.”
+    - Don’t say “the candidate” — talk directly.
+    - Don’t give all follow-ups at once. Simulate a natural exchange.
+    - Avoid saying you’re an AI or assistant.
+
+    Now respond as the interviewer.
+    `;
+
+    const response = await getPromptResponse({
+      actor: Actor.INTERVIEWER,
+      context: `Problem: ${problem.title}\n${problem.problemStatement}`,
+      prompt,
+    });
+
+    if (response.trim().startsWith("Correct")) {
+      setIsSolutionVerifiedCorrect(true);
+      isSolutionVerifiedCorrectRef.current = true;
+    }
+
+    await addBotMessage(response);
+  };
 
   return (
     <div className="chatbox">
