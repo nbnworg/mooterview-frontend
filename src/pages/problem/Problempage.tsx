@@ -9,7 +9,6 @@ import type { Problem } from "mooterview-client";
 import { updateSessionById } from "../../utils/handlers/updateSessionById";
 import ChatBox from "../../components/chatbox/ChatBox";
 import { initialCode } from "../../utils/constants";
-// import Modal from "../../components/modal/Modal";
 
 const ProblemPage = () => {
   const location = useLocation();
@@ -23,7 +22,6 @@ const ProblemPage = () => {
 
   const verifySolutionRef = useRef<() => void | null>(null);
 
-  const [timeUp, _setTimeUp] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -42,38 +40,6 @@ const ProblemPage = () => {
 
     fetchProblem();
   }, [problemId]);
-
-  // useEffect(() => {
-  //   const timer = setInterval(() => {
-  //     setTimeLeft((prev) => {
-  //       if (prev <= 1) {
-  //         clearInterval(timer);
-  //         setTimeUpModalOpen(true);
-  //         setTimeUp(true);
-  //         return 0;
-  //       }
-  //       return prev - 1;
-  //     });
-  //   }, 1000);
-
-  //   return () => clearInterval(timer);
-  // }, []);
-
-  // useEffect(() => {
-  //   const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-  //     if (timeLeft > 0) {
-  //       e.preventDefault();
-
-  //       setRefreshModalOpen(true);
-  //       return "";
-  //     }
-  //   };
-
-  //   window.addEventListener("beforeunload", handleBeforeUnload);
-  //   return () => {
-  //     window.removeEventListener("beforeunload", handleBeforeUnload);
-  //   };
-  // }, [timeLeft]);
 
   const endSession = async () => {
     const sessionId = localStorage.getItem("mtv-sessionId");
@@ -114,7 +80,7 @@ const ProblemPage = () => {
   return (
     <>
       <Navbar />
-      {timeUp && <div className="timeUpMessage">Time is up!</div>}
+      {/* {timeUp && <div className="timeUpMessage">Time is up!</div>} */}
       <section className="problemSection" id="problemSection">
         <div className="problemDetailAndChatContainer">
           <h1>{problem.title}</h1>
