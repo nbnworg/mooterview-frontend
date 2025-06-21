@@ -46,18 +46,20 @@ const ProblemPage = () => {
   }, [problemId]);
 
   useEffect(() => {
-    if (timeLeft <= 0) {
-      setTimeUpModalOpen(true);
-      setTimeUp(true);
-      return;
-    }
-
     const timer = setInterval(() => {
-      setTimeLeft((prev) => prev - 1);
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          setTimeUpModalOpen(true);
+          setTimeUp(true);
+          return 0;
+        }
+        return prev - 1;
+      });
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [timeLeft]);
+  }, []);
 
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
