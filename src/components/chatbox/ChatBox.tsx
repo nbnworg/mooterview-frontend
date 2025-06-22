@@ -259,7 +259,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
 
           Now give a natural next-step prompt to the candidate:
           `;
-
                 getPromptResponse({
                     actor: Actor.INTERVIEWER,
                     context: `Problem: ${problem.title}\n\n${problem.problemDescription}`,
@@ -283,6 +282,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
 
                 const codeSnapshot = codeRef.current?.trim() || "";
                 const autoPrompt = `
+
         You're acting as a human interviewer in a live coding interview.
 
         Here is the current problem:
