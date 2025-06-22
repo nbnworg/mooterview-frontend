@@ -10,6 +10,7 @@ import Problempage from "./pages/problem/Problempage";
 import PrivateRoute from "./privateRoute";
 import SessionSummary from "./pages/sessionSummary/SessionSummary";
 import NotFound from "./pages/notFound/NotFound";
+import Solution from "./pages/solution/Solution";
 
 function App() {
   return (
@@ -48,6 +49,14 @@ function App() {
           element={
             <PrivateRoute>
               <SessionSummary />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path={"/solution/:id"}
+          element={
+            <PrivateRoute>
+              <Solution />
             </PrivateRoute>
           }
         />
