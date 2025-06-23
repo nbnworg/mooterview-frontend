@@ -1,12 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Navigate, useLocation, useNavigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import Navbar from "../../components/navbar/Navbar";
 import "./problem.css";
 import CodeEditor from "../../components/codeEditor/CodeEditor";
 import { useEffect, useRef, useState } from "react";
 import { getProblemById } from "../../utils/handlers/getProblemById";
 import type { Problem } from "mooterview-client";
-import { updateSessionById } from "../../utils/handlers/updateSessionById";
 import ChatBox from "../../components/chatbox/ChatBox";
 import { initialCode } from "../../utils/constants";
 
@@ -21,8 +20,6 @@ const ProblemPage = () => {
   const [timeLeft, setTimeLeft] = useState(15 * 60);
 
   const verifySolutionRef = useRef<() => void | null>(null);
-
-  const navigate = useNavigate();
 
   useEffect(() => {
     if (!problemId) return;
@@ -40,23 +37,6 @@ const ProblemPage = () => {
 
     fetchProblem();
   }, [problemId]);
-
-  const endSession = async () => {
-    const sessionId = localStorage.getItem("mtv-sessionId");
-    if (!sessionId) return;
-
-    try {
-      await updateSessionById({
-        sessionId,
-        endTime: new Date().toISOString(),
-      });
-      alert("Session ended successfully.");
-    } catch (err) {
-      console.error("Failed to end session", err);
-    } finally {
-      navigate("/home");
-    }
-  };
 
   if (!problemId) {
     return <Navigate to="/home" replace />;
@@ -80,7 +60,6 @@ const ProblemPage = () => {
   return (
     <>
       <Navbar />
-      {/* {timeUp && <div className="timeUpMessage">Time is up!</div>} */}
       <section className="problemSection" id="problemSection">
         <div className="problemDetailAndChatContainer">
           <h1>{problem.title}</h1>
@@ -89,7 +68,6 @@ const ProblemPage = () => {
             problem={problem}
             code={code[language]}
             elapsedTime={(problem.averageSolveTime ?? 15) * 60 - timeLeft}
-            endSession={endSession}
             onVerifyRef={verifySolutionRef}
           />
         </div>
