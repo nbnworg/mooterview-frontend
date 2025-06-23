@@ -21,8 +21,6 @@ const ProblemPage = () => {
 
   const verifySolutionRef = useRef<() => void | null>(null);
 
-  // const navigate = useNavigate();
-
   useEffect(() => {
     if (!problemId) return;
 
