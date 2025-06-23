@@ -177,17 +177,16 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     return () => clearInterval(interval);
   }, [problem]);
 
-
   useEffect(() => {
-  const interval = setInterval(() => {
-    const elapsed = elapsedTimeRef.current;
-    console.log('elapsed', elapsed)
-    
-    if (Math.floor(elapsed) >= 900 && !has15SecTriggered.current) {
-      has15SecTriggered.current = true;
-      
-      const codeSnapshot = codeRef.current?.trim() || "";
-      const autoPrompt = `
+    const interval = setInterval(() => {
+      const elapsed = elapsedTimeRef.current;
+      console.log("elapsed", elapsed);
+
+      if (Math.floor(elapsed) >= 900 && !has15SecTriggered.current) {
+        has15SecTriggered.current = true;
+
+        const codeSnapshot = codeRef.current?.trim() || "";
+        const autoPrompt = `
         You're acting as a human interviewer in a live coding interview.
 
         Here is the current problem:
@@ -222,22 +221,20 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         Now respond:
         `;
 
-      getPromptResponse({
-        actor: Actor.INTERVIEWER,
-        context: `Problem: ${problem.title}\n\n${problem.problemDescription}`,
-        prompt: autoPrompt,
-      }).then(async (response) => {
-        await addBotMessage(response);
-        setWaitingForHintResponse(true);
-      });
-      console.log("functioncclled");
-      
-    }
-  }, 1000);
+        getPromptResponse({
+          actor: Actor.INTERVIEWER,
+          context: `Problem: ${problem.title}\n\n${problem.problemDescription}`,
+          prompt: autoPrompt,
+        }).then(async (response) => {
+          await addBotMessage(response);
+          setWaitingForHintResponse(true);
+        });
+        console.log("functioncclled");
+      }
+    }, 1000);
 
-  return () => clearInterval(interval);
-}, []);
-
+    return () => clearInterval(interval);
+  }, []);
 
   // User sends manual message
   const handleSubmit = async (e: React.FormEvent) => {
@@ -253,16 +250,16 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     await updateChatsInSession(updatedUserMessages);
 
     try {
-    let aiResponse;
-    
-    if (waitingForHintResponse) {
-      const wantsHint = /yes|yeah|sure|okay|ok|hint|help|please/i.test(input);
-      
-      if (wantsHint) {
-        aiResponse = await getPromptResponse({
-          actor: Actor.USER,
-          context: `Problem: ${problem.title}\n\n${problem.problemDescription}\n\nCurrent code:\n${codeRef.current}`,
-          prompt: `
+      let aiResponse;
+
+      if (waitingForHintResponse) {
+        const wantsHint = /yes|yeah|sure|okay|ok|hint|help|please/i.test(input);
+
+        if (wantsHint) {
+          aiResponse = await getPromptResponse({
+            actor: Actor.USER,
+            context: `Problem: ${problem.title}\n\n${problem.problemDescription}\n\nCurrent code:\n${codeRef.current}`,
+            prompt: `
             The candidate just asked for a hint about this coding problem.
 
             **Give them ONE clear, actionable hint that:**
@@ -275,17 +272,17 @@ const ChatBox: React.FC<ChatBoxProps> = ({
 
             Respond like a human interviewer giving a helpful hint.
             `,
-        });
+          });
+        } else {
+          aiResponse = "No problem! Feel free to ask if you need help later.";
+        }
+
+        setWaitingForHintResponse(false);
       } else {
-        aiResponse = "No problem! Feel free to ask if you need help later.";
-      }
-      
-      setWaitingForHintResponse(false);
-    } else {
-      aiResponse = await getPromptResponse({
-        actor: Actor.USER,
-        context: `Problem: ${problem.title}\n\n${problem.problemDescription}\n\nCurrent code:\n${codeRef.current}`,
-        prompt: `
+        aiResponse = await getPromptResponse({
+          actor: Actor.USER,
+          context: `Problem: ${problem.title}\n\n${problem.problemDescription}\n\nCurrent code:\n${codeRef.current}`,
+          prompt: `
           You're acting as a calm, professional human interviewer in a live coding interview.
 
         Your job is to evaluate and guide the candidate. Respond in a natural, human tone based on the candidate’s message.
@@ -311,26 +308,25 @@ const ChatBox: React.FC<ChatBoxProps> = ({
 
         Now write your reply as a human interviewer:
         `,
-      });
+        });
+      }
+
+      const botMsg = { actor: Actor.INTERVIEWER, message: aiResponse };
+      const updatedFinalMessages = [...updatedUserMessages, botMsg];
+      setMessages(updatedFinalMessages);
+      await updateChatsInSession(updatedFinalMessages);
+    } catch {
+      const errorMsg = {
+        actor: Actor.AI,
+        message: "Sorry, I couldn't process that.",
+      };
+      const fallbackMessages = [...updatedUserMessages, errorMsg];
+      setMessages(fallbackMessages);
+      await updateChatsInSession(fallbackMessages);
     }
 
-    const botMsg = { actor: Actor.INTERVIEWER, message: aiResponse };
-    const updatedFinalMessages = [...updatedUserMessages, botMsg];
-    setMessages(updatedFinalMessages);
-    await updateChatsInSession(updatedFinalMessages);
-  } catch {
-    const errorMsg = {
-      actor: Actor.AI,
-      message: "Sorry, I couldn't process that.",
-    };
-    const fallbackMessages = [...updatedUserMessages, errorMsg];
-    setMessages(fallbackMessages);
-    await updateChatsInSession(fallbackMessages);
-  }
-
-  setLoading(false);
-};
-
+    setLoading(false);
+  };
 
   useEffect(() => {
     if (onVerifyRef) {
@@ -342,46 +338,49 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     const currentCode = codeRef.current;
 
     const prompt = `
-    You are a human coding interviewer evaluating a submitted solution.
+      You are a human coding interviewer evaluating a submitted solution.
 
-    Start your response with exactly one of the following two lines:
-    - "Correct"
-    - "Incorrect"
+      Start your response with exactly one of the following two lines:
+      - "Correct"
+      - "Incorrect"
 
-    Then follow up naturally as you would in a mock interview.
+      Then follow up naturally as you would in a mock interview.
 
-    Problem: ${problem.title}
-    Description: ${problem.problemStatement}
+      Problem: ${problem.title}
+      Description: ${problem.problemStatement}
 
-    Candidate's solution code:
-    ${currentCode || "[No code provided]"}
+      Candidate's solution code:
+      ${currentCode || "[No code provided]"}
 
-    Your job is to evaluate the code and do **one** of the following:
+      Your job is to evaluate the code and do **one** of the following:
 
-    1. ❌ If the solution is **incorrect** or **missing**:
-      - Respond naturally as a live interviewer.
-      - Give only **one specific and helpful tip**.
-      - No lists or generic phrases — give one realistic nudge like:
-        - “Looks like you haven't handled the loop correctly — try stepping through an example.”
+      1. ❌ If the solution is **clearly incorrect** or **missing**:
+        - Respond naturally as a live interviewer.
+        - Give only **one specific and helpful tip**.
+        - No lists or generic phrases — give one realistic nudge like:
+          - “Looks like you haven't handled the loop correctly — try stepping through an example.”
 
-    2. ✅ If the solution is **correct**:
-      - Begin a realistic **back-and-forth conversation** with the candidate.
-      - Start with a thoughtful follow-up question like:
-        - “Can you walk me through your approach?”
-      - Then imagine the candidate responds briefly.
-      - Then you ask another deeper question.
-      - Repeat for 3 to 4 rounds.
-      - Keep it casual, like a real mock interview.
+      2. ✅ If the solution appears **fully correct** and logically sound:
+        - Begin a realistic **back-and-forth conversation** with the candidate.
+        - Start with a thoughtful follow-up question like:
+          - “Can you walk me through your approach?”
+        - Then imagine the candidate responds briefly.
+        - Then you ask another deeper question.
+        - Repeat for 3 to 4 rounds.
+        - Keep it casual, like a real mock interview.
 
-    Rules:
-    - Speak naturally, like a calm, focused interviewer.
-    - Avoid robotic phrases like “Correct solution.” or “Incorrect solution.”
-    - Don’t say “the candidate” — talk directly.
-    - Don’t give all follow-ups at once. Simulate a natural exchange.
-    - Avoid saying you’re an AI or assistant.
+      Guidelines:
+      - ✅ Only say “Incorrect” if you are **confident** the solution is flawed in logic or correctness.
+      - If you're unsure but the code seems mostly valid, lean toward “Correct” and continue with follow-up.
+      - Do **not nitpick** minor syntax, formatting, or naming issues — focus only on the core logic.
+      - Speak naturally, like a calm, focused interviewer.
+      - Avoid robotic phrases like “Correct solution.” or “Incorrect solution.”
+      - Don’t say “the candidate” — talk directly.
+      - Don’t give all follow-ups at once. Simulate a natural exchange.
+      - Avoid saying you’re an AI or assistant.
 
-    Now respond as the interviewer.
-    `;
+      Now respond as the interviewer.
+      `;
 
     const response = await getPromptResponse({
       actor: Actor.INTERVIEWER,
@@ -396,6 +395,8 @@ const ChatBox: React.FC<ChatBoxProps> = ({
 
     await addBotMessage(response);
   };
+
+  console.log(isSolutionVerifiedCorrectRef.current);
 
   return (
     <div className="chatbox">
