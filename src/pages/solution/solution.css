@@ -114,6 +114,7 @@ body {
     background-color: rgb(78, 186, 78);
     color: white;
     cursor: pointer;
+    border-radius: 1vw;
 }
 
 @media (max-width: 40vw) {

@@ -89,53 +89,46 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         console.log("code", codeRef.current);
 
         const prompt = `
-          You're an experienced coding interviewer evaluating a full mock interview.
-
-          Summarize:
-          - How the candidate performed overall
-          - What they asked (or didn’t ask), such as clarification questions
-          - What they tested and missed (e.g., edge cases)
-          - Suggestions for improvement
-
-          Strict guidelines:
-          - If the code contains only comments such as “#Write Python code” or of another langauge DO NOT evaluate it as code, it’s empty code.
-          - DO NOT ENGAFE in pleasentries just provide a straightforward evaluation of the session.
-
-          Evaluate the following coding interview session and respond with a JSON object using this exact structure:
-          {
-            "summary": "One paragraph evaluating the candidate's overall performance (based on the chat and code)",
-            "alternativeSolutions": [
-              "Full code for an optimal or different approach #1",
-              "Full code for an optimal or different approach #2"
-            ]
-          }
-
-          Rules:
-          - The output MUST be **valid JSON**
-          - The "summary" must be based on how the candidate performed: Did they ask clarifying questions? What did they test? Did they cover edge cases? Was the code correct?
-          - The "alternativeSolutions" field must contain **only full code blocks** (NOT explanations)
-          - Each entry inside "alternativeSolutions" should be a full, self-contained code solution (without comments or explanation).
-          - If the user's final code is missing, provide at least 2 optimal implementations from scratch not just code blocks which have different names but with different approach and logic.
-          - If some code is present, still provide **two** better/different approaches.
-
-          Absolutely DO NOT:
-          - Explain the solution in "alternativeSolutions"
-          - Include comments in the code
-          - Use Markdown formatting (no \`\`\`)
-
-          Problem: ${problem.title}
-          Description: ${problem.problemDescription}
-
-          Elapsed time: ${elapsedTimeRef.current / 60} minutes
-
-          Final code:
-          ${codeRef.current?.trim() || ""}
-
-          Chat transcript:
-          ${JSON.stringify(messages, null, 2)}
-
-          Give a human-style evaluation paragraph.
+            You're an experienced, no-nonsense coding interviewer evaluating a full mock interview.
+                
+            Your task is to return a strict evaluation JSON object in this **exact structure**:
+                
+            {
+              "summary": "A detailed, direct paragraph (at least 3 sentences) evaluating the candidate's behavior, thinking, and code quality like “what did the user ask, what did he not ask, what testcases he considered”.",
+              "alternativeSolutions": [
+                "FULL self-contained code for an optimal or DIFFERENT approach #1 (must use a different logic or technique)",
+                "FULL self-contained code for an optimal or DIFFERENT approach #2 (must use a different logic or technique)"
+              ]
+            }
+                
+            **Summary Requirements:**
+            - Speak directly to the candidate using “you” and not “candidate”.
+            - Be specific: Did you ask clarification questions? What did you test or miss? Did you show problem-solving skills or not?
+            - Be blunt. No fluff or politeness.
+            - DO NOT SAY THINGS like “The candidate showed good problem-solving skills by clearly understanding” if the candidate has done no work or provoded nothing in the entire session.
+            - Minimum 3 sentences. Do NOT output fewer.
+                
+            **Alternative Solutions Requirements:**
+            - Do NOT just rename variables; each must follow a different **approach** (e.g. brute-force, hash map, two-pointer with sort, etc.)
+            - Each solution must be fully self-contained code (Python)
+            - NO comments, NO markdown, NO explanations — just code
+            - NEVER output text like "Full code for..." — only the raw code strings.
+                
+            If no code was written, generate both solutions from scratch using two different approaches.
+                
+            Problem: ${problem.title}
+            Description: ${problem.problemDescription}
+                
+            Elapsed time: ${elapsedTimeRef.current / 60} minutes
+                
+            Final code:
+            ${codeRef.current?.trim() || "No code was written."}
+                
+            Chat transcript:
+            ${JSON.stringify(messages, null, 2)}
             `;
+
+
 
         const response = await getPromptResponse({
             actor: Actor.INTERVIEWER,
