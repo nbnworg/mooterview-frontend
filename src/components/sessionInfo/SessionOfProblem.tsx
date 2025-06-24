@@ -1,0 +1,138 @@
+import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
+import { getSessionById } from '../../utils/handlers/getSessionById';
+import type { Session } from "mooterview-client";
+import './sessionOfProblem.css';
+import { useNavigate } from 'react-router-dom';
+
+
+const SessionOfProblem = () => {
+  const navigate = useNavigate();
+
+  const location = useLocation();
+  const sessionId = location.state?.sessionId as string | undefined;
+
+  const [currentSession, setCurrentSession] = useState<Partial<Session> | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchSessionById = async () => {
+      try {
+        if (!sessionId) {
+          setError("Missing sessionId");
+          return;
+        }
+
+        const result = await getSessionById(sessionId);
+        setCurrentSession(result);
+      } catch (err) {
+        setError("Failed to fetch session");
+      }
+    };
+
+    fetchSessionById();
+  }, [sessionId]);
+
+
+
+
+
+  const formatDate = (dateString: string | undefined) => {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleString();
+  };
+
+  const calculateDuration = () => {
+    if (!currentSession?.startTime) return 'N/A';
+
+    const start = new Date(currentSession.startTime);
+    const end = currentSession.endTime ? new Date(currentSession.endTime) : new Date();
+    const diffMs = end.getTime() - start.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMins / 60);
+    const remainingMins = diffMins % 60;
+
+    if (diffHours > 0) {
+      return `${diffHours}h ${remainingMins}m`;
+    }
+    return `${diffMins}m`;
+  };
+
+  return (
+    <div className="session-container">
+      <div className="session-header">
+        <h2 className="session-title">Problem Session Details</h2>
+      </div>
+
+      <button className="back-button" onClick={() => navigate('/dashboard')}>
+        Back 
+      </button>
+
+
+      {error && <div className="session-error">{error}</div>}
+
+      {currentSession ? (
+        <>
+          <div className="session-info">
+            <div className="info-item">
+              <span className="info-label">Problem ID:</span>
+              <span className="info-value">{currentSession.problemId}</span>
+            </div>
+            <div className="info-item">
+              <span className="info-label">Status:</span>
+              <span className={`status-badge ${currentSession.problemStatus}`}>
+                {currentSession.problemStatus || 'Unknown'}
+              </span>
+            </div>
+            <div className="info-item">
+              <span className="info-label">Start Time:</span>
+              <span className="info-value">{formatDate(currentSession.startTime)}</span>
+            </div>
+            <div className="info-item">
+              <span className="info-label">End Time:</span>
+              <span className="info-value">
+                {currentSession.endTime ? formatDate(currentSession.endTime) : 'In Progress'}
+              </span>
+            </div>
+            <div className="info-item">
+              <span className="info-label">Duration:</span>
+              <span className="info-value">{calculateDuration()}</span>
+            </div>
+            <div className="info-item">
+              <span className="info-label">Total Messages:</span>
+              <span className="info-value">{currentSession.chatsQueue?.length || 0}</span>
+            </div>
+          </div>
+
+          <div className="chat-section">
+            <h3 className="section-title">Chat History</h3>
+            {currentSession.chatsQueue?.length ? (
+              <div className="chat-container">
+                {currentSession.chatsQueue.map((chat, index) => (
+                  <div
+                    key={index}
+                    className={`chat-item chat-${chat?.actor?.toLowerCase()}`}
+                  >
+                    <div className="chat-header">
+                      <span className="chat-actor">{chat.actor}</span>
+                      <span className="chat-index">#{index + 1}</span>
+                    </div>
+                    <div className="chat-message">{chat.message}</div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="no-data">
+                <p>No chat messages found.</p>
+              </div>
+            )}
+          </div>
+        </>
+      ) : (
+        !error && <div className="loading-indicator">Loading session information...</div>
+      )}
+    </div>
+  );
+};
+
+export default SessionOfProblem;

@@ -1,0 +1,132 @@
+import React, { useState, useEffect } from 'react';
+import type { Session } from "mooterview-client";
+import { getAllSessionByUserId } from '../../utils/handlers/getAllSessionById';
+import { getTokenData } from '../../utils/constants';
+import { Link } from 'react-router-dom';
+import { getUserById } from '../../utils/handlers/getUserInfoById';
+import type { GetUserByIdOutput } from "mooterview-client";
+import avatarImage from '../../assets/avatar/avatar.png';
+import './dashboard.css';
+
+const DashBoard = () => {
+  const [sessions, setSessions] = useState<Session[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [userData, setuserData] = useState<GetUserByIdOutput>();
+  // console.log("userdata is", sessions);
+
+
+  useEffect(() => {
+    // fetch all session of the user 
+    const fetchSessions = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const response: any = await getAllSessionByUserId(getTokenData().id);
+        const fetchedSessions: Session[] = response.sessions;
+        setSessions(fetchedSessions);
+
+      } catch (error: any) {
+        setError("Something went wrong while fetching sessions.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    // fetch All Data of User 
+    const fetchUserInfo = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const response: any = await getUserById(getTokenData().id);
+        setuserData(response);
+
+      } catch (error: any) {
+        setError("Something went wrong while fetching userInfomation at dashboard.tsx.");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchUserInfo();
+    fetchSessions();
+  }, []);
+
+  const formatTime = (timeString: string | undefined) => {
+    if (!timeString) return 'N/A';
+    const date = new Date(timeString);
+    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
+  return (
+    <div className="dashboard-container">
+      {/* User Profile Section */}
+      <div className="user-profile-section">
+        <div className="profile-card">
+          <div className="avatar-container">
+            <img src={avatarImage} alt="Profile Avatar" className="profile-avatar" />
+          </div>
+          <div className="user-info">
+            <h2 className="user-name">{userData?.fullName || 'Loading...'}</h2>
+            <p className="user-username">@{userData?.username}</p>
+            <p className="user-email">{userData?.email}</p>
+            <p className="user-location"> {userData?.location}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Sessions List Section */}
+      <div className="sessions-section">
+        <h3 className="section-title">Problem Sessions</h3>
+
+        {loading && <div className="loading">Loading...</div>}
+        {error && <p className="error-message">{error}</p>}
+
+        
+        <div className="sessions-list">
+          {sessions.map((session, index) => (
+            <Link
+              key={session.sessionId}
+              to="/session"
+              state={{ sessionId: session.sessionId }}
+              className="session-item"
+            >
+
+
+              <div className="session-number">{index + 1}</div>
+              <div className="session-details">
+                <div className="session-problem-id">
+                  <strong>Problem ID:</strong> {session.problemId}
+                </div>
+                <div className="session-time">
+                  <strong>Started:</strong> {formatTime(session.startTime)}
+                  {session.endTime && (
+                    <span className="end-time">
+                      <strong> | Ended:</strong> {formatTime(session.endTime)}
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div className="session-status">
+                <span className={`status-badge ${session.problemStatus?.toLowerCase().replace(' ', '-')}`}>
+                  {session.problemStatus}
+                </span>
+              </div>
+              <div className="session-arrow">→</div>
+            </Link>
+          ))}
+        </div>
+
+        {sessions.length === 0 && !loading && (
+          <div className="no-sessions">
+            <p>No sessions found.</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default DashBoard;

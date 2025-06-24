@@ -10,15 +10,20 @@ import Problempage from "./pages/problem/Problempage";
 import PrivateRoute from "./privateRoute";
 import SessionSummary from "./pages/sessionSummary/SessionSummary";
 import NotFound from "./pages/notFound/NotFound";
+import DashBoard from "./components/dashboard/DashBoard";
+import SessionOfProblem from "./components/sessionInfo/SessionOfProblem";
+
 
 function App() {
   return (
     <>
       <Routes>
+
         <Route path={"/"} element={<AuthRedirect />} />
         <Route path={"/sign-up"} element={<Signup />} />
         <Route path={"/log-in"} element={<Login />} />
         <Route path={"/landing"} element={<LandingPage />} />
+
         <Route
           path={"/home"}
           element={
@@ -27,6 +32,24 @@ function App() {
             </PrivateRoute>
           }
         />
+
+        <Route
+          path={"/dashboard"}
+          element={
+            <PrivateRoute>
+              <DashBoard />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path={"/session"}
+          element={
+            <PrivateRoute>
+              <SessionOfProblem />
+            </PrivateRoute>
+          }
+        />
+
         <Route
           path={"/problem/:title"}
           element={
@@ -35,6 +58,7 @@ function App() {
             </PrivateRoute>
           }
         />
+
         <Route
           path={"/create-a-problem"}
           element={

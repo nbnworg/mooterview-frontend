@@ -17,6 +17,11 @@ const Homepage = () => {
   const [selectedLevel, setSelectedLevel] = useState<string>("All");
   const [searchTerm, setSearchTerm] = useState<string>("");
 
+const data= JSON.parse(
+  localStorage.getItem("userData") || "{}"
+  )
+  console.log("access token: ", data);
+  
   useEffect(() => {
     console.log("before problems");
     const fetchProblems = async () => {
@@ -45,6 +50,7 @@ const Homepage = () => {
     const matchesLevel =
       selectedLevel === "All" ||
       problem.level?.toLowerCase() === selectedLevel.toLowerCase();
+    
     const matchesSearch = problem.title
       ?.toLowerCase()
       .includes(searchTerm.toLowerCase());
@@ -113,6 +119,7 @@ const Homepage = () => {
                   {problem.level}
                 </p>
               </div>
+              
               <button
                 onClick={async () => {
                   const confirmed = window.confirm(
