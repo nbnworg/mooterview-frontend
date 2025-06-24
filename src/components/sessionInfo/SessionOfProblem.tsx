@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import  { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { getSessionById } from '../../utils/handlers/getSessionById';
 import type { Session } from "mooterview-client";

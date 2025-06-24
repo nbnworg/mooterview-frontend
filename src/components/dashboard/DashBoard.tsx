@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import  { useState, useEffect } from 'react';
 import type { Session } from "mooterview-client";
 import { getAllSessionByUserId } from '../../utils/handlers/getAllSessionById';
 import { getTokenData } from '../../utils/constants';
