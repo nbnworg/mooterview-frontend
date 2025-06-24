@@ -12,6 +12,7 @@ import SessionSummary from "./pages/sessionSummary/SessionSummary";
 import NotFound from "./pages/notFound/NotFound";
 import DashBoard from "./components/dashboard/DashBoard";
 import SessionOfProblem from "./components/sessionInfo/SessionOfProblem";
+import Solution from "./pages/solution/Solution";
 
 
 function App() {
@@ -72,6 +73,14 @@ function App() {
           element={
             <PrivateRoute>
               <SessionSummary />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path={"/solution/:id"}
+          element={
+            <PrivateRoute>
+              <Solution />
             </PrivateRoute>
           }
         />
