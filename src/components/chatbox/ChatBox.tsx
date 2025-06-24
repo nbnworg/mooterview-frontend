@@ -135,6 +135,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         });
 
         try {
+
             return JSON.parse(response);
         } catch (err) {
             console.error("Failed to parse evaluation response", response);
