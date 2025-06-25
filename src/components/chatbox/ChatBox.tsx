@@ -128,15 +128,14 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             ${JSON.stringify(messages, null, 2)}
             `;
 
-
-
         const response = await getPromptResponse({
             actor: Actor.INTERVIEWER,
             context: `Problem: ${problem.title}`,
             prompt,
         });
 
-        try {          
+        try {
+
             return JSON.parse(response);
         } catch (err) {
             console.error("Failed to parse evaluation response", response);
@@ -163,14 +162,24 @@ const ChatBox: React.FC<ChatBoxProps> = ({
 
             if (wantsSolution) {
                 const evaluation = await generateEvaluationSummary();
-                console.log('evaluation', evaluation)
+                await updateSessionById({
+                    sessionId,
+                    notes: [
+                        { content: evaluation.summary },
+                        {
+                            content:
+                                codeRef.current.trim() || "No code provided",
+                        },
+                    ],
+                });
+                console.log("evaluation", evaluation);
                 navigate(
                     `/solution/${encodeURIComponent(problem.title ?? "")}`,
-                    { state: { evaluation } }
+                    { state: { evaluation }, replace: true }
                 );
             } else {
                 alert("Session ended successfully.");
-                navigate("/home");
+                navigate("/home", { replace: true });
             }
         } catch (err) {
             console.error("Failed to end session", err);
