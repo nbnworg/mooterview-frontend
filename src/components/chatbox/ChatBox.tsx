@@ -163,16 +163,22 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                 const evaluation = await generateEvaluationSummary();
                 await updateSessionById({
                     sessionId,
-                    notes: [{ content: evaluation.summary }],
+                    notes: [
+                        { content: evaluation.summary },
+                        {
+                            content:
+                                codeRef.current.trim() || "No code provided",
+                        },
+                    ],
                 });
                 console.log("evaluation", evaluation);
                 navigate(
                     `/solution/${encodeURIComponent(problem.title ?? "")}`,
-                    { state: { evaluation } }
+                    { state: { evaluation }, replace: true }
                 );
             } else {
                 alert("Session ended successfully.");
-                navigate("/home");
+                navigate("/home", { replace: true });
             }
         } catch (err) {
             console.error("Failed to end session", err);
