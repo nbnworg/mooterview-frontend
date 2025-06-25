@@ -1,0 +1,236 @@
+.dashboard-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  padding: 2rem;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+
+.user-profile-section {
+  margin-bottom: 2rem;
+}
+
+.profile-card {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  box-shadow: 5px 2px 10px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
+}
+
+.profile-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #4299e1;
+}
+
+.user-info {
+  flex: 1;
+}
+
+.user-name {
+  font-size: 1.5rem;
+  font-weight:600;
+  color: #2d3748;
+  margin: 0 0 0.5rem 0;
+}
+
+.user-username {
+  font-size: 1rem;
+  color: #4299e1;
+  margin: 0 0 0.25rem 0;
+  font-weight: 500;
+}
+
+.user-email {
+  font-size: 0.9rem;
+  color: #4a5568;
+  margin: 0 0 0.25rem 0;
+}
+
+.user-location {
+  font-size: 0.9rem;
+  color: #718096;
+  margin: 0;
+}
+
+
+.sessions-section {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 4px 2px 10px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
+}
+
+.section-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: aqua;
+  margin: 0 0 1.5rem 0;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+
+.sessions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.session-item {
+  display: flex;
+  align-items: center;
+  padding: 14px;
+  background: #f8fafc;
+  border: 1px solid #9ea9b7;
+  border-radius: 10px;
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.2s ease;
+  gap: 15px;
+}
+
+.session-item:hover {
+  background: #edf2f7;
+  border-color: #4299e1;
+  transform: translateX(5px);
+}
+
+.session-number {
+  background: #4299e1;
+  color: white;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+
+.session-details {
+  flex: 1;
+}
+
+.session-problem-id {
+  font-size: 0.9rem;
+  color: #2d3748;
+  margin-bottom: 0.25rem;
+}
+
+.session-time {
+  font-size: 0.8rem;
+  color: #718096;
+}
+
+.end-time {
+  margin-left: 0.5rem;
+}
+
+.session-status {
+  flex-shrink: 0;
+}
+
+.status-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.status-badge.not-started {
+  background: #fed7d7;
+  color: #c53030;
+}
+
+.status-badge.in-progress {
+  background: #fbd38d;
+  color: #d69e2e;
+}
+
+.status-badge.completed {
+  background: #c6f6d5;
+  color: #38a169;
+}
+
+.session-arrow {
+  color: #4299e1;
+  font-size: 1.2rem;
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+
+.loading {
+  text-align: center;
+  padding: 2rem;
+  color: #4299e1;
+  font-weight: 500;
+}
+
+.error-message {
+  background: #fed7d7;
+  color: #c53030;
+  padding: 1rem;
+  border-radius: 8px;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.no-sessions {
+  text-align: center;
+  padding: 2rem;
+  color: #718096;
+}
+
+
+
+@media (max-width: 768px) {
+  .dashboard-container {
+    padding: 1rem;
+  }
+  
+  .profile-card {
+    flex-direction: column;
+    text-align: center;
+    padding: 1rem;
+  }
+  
+  .session-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .session-number {
+    align-self: flex-start;
+  }
+  
+  .session-arrow {
+    align-self: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .user-name {
+    font-size: 1.25rem;
+  }
+  
+  .section-title {
+    font-size: 1.1rem;
+  }
+  
+  .session-item {
+    padding: 0.75rem;
+  }
+}
