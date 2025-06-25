@@ -13,11 +13,9 @@ const DashBoard = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [userData, setuserData] = useState<GetUserByIdOutput>();
-  // console.log("userdata is", sessions);
 
 
   useEffect(() => {
-    // fetch all session of the user 
     const fetchSessions = async () => {
       try {
         setLoading(true);
@@ -34,7 +32,6 @@ const DashBoard = () => {
       }
     };
 
-    // fetch All Data of User 
     const fetchUserInfo = async () => {
       try {
         setLoading(true);
@@ -62,7 +59,6 @@ const DashBoard = () => {
 
   return (
     <div className="dashboard-container">
-      {/* User Profile Section */}
       <div className="user-profile-section">
         <div className="profile-card">
           <div className="avatar-container">
@@ -77,7 +73,6 @@ const DashBoard = () => {
         </div>
       </div>
 
-      {/* Sessions List Section */}
       <div className="sessions-section">
         <h3 className="section-title">Problem Sessions</h3>
 

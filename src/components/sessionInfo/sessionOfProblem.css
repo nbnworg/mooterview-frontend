@@ -165,7 +165,7 @@
   border: 1px solid #eee;
 }
 
-/* Responsive Design */
+
 @media (max-width: 768px) {
   .session-container {
     padding: 1rem;
