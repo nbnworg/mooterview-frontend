@@ -23,8 +23,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     const [input, setInput] = useState("");
     const [loading, setLoading] = useState(false);
     const lastAutoTimeRef = useRef(0);
-    const has15SecTriggered = useRef(false);
-    const [waitingForHintResponse, setWaitingForHintResponse] = useState(false);
     const elapsedTimeRef = useRef(elapsedTime);
     const codeRef = useRef(code);
     const messagesRef = useRef<HTMLDivElement | null>(null);
@@ -55,10 +53,10 @@ const ChatBox: React.FC<ChatBoxProps> = ({
 
     const addBotMessage = async (text: string) => {
         const newMessage = { actor: Actor.INTERVIEWER, message: text };
+        await updateChatsInSession([newMessage]);
 
         setMessages((prevMessages) => {
             const updated = [...prevMessages, newMessage];
-            updateChatsInSession(updated);
             return updated;
         });
     };
@@ -161,8 +159,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         const explainProblem = async () => {
             if (hasExplainedRef.current) return;
             hasExplainedRef.current = true;
-            console.log("called");
-
             const response = await getPromptResponse({
                 actor: Actor.INTERVIEWER,
                 context: `The candidate has just started working on the following coding problem:\n\n${problem.problemDescription}`,
@@ -212,66 +208,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         return () => clearInterval(interval);
     }, [problem]);
 
-    useEffect(() => {
-        const interval = setInterval(() => {
-            const elapsed = elapsedTimeRef.current;
-            console.log("elapsed", elapsed);
-
-            if (Math.floor(elapsed) >= 900 && !has15SecTriggered.current) {
-                has15SecTriggered.current = true;
-
-                const codeSnapshot = codeRef.current?.trim() || "";
-                const autoPrompt = `
-
-        You're acting as a human interviewer in a live coding interview.
-
-        Here is the current problem:
-        ${problem.problemDescription}
-
-        The candidate has been working on this problem for about 15 minutes.
-        Here is their current code:
-
-        ${codeSnapshot || "[No code written yet]"}
-
-        Now, based on the candidate's code, respond with ONE of the following:
-
-        ---
-
-        **IF THE CODE IS CORRECT:**
-        - Congratulate them very briefly.
-        - Ask them to explain their thought process.
-        Example: "Nice work! That looks like a correct solution. Can you walk me through your approach?"
-
-        **IF THE CODE IS INCOMPLETE OR INCORRECT (including no code):**
-        - DO NOT give any hint yet.
-        - You must ONLY ask the candidate if they would like a hint — without giving any suggestion, advice, or solution.
-        - Example: "We're about 15 minutes in. Would you like a hint to help you move forward?"
-
-        IMPORTANT:
-        - Do NOT include any hints, advice, or nudges.
-        - Do NOT say things like “Consider doing X” or “You might want to try…”.
-        - Your job right now is ONLY to ask if they want a hint. Wait for their response before saying anything else.
-
-        Never say you're an AI or assistant. Speak naturally, like a human interviewer.
-
-        Now respond:
-        `;
-
-                getPromptResponse({
-                    actor: Actor.INTERVIEWER,
-                    context: `Problem: ${problem.title}\n\n${problem.problemDescription}`,
-                    promptKey: autoPrompt,
-                }).then(async (response) => {
-                    await addBotMessage(response);
-                    setWaitingForHintResponse(true);
-                });
-                console.log("functioncclled");
-            }
-        }, 1000);
-
-        return () => clearInterval(interval);
-    }, []);
-
     // User sends manual message
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -284,52 +220,20 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         setInput("");
         setLoading(true);
 
-        await updateChatsInSession(updatedUserMessages);
+        await updateChatsInSession([userMsg]);
 
         try {
-            let aiResponse;
-
-            if (waitingForHintResponse) {
-                const wantsHint =
-                    /yes|yeah|sure|okay|ok|hint|help|please/i.test(input);
-
-                if (wantsHint) {
-                    aiResponse = await getPromptResponse({
-                        actor: Actor.USER,
-                        context: `Problem: ${problem.title}\n\n${problem.problemDescription}\n\nCurrent code:\n${codeRef.current}`,
-                        promptKey: `
-            The candidate just asked for a hint about this coding problem.
-
-            **Give them ONE clear, actionable hint that:**
-            - Helps them move forward without solving the entire problem
-            - Is specific to their current code state
-            - Guides them toward the right approach
-
-            Current code state:
-            ${codeRef.current?.trim() || "[No code written yet]"}
-
-            Respond like a human interviewer giving a helpful hint.
-            `,
-                    });
-                } else {
-                    aiResponse =
-                        "No problem! Feel free to ask if you need help later.";
-                }
-
-                setWaitingForHintResponse(false);
-            } else {
-                aiResponse = await getPromptResponse({
-                    actor: Actor.USER,
-                    context: `Problem: ${problem.title}\n\n${problem.problemDescription}\n\nCurrent code:\n${codeRef.current}\nCandidate's message:
+            const aiResponse = await getPromptResponse({
+                actor: Actor.USER,
+                context: `Problem: ${problem.title}\n\n${problem.problemDescription}\n\nCurrent code:\n${codeRef.current}\nCandidate's message:
         "${input}"`,
-                    promptKey: `handle-chat`,
-                });
-            }
+                promptKey: `handle-chat`,
+            });
 
             const botMsg = { actor: Actor.INTERVIEWER, message: aiResponse };
             const updatedFinalMessages = [...updatedUserMessages, botMsg];
             setMessages(updatedFinalMessages);
-            await updateChatsInSession(updatedFinalMessages);
+            await updateChatsInSession([botMsg]);
         } catch {
             const errorMsg = {
                 actor: Actor.AI,
