@@ -55,10 +55,10 @@ const ChatBox: React.FC<ChatBoxProps> = ({
 
     const addBotMessage = async (text: string) => {
         const newMessage = { actor: Actor.INTERVIEWER, message: text };
+        await updateChatsInSession([newMessage]);
 
         setMessages((prevMessages) => {
             const updated = [...prevMessages, newMessage];
-            updateChatsInSession(updated);
             return updated;
         });
     };
@@ -135,7 +135,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         });
 
         try {
-
             return JSON.parse(response);
         } catch (err) {
             console.error("Failed to parse evaluation response", response);
@@ -191,29 +190,27 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         const explainProblem = async () => {
             if (hasExplainedRef.current) return;
             hasExplainedRef.current = true;
-            console.log("called");
-
             const response = await getPromptResponse({
                 actor: Actor.INTERVIEWER,
                 context: `The candidate has just started working on the following coding problem:\n\n${problem.problemDescription}`,
                 prompt: `
-        You're a calm, confident human interviewer. The candidate has just received this problem:
+                  You're a calm, confident human interviewer. The candidate has just received this problem:
 
-        "${problem.problemDescription}"
+                  "${problem.problemDescription}"
 
-        Introduce the problem in a direct and natural way, as if you're speaking to the candidate live. Don’t over-explain — your goal is to clearly present the core task.
+                  Introduce the problem in a direct and natural way, as if you're speaking to the candidate live. Don’t over-explain — your goal is to clearly present the core task.
 
-        Examples of tone:
-        - "Here’s the problem for today..."
-        - "You’re given X and Y — figure out how to Z."
+                  Examples of tone:
+                  - "Here’s the problem for today..."
+                  - "You’re given X and Y — figure out how to Z."
 
-        Strict guidelines:
-        - DO NOT greet or say things like “Hi” or “Welcome.”
-        - DO NOT say “I’m your interviewer” or “I’m here to help.”
-        - Just state the problem in a straightforward, conversational way — as if the candidate asked “What’s the task?”
+                  Strict guidelines:
+                  - DO NOT greet or say things like “Hi” or “Welcome.”
+                  - DO NOT say “I’m your interviewer” or “I’m here to help.”
+                  - Just state the problem in a straightforward, conversational way — as if the candidate asked “What’s the task?”
 
-        Now speak directly to the candidate:
-        `,
+                  Now speak directly to the candidate:
+                  `,
             });
             await addBotMessage(response);
         };
@@ -277,8 +274,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     useEffect(() => {
         const interval = setInterval(() => {
             const elapsed = elapsedTimeRef.current;
-            console.log("elapsed", elapsed);
-
             if (Math.floor(elapsed) >= 900 && !has15SecTriggered.current) {
                 has15SecTriggered.current = true;
 
@@ -327,7 +322,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                     await addBotMessage(response);
                     setWaitingForHintResponse(true);
                 });
-                console.log("functioncclled");
             }
         }, 1000);
 
@@ -346,7 +340,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         setInput("");
         setLoading(true);
 
-        await updateChatsInSession(updatedUserMessages);
+        await updateChatsInSession([userMsg]);
 
         try {
             let aiResponse;
@@ -415,7 +409,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             const botMsg = { actor: Actor.INTERVIEWER, message: aiResponse };
             const updatedFinalMessages = [...updatedUserMessages, botMsg];
             setMessages(updatedFinalMessages);
-            await updateChatsInSession(updatedFinalMessages);
+            await updateChatsInSession([botMsg]);
         } catch {
             const errorMsg = {
                 actor: Actor.AI,
