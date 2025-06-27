@@ -163,6 +163,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                 actor: Actor.INTERVIEWER,
                 context: `The candidate has just started working on the following coding problem:\n\n${problem.problemDescription}`,
                 promptKey: "explain-problem",
+
             });
             await addBotMessage(response);
         };
