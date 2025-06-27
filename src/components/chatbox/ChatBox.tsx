@@ -88,11 +88,11 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         );
         console.log("code", codeRef.current);
 
-        const prompt = "generate-summary";
+        const promptKey = "generate-summary";
 
         const response = await getPromptResponse({
             actor: Actor.INTERVIEWER,
-            context: `Problem: ${problem.title} Problem: ${problem.title}
+            context: `Problem: ${problem.title}\n
             Description: ${problem.problemDescription}
                 
             Elapsed time: ${elapsedTimeRef.current / 60} minutes
@@ -102,7 +102,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                 
             Chat transcript:
             ${JSON.stringify(messages, null, 2)}`,
-            prompt,
+            promptKey,
         });
 
         try {
@@ -166,7 +166,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             const response = await getPromptResponse({
                 actor: Actor.INTERVIEWER,
                 context: `The candidate has just started working on the following coding problem:\n\n${problem.problemDescription}`,
-                prompt: "explain-problem",
+                promptKey: "explain-problem",
             });
             await addBotMessage(response);
         };
@@ -202,7 +202,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
 
           Their current code is:
           ${codeSnapshot || "[No code written yet]"}`,
-                    prompt: autoPrompt,
+                    promptKey: autoPrompt,
                 }).then(async (response) => {
                     await addBotMessage(response);
                 });
@@ -260,7 +260,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                 getPromptResponse({
                     actor: Actor.INTERVIEWER,
                     context: `Problem: ${problem.title}\n\n${problem.problemDescription}`,
-                    prompt: autoPrompt,
+                    promptKey: autoPrompt,
                 }).then(async (response) => {
                     await addBotMessage(response);
                     setWaitingForHintResponse(true);
@@ -297,7 +297,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                     aiResponse = await getPromptResponse({
                         actor: Actor.USER,
                         context: `Problem: ${problem.title}\n\n${problem.problemDescription}\n\nCurrent code:\n${codeRef.current}`,
-                        prompt: `
+                        promptKey: `
             The candidate just asked for a hint about this coding problem.
 
             **Give them ONE clear, actionable hint that:**
@@ -322,7 +322,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                     actor: Actor.USER,
                     context: `Problem: ${problem.title}\n\n${problem.problemDescription}\n\nCurrent code:\n${codeRef.current}\nCandidate's message:
         "${input}"`,
-                    prompt: `handle-chat`,
+                    promptKey: `handle-chat`,
                 });
             }
 
@@ -352,7 +352,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     const handleVerifyCode = async () => {
         const currentCode = codeRef.current;
 
-        const prompt = `verify-code`;
+        const promptKey = `verify-code`;
 
         const response = await getPromptResponse({
             actor: Actor.INTERVIEWER,
@@ -362,8 +362,10 @@ const ChatBox: React.FC<ChatBoxProps> = ({
 
     Candidate's solution code:\n
     ${currentCode || "[No code provided]"}`,
-            prompt,
+            promptKey,
         });
+
+        console.log("code", currentCode);
 
         if (response.trim().startsWith("Correct")) {
             setIsSolutionVerifiedCorrect(true);

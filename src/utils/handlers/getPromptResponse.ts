@@ -5,11 +5,11 @@ import { refreshAccessToken } from "../refreshAccessToken";
 export const getPromptResponse = async ({
   actor,
   context,
-  prompt,
+  promptKey,
 }: {
   actor: string;
   context: string;
-  prompt: string;
+  promptKey: string;
 }) => {
   const makeRequest = async (accessToken: string) => {
     const response = await fetch(`${BASE_URL}/prompt/response`, {
@@ -18,7 +18,7 @@ export const getPromptResponse = async ({
         "Content-Type": "application/json",
         Authorization: `Bearer ${accessToken}`,
       },
-      body: JSON.stringify({ actor, context, prompt }),
+      body: JSON.stringify({ actor, context, promptKey }),
     });
 
     if (!response.ok) {
