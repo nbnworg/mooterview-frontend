@@ -74,7 +74,6 @@ const ProblemPage = () => {
         <div className="verticalLine"></div>
         <div className="codeEditorAndOptionsContainer">
           <CodeEditor
-            averageSolveTime={Number(problem.averageSolveTime)}
             code={code}
             setCode={setCode}
             language={language}

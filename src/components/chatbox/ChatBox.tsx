@@ -55,10 +55,10 @@ const ChatBox: React.FC<ChatBoxProps> = ({
 
     const addBotMessage = async (text: string) => {
         const newMessage = { actor: Actor.INTERVIEWER, message: text };
+        await updateChatsInSession([newMessage]);
 
         setMessages((prevMessages) => {
             const updated = [...prevMessages, newMessage];
-            updateChatsInSession(updated);
             return updated;
         });
     };
@@ -161,12 +161,11 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         const explainProblem = async () => {
             if (hasExplainedRef.current) return;
             hasExplainedRef.current = true;
-            console.log("called");
-
             const response = await getPromptResponse({
                 actor: Actor.INTERVIEWER,
                 context: `The candidate has just started working on the following coding problem:\n\n${problem.problemDescription}`,
                 promptKey: "explain-problem",
+
             });
             await addBotMessage(response);
         };
@@ -215,8 +214,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     useEffect(() => {
         const interval = setInterval(() => {
             const elapsed = elapsedTimeRef.current;
-            console.log("elapsed", elapsed);
-
             if (Math.floor(elapsed) >= 900 && !has15SecTriggered.current) {
                 has15SecTriggered.current = true;
 
@@ -265,7 +262,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                     await addBotMessage(response);
                     setWaitingForHintResponse(true);
                 });
-                console.log("functioncclled");
             }
         }, 1000);
 
@@ -284,7 +280,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         setInput("");
         setLoading(true);
 
-        await updateChatsInSession(updatedUserMessages);
+        await updateChatsInSession([userMsg]);
 
         try {
             let aiResponse;
@@ -329,7 +325,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             const botMsg = { actor: Actor.INTERVIEWER, message: aiResponse };
             const updatedFinalMessages = [...updatedUserMessages, botMsg];
             setMessages(updatedFinalMessages);
-            await updateChatsInSession(updatedFinalMessages);
+            await updateChatsInSession([botMsg]);
         } catch {
             const errorMsg = {
                 actor: Actor.AI,

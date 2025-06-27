@@ -6,7 +6,6 @@ import Editor from "@monaco-editor/react";
 import "./codeEditor.css";
 
 interface CodeEditorProps {
-  averageSolveTime?: number;
   code: { [lang: string]: string };
   setCode: React.Dispatch<React.SetStateAction<{ [lang: string]: string }>>;
   language: string;
@@ -16,7 +15,6 @@ interface CodeEditorProps {
 }
 
 const CodeEditor: React.FC<CodeEditorProps> = ({
-  averageSolveTime,
   code,
   setCode,
   language,
@@ -51,8 +49,6 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
     const secs = String(seconds % 60).padStart(2, "0");
     return `${mins}:${secs}`;
   };
-
-  console.log(averageSolveTime)
 
   return (
     <div className="codeEditorContainer">
