@@ -58,40 +58,48 @@ const ProblemPage = () => {
   }
 
   return (
-    <>
-      <Navbar />
-      <section className="problemSection" id="problemSection">
-        <div className="problemDetailAndChatContainer">
-          <h1>{problem.title}</h1>
+  <>
+    <Navbar />
+    <section className="problemSection" id="problemSection">
+      <div className="problemDetailAndChatContainer">
+        <h1>{problem.title}</h1>
+
+        <div className="problem-description-box">
           <p>{problem.problemDescription}</p>
-          <ChatBox
-            problem={problem}
-            code={code[language]}
-            elapsedTime={(problem.averageSolveTime ?? 15) * 60 - timeLeft}
-            onVerifyRef={verifySolutionRef}
-          />
         </div>
-        <div className="verticalLine"></div>
-        <div className="codeEditorAndOptionsContainer">
-          <CodeEditor
-            averageSolveTime={Number(problem.averageSolveTime)}
-            code={code}
-            setCode={setCode}
-            language={language}
-            setLanguage={setLanguage}
-            timeLeft={timeLeft}
-            setTimeLeft={setTimeLeft}
-          />
-          <button
-            className="verifyCodeButton"
-            onClick={() => verifySolutionRef.current?.()}
-          >
-            Verify Code
-          </button>
-        </div>
-      </section>
-    </>
-  );
+
+      
+
+        <ChatBox
+          problem={problem}
+          code={code[language]}
+          elapsedTime={(problem.averageSolveTime ?? 15) * 60 - timeLeft}
+          onVerifyRef={verifySolutionRef}
+        />
+      </div>
+
+      <div className="verticalLine"></div>
+
+      <div className="codeEditorAndOptionsContainer">
+        <CodeEditor
+          code={code}
+          setCode={setCode}
+          language={language}
+          setLanguage={setLanguage}
+          timeLeft={timeLeft}
+          setTimeLeft={setTimeLeft}
+        />
+        <button
+          className="verifyCodeButton"
+          onClick={() => verifySolutionRef.current?.()}
+        >
+          Verify Code
+        </button>
+      </div>
+    </section>
+  </>
+);
+
 };
 
 export default ProblemPage;
