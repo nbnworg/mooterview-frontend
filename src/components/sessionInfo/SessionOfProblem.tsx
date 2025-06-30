@@ -4,6 +4,9 @@ import { getSessionById } from '../../utils/handlers/getSessionById';
 import type { Session } from "mooterview-client";
 import './sessionOfProblem.css';
 import { useNavigate } from 'react-router-dom';
+import { getProblemById } from "../../utils/handlers/getProblemById";
+import Navbar from '../navbar/Navbar';
+
 
 
 const SessionOfProblem = () => {
@@ -11,27 +14,37 @@ const SessionOfProblem = () => {
 
   const location = useLocation();
   const sessionId = location.state?.sessionId as string | undefined;
+  const [problemTitle, setProblemTitle] = useState<string>("");
+  const[ses,setses]=useState<boolean>(false);
+
 
   const [currentSession, setCurrentSession] = useState<Partial<Session> | null>(null);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchSessionById = async () => {
-      try {
-        if (!sessionId) {
-          setError("Missing sessionId");
-          return;
-        }
-
-        const result = await getSessionById(sessionId);
-        setCurrentSession(result);
-      } catch (err) {
-        setError("Failed to fetch session");
+useEffect(() => {
+  const fetchSessionById = async () => {
+    try {
+      if (!sessionId) {
+        setError("Missing sessionId");
+        return;
       }
-    };
+setses(true);
+      const result = await getSessionById(sessionId);
+      setCurrentSession(result);
 
-    fetchSessionById();
-  }, [sessionId]);
+      // 🔽 Fetch problem title from problemId
+      if (result.problemId) {
+        const problem = await getProblemById(result.problemId);
+        setProblemTitle(problem.title || "Untitled");
+        setses(false);
+      }
+
+    } catch (err) {
+      setError("Failed to fetch session or problem details");
+    }
+  };
+
+  fetchSessionById();
+}, [sessionId]);
 
 
 
@@ -59,6 +72,8 @@ const SessionOfProblem = () => {
   };
 
   return (
+    <div>
+    <Navbar/>
     <div className="session-container">
       <div className="session-header">
         <h2 className="session-title">Problem Session Details</h2>
@@ -70,13 +85,16 @@ const SessionOfProblem = () => {
 
 
       {error && <div className="session-error">{error}</div>}
+      
 
-      {currentSession ? (
+      {currentSession && !ses ? (
         <>
+        
+          
           <div className="session-info">
             <div className="info-item">
-              <span className="info-label">Problem ID:</span>
-              <span className="info-value">{currentSession.problemId}</span>
+             <span className="info-label">Problem :</span>
+  <span className="info-value">{problemTitle}</span>
             </div>
             <div className="info-item">
               <span className="info-label">Status:</span>
@@ -127,10 +145,12 @@ const SessionOfProblem = () => {
               </div>
             )}
           </div>
+          
         </>
       ) : (
         !error && <div className="loading-indicator">Loading session information...</div>
       )}
+    </div>
     </div>
   );
 };
