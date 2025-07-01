@@ -31,7 +31,7 @@ setses(true);
       const result = await getSessionById(sessionId);
       setCurrentSession(result);
 
-      // 🔽 Fetch problem title from problemId
+      
       if (result.problemId) {
         const problem = await getProblemById(result.problemId);
         setProblemTitle(problem.title || "Untitled");
