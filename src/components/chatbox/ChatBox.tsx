@@ -143,7 +143,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                 console.log("evaluation", evaluation);
                 navigate(
                     `/solution/${encodeURIComponent(problem.title ?? "")}`,
-                    { state: { evaluation }, replace: true }
+                    { state: {evaluation,}, replace: true }
                 );
             } else {
                 alert("Session ended successfully.");
