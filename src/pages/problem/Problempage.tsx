@@ -65,7 +65,7 @@ const ProblemPage = () => {
           <ChatBox
             problem={problem}
             elapsedTime={(problem.averageSolveTime ?? 15) * 60 - timeLeft}
-            onVerifyRef={verifySolutionRef} code={""}          />
+            onVerifyRef={verifySolutionRef} code={code}          />
         </div>
         <div className="verticalLine"></div>
         <div className="codeEditorAndOptionsContainer">
