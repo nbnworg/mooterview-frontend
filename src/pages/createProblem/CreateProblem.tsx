@@ -10,12 +10,14 @@ import Navbar from "../../components/navbar/Navbar";
 const CreateProblem = () => {
   const [formData, setFormData] = useState({
     title: "",
-    problemStatement: "",
     problemDescription: "",
-    level: "",
     averageSolveTime: "",
-    totalUsersAttempted: "",
+    level: "",
+    sampleInput: "",
+    sampleOutput: "",
+    example: "",
   });
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -28,7 +30,6 @@ const CreateProblem = () => {
     >
   ) => {
     const { name, value } = e.target;
-
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -36,6 +37,7 @@ const CreateProblem = () => {
     e.preventDefault();
     setLoading(true);
     const endpoint = `${BASE_URL}/problems`;
+
     try {
       const tokenData = getTokenData();
       if (!tokenData) throw new Error("No token found");
@@ -49,17 +51,18 @@ const CreateProblem = () => {
       setSuccess("Problem created successfully!");
       setFormData({
         title: "",
-        problemStatement: "",
         problemDescription: "",
-        level: "",
         averageSolveTime: "",
-        totalUsersAttempted: "",
+        level: "",
+        sampleInput: "",
+        sampleOutput: "",
+        example: "",
       });
 
       navigate("/home");
     } catch (error: any) {
       setError(
-        error.response?.data || "Server Is busy, Can't Fetch problem right now."
+        error.response?.data || "Server is busy. Cannot create problem now."
       );
     } finally {
       setLoading(false);
@@ -71,6 +74,7 @@ const CreateProblem = () => {
       <Navbar />
       <section className="CreateProblemSection">
         <h1>Create A Problem</h1>
+
         {error && (
           <div className="errorMessage">
             <p>{error}</p>
@@ -93,30 +97,23 @@ const CreateProblem = () => {
           <input
             type="text"
             name="title"
-            id="title"
             placeholder="Enter Problem Title"
             value={formData.title}
             onChange={handleInputChange}
+            required
           />
-          <textarea
-            name="problemStatement"
-            id="statement"
-            rows={3}
-            placeholder="Enter Problem Statement"
-            value={formData.problemStatement}
-            onChange={handleInputChange}
-          />
+
           <textarea
             name="problemDescription"
-            id="description"
-            rows={4}
-            placeholder="Enter Problem description"
+            placeholder="Enter Full Problem problemDescription"
             value={formData.problemDescription}
             onChange={handleInputChange}
+            rows={4}
+            required
           />
+
           <select
             name="level"
-            id="level"
             value={formData.level}
             onChange={handleInputChange}
             required
@@ -128,24 +125,41 @@ const CreateProblem = () => {
             <option value="Medium">Medium</option>
             <option value="Hard">Hard</option>
           </select>
+
           <input
             type="text"
             name="averageSolveTime"
-            id="averageSolveTime"
-            placeholder="Enter Average problem time"
+            placeholder="Enter Avg. Solve Time (e.g., 5 mins)"
             value={formData.averageSolveTime}
             onChange={handleInputChange}
           />
-          <input
-            type="text"
-            name="totalUsersAttempted"
-            id="totalUserAttempted"
-            placeholder="Enter Total number of user attempted"
-            value={formData.totalUsersAttempted}
+
+          <textarea
+            name="sampleInput"
+            placeholder="Enter Sample Input"
+            value={formData.sampleInput}
             onChange={handleInputChange}
+            rows={2}
           />
+
+          <textarea
+            name="sampleOutput"
+            placeholder="Enter Sample Output"
+            value={formData.sampleOutput}
+            onChange={handleInputChange}
+            rows={2}
+          />
+
+          <textarea
+            name="example"
+            placeholder="Enter Problem Example"
+            value={formData.example}
+            onChange={handleInputChange}
+            rows={2}
+          />
+
           <button type="submit" className="submitButton">
-            {loading ? <div className="loader"></div> : "Create problem"}
+            {loading ? <div className="loader"></div> : "Create Problem"}
           </button>
         </form>
       </section>

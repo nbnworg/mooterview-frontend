@@ -1,15 +1,11 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useEffect, useRef } from "react";
-import { languageLabels } from "../../utils/constants";
 import Editor from "@monaco-editor/react";
 
 import "./codeEditor.css";
 
 interface CodeEditorProps {
-  code: { [lang: string]: string };
-  setCode: React.Dispatch<React.SetStateAction<{ [lang: string]: string }>>;
-  language: string;
-  setLanguage: React.Dispatch<React.SetStateAction<string>>;
+  code: string;
+  setCode: React.Dispatch<React.SetStateAction<string>>;
   timeLeft: number;
   setTimeLeft: React.Dispatch<React.SetStateAction<number>>;
 }
@@ -17,16 +13,10 @@ interface CodeEditorProps {
 const CodeEditor: React.FC<CodeEditorProps> = ({
   code,
   setCode,
-  language,
-  setLanguage,
   timeLeft,
   setTimeLeft,
 }) => {
   const editorRef = useRef<HTMLDivElement>(null);
-
-  const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setLanguage(e.target.value);
-  };
 
   useEffect(() => {
     if (timeLeft <= 0) return;
@@ -42,7 +32,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
     if (editorRef.current) {
       editorRef.current.scrollTop = editorRef.current.scrollHeight;
     }
-  }, [code[language]]);
+  }, [code]);
 
   const formatTime = (seconds: number) => {
     const mins = String(Math.floor(seconds / 60)).padStart(2, "0");
@@ -53,35 +43,20 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
   return (
     <div className="codeEditorContainer">
       <div className="languageAndTimerContainer">
-        <div className="selectContainer">
-          <label htmlFor="language-select" style={{ fontWeight: "bold" }}>
-            Select Language:&nbsp;
-          </label>
-          <select
-            id="language-select"
-            value={language}
-            onChange={handleLanguageChange}
-            className="languageSelect"
-          >
-            {Object.keys(languageLabels).map((lang) => (
-              <option key={lang} value={lang}>
-                {languageLabels[lang]}
-              </option>
-            ))}
-          </select>
-        </div>
         <div className="timerContainer">{formatTime(timeLeft)}</div>
       </div>
 
       <div ref={editorRef} className="codeEditor">
         <Editor
           height="60vh"
-          defaultLanguage={language}
-          value={code[language]}
+          value={code}
           theme="vs-dark"
-          onChange={(value) =>
-            setCode((prev) => ({ ...prev, [language]: value || "" }))
-          }
+          onChange={(value) => setCode(value || "")}
+          options={{
+            placeholder: "Start writing your code here...",
+            fontSize: 16,
+            minimap: { enabled: false },
+          }}
         />
       </div>
     </div>
