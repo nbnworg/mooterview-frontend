@@ -67,7 +67,8 @@ const ProblemPage = () => {
             problem={problem}
             elapsedTime={(problem.averageSolveTime ?? 15) * 60 - timeLeft}
             onVerifyRef={verifySolutionRef}
-            userId={userId}
+            userId={userId} 
+            code={code}
           />
         </div>
         <div className="verticalLine"></div>
