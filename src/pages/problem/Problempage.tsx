@@ -12,6 +12,7 @@ import { initialCode } from "../../utils/constants";
 const ProblemPage = () => {
   const location = useLocation();
   const problemId = location.state?.problemId;
+  const userId = location.state?.userId;
 
   const [problem, setProblem] = useState<Problem>();
   const [error, setError] = useState<string | null>(null);
@@ -69,6 +70,7 @@ const ProblemPage = () => {
             code={code[language]}
             elapsedTime={(problem.averageSolveTime ?? 15) * 60 - timeLeft}
             onVerifyRef={verifySolutionRef}
+            userId={userId}
           />
         </div>
         <div className="verticalLine"></div>

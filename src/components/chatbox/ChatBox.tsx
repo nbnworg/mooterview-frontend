@@ -5,19 +5,35 @@ import { getPromptResponse } from "../../utils/handlers/getPromptResponse";
 import { updateSessionById } from "../../utils/handlers/updateSessionById";
 import { Actor, type Problem } from "mooterview-client";
 import { useNavigate } from "react-router-dom";
+import { createSession } from "../../utils/handlers/createSession";
 
 interface ChatBoxProps {
     problem: Problem;
     code: string;
     elapsedTime: number;
     onVerifyRef?: React.MutableRefObject<(() => void) | null>;
+    userId: string;
 }
+
+type Stage =
+    | "EXPLAIN_PROBLEM"
+    | "ASK_UNDERSTAND"
+    | "WAIT_FOR_APPROACH"
+    | "CODING"
+    | "SESSION_END";
+
+type Phase =
+    | "CODING"
+    | "CODING_NOT_STARTED"
+    | "goingOnWrongPath"
+    | "stuckWhileCoding";
 
 const ChatBox: React.FC<ChatBoxProps> = ({
     problem,
     code,
     elapsedTime,
     onVerifyRef,
+    userId,
 }) => {
     const [messages, setMessages] = useState<any[]>([]);
     const [input, setInput] = useState("");
@@ -30,6 +46,13 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     const [isSolutionVerifiedCorrect, setIsSolutionVerifiedCorrect] =
         useState(false);
     const isSolutionVerifiedCorrectRef = useRef(false);
+    const stageRef = useRef<Stage>("EXPLAIN_PROBLEM");
+    const [_stage, setStage] = useState<Stage>("EXPLAIN_PROBLEM");
+    const understandingAttemptsRef = useRef(0);
+    const intitalCodeContextRef = useRef("");
+
+    const [_phase, setPhase] = useState<Phase>("CODING_NOT_STARTED");
+    const phaseRef = useRef("CODING_NOT_STARTED");
 
     const sessionId = localStorage.getItem("mtv-sessionId");
 
@@ -62,7 +85,10 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     };
 
     const updateChatsInSession = async (newChats: any[]) => {
+        const sessionId = localStorage.getItem("mtv-sessionId");
+        console.log("sess", sessionId);
         if (!sessionId) return;
+
         try {
             await updateSessionById({
                 sessionId,
@@ -128,6 +154,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                 endTime: new Date().toISOString(),
             });
 
+            localStorage.removeItem("mtv-sessionId");
             if (wantsSolution) {
                 const evaluation = await generateEvaluationSummary();
                 await updateSessionById({
@@ -156,6 +183,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
 
     // ✅ Initial problem explanation
     useEffect(() => {
+        // if (!sessionId) return;
         const explainProblem = async () => {
             if (hasExplainedRef.current) return;
             hasExplainedRef.current = true;
@@ -163,9 +191,19 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                 actor: Actor.INTERVIEWER,
                 context: `The candidate has just started working on the following coding problem:\n\n${problem.problemDescription}`,
                 promptKey: "explain-problem",
-
             });
             await addBotMessage(response);
+
+            // const askAgain = await getPromptResponse({
+            //     actor: Actor.INTERVIEWER,
+            //     context: "Ask the user if they understood the problem",
+            //     promptKey: "ask-understand"
+            // })
+            // await addBotMessage(askAgain);
+            // setMessages([...messages, { actor: Actor.INTERVIEWER, message: "Have you understood the problem?" }])
+            addBotMessage("Have you understood the problem?");
+            setStage("ASK_UNDERSTAND");
+            stageRef.current = "ASK_UNDERSTAND";
         };
 
         explainProblem();
@@ -173,36 +211,97 @@ const ChatBox: React.FC<ChatBoxProps> = ({
 
     // Auto-tip every 5 mins
     useEffect(() => {
-        const interval = setInterval(() => {
+        const interval = setInterval(async () => {
             const elapsed = elapsedTimeRef.current;
+            console.log(
+                "Elapsed:",
+                elapsed,
+                "LastAuto:",
+                lastAutoTimeRef.current,
+                "Diff:",
+                elapsed - lastAutoTimeRef.current
+            );
+            console.log("Interval");
 
             if (
                 !isSolutionVerifiedCorrectRef.current &&
-                elapsed - lastAutoTimeRef.current >= 180
+                elapsed - lastAutoTimeRef.current >= 300
             ) {
                 lastAutoTimeRef.current = elapsed;
-
                 const codeSnapshot = codeRef.current?.trim() || "";
-                const autoPrompt = `auto-tip`;
-                getPromptResponse({
-                    actor: Actor.INTERVIEWER,
-                    context: `Problem: ${problem.title}\n\n${
-                        problem.problemDescription
+                if (codeSnapshot.length > 20) {
+                    setPhase("CODING");
+                    phaseRef.current = "CODING";
+                }
+
+                const commonContext = `Problem: ${problem.title}\n\n${
+                    problem.problemDescription
+                }
+                    Elapsed time: ${Math.floor(elapsed / 60)} minutes`;
+                const prevAnalysisCode = intitalCodeContextRef.current;
+
+                if (phaseRef.current === "CODING_NOT_STARTED") {
+                    console.log("CODING NOT TRIGGERED");
+
+                    const res = await getPromptResponse({
+                        actor: Actor.INTERVIEWER,
+                        context: commonContext,
+                        promptKey: "nudge-start-coding",
+                    }).then(async (response) => await addBotMessage(response));
+                    console.log("res", res);
+                } else if (phaseRef.current === "CODING") {
+                    console.log("this called", phaseRef.current);
+                    const response = await getPromptResponse({
+                        actor: Actor.INTERVIEWER,
+                        context: `
+                        Problem: ${problem.title}
+                        Description: ${problem.problemDescription}
+                        Elapsed Time: ${Math.floor(elapsed / 60)} minutes
+
+                        Candidate's code:
+                        ${codeSnapshot || "[No code written yet]"}
+
+                        Candidate's last analyzed code:
+                        ${prevAnalysisCode || "[No previous code analyzed]"}
+
+                        Chat history:
+                        ${JSON.stringify(messages.slice(-5), null, 2)}
+
+                        Evaluate the situation and respond with:
+                        - One of: #STUCK, #WRONG_PATH, or #NORMAL
+                        - Followed by a one-line suggestion.`,
+                        promptKey: "analyze-coding-progress",
+                    });
+
+                    if (response.includes("#NORMAL")) {
+                        await addBotMessage(response);
                     }
-                    You are acting as a human coding interviewer.
 
-          It’s been ${Math.floor(
-              elapsed / 60
-          )} minutes since the interview started. The candidate is working on the following problem:
+                    if (response.includes("#STUCK")) {
+                        setPhase("stuckWhileCoding");
+                        phaseRef.current = "stuckWhileCoding";
+                        const tip = await getPromptResponse({
+                            actor: Actor.INTERVIEWER,
+                            context: `${commonContext}\nUser seems stuck. Offer hints or ask them to revisit logic.`,
+                            promptKey: "stuck-feedback",
+                        });
+                        console.log("tip", tip);
 
-          "${problem.title}"
-
-          Their current code is:
-          ${codeSnapshot || "[No code written yet]"}`,
-                    promptKey: autoPrompt,
-                }).then(async (response) => {
-                    await addBotMessage(response);
-                });
+                        await addBotMessage(tip);
+                    } else if (response.includes("WRONG_PATH")) {
+                        setPhase("goingOnWrongPath");
+                        phaseRef.current = "goingOnWrongPath";
+                        const warning = await getPromptResponse({
+                            actor: Actor.INTERVIEWER,
+                            context: `${commonContext}\nThe user seems to be going in a wrong direction or using an incorrect approach.`,
+                            promptKey: "wrong-path-feedback",
+                        });
+                        await addBotMessage(warning);
+                    }
+                    intitalCodeContextRef.current = codeSnapshot;
+                    setPhase("CODING");
+                    phaseRef.current = "CODING";
+                }
             }
         }, 10000);
 
@@ -213,28 +312,102 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!input.trim()) return;
+        let approachAttempt = 0;
 
         const userMsg = { actor: Actor.USER, message: input };
         const updatedUserMessages = [...messages, userMsg];
         console.log("updatedUserMessages", updatedUserMessages);
         setMessages(updatedUserMessages);
+        console.log("messages", messages);
         setInput("");
         setLoading(true);
 
         await updateChatsInSession([userMsg]);
+        const currentPhase = stageRef.current;
+        console.log(currentPhase);
 
         try {
-            const aiResponse = await getPromptResponse({
-                actor: Actor.USER,
-                context: `Problem: ${problem.title}\n\n${problem.problemDescription}\n\nCurrent code:\n${codeRef.current}\nCandidate's message:
-        "${input}"`,
-                promptKey: `handle-chat`,
-            });
+            if (currentPhase === "ASK_UNDERSTAND") {
+                if (/\b(yes|yeah|understood|got it)\b/i.test(input)) {
+                    const problemApproach = await getPromptResponse({
+                        actor: Actor.INTERVIEWER,
+                        context: `Chat transcript:${JSON.stringify(
+                            messages,
+                            null,
+                            2
+                        )}`,
+                        promptKey: "ask-approach",
+                    });
+                    await addBotMessage(problemApproach);
+                    setStage("WAIT_FOR_APPROACH");
+                    stageRef.current = "WAIT_FOR_APPROACH";
+                } else if (
+                    /\b(no|not really|confused|don’t understand|still not)\b/i.test(
+                        input
+                    )
+                ) {
+                    const nudge = await getPromptResponse({
+                        actor: Actor.INTERVIEWER,
+                        context: `Nudge the user to not start coding but explain their approach first.
+                        Chat transcript:
+                        ${JSON.stringify(messages, null, 2)}
+                        `,
+                        promptKey: "nudge-approach",
+                    });
+                    await addBotMessage(nudge);
+                    understandingAttemptsRef.current++;
+                    if (understandingAttemptsRef.current > 2) {
+                        addBotMessage(
+                            "Okay we'll now get back to solving the problem"
+                        );
+                        setStage("WAIT_FOR_APPROACH");
+                        stageRef.current = "WAIT_FOR_APPROACH";
+                    }
+                }
+            } else if (currentPhase === "WAIT_FOR_APPROACH") {
+                const codeMsg = await getPromptResponse({
+                    actor: Actor.INTERVIEWER,
+                    context: `Acknowledge user's approach and ask to start coding.
+                    Chat transcript: ${JSON.stringify(messages, null, 2)}`,
+                    promptKey: "ack-approach",
+                });
+                if (codeMsg.includes("#CORRECT")) {
+                    setStage("CODING");
+                    stageRef.current = "CODING";
+                    await addBotMessage("Okay, you can start coding now");
+                } else if (codeMsg.includes("#WRONG")) {
+                    setStage("WAIT_FOR_APPROACH");
+                    stageRef.current = "WAIT_FOR_APPROACH";
+                    approachAttempt += 1;
+                    if (approachAttempt > 2) {
+                        setStage("CODING");
+                        stageRef.current = "CODING";
+                        addBotMessage("Okay, you can start coding now");
+                        return;
+                    }
+                    const response = await getPromptResponse({
+                        actor: Actor.INTERVIEWER,
+                        context: `User has probably given wrong answer so acknowledge the approach.
+                        Chat transcript: ${JSON.stringify(messages, null, 2)}`,
+                        promptKey: "repeat-ask",
+                    });
+                    await addBotMessage(response);
+                }
+            }
+            if (stageRef.current === "CODING") {
+                if (!sessionId) {
+                    const sessionId = await createSession({
+                        userId,
+                        problemId: problem.problemId || "",
+                    });
 
-            const botMsg = { actor: Actor.INTERVIEWER, message: aiResponse };
-            const updatedFinalMessages = [...updatedUserMessages, botMsg];
-            setMessages(updatedFinalMessages);
-            await updateChatsInSession([botMsg]);
+                    localStorage.setItem("mtv-sessionId", sessionId);
+                    updateChatsInSession([...messages]);
+                } else {
+                    setLoading(false);
+                    return;
+                }
+            }
         } catch {
             const errorMsg = {
                 actor: Actor.AI,

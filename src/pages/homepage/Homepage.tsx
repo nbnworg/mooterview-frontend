@@ -7,7 +7,7 @@ import type { ProblemSummary } from "mooterview-client";
 import { FaPlay } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { getAllProblems } from "../../utils/handlers/getAllProblems";
-import { createSession } from "../../utils/handlers/createSession";
+// import { createSession } from "../../utils/handlers/createSession";
 
 const Homepage = () => {
   const [problems, setProblems] = useState<any>();
@@ -132,17 +132,17 @@ const data= JSON.parse(
                     const userId = userData.id;
 
                     try {
-                      const sessionId = await createSession({
-                        userId,
-                        problemId: problem.problemId || "",
-                      });
+                      // const sessionId = await createSession({
+                      //   userId,
+                      //   problemId: problem.problemId || "",
+                      // });
 
-                      localStorage.setItem("mtv-sessionId", sessionId);
+                      // localStorage.setItem("mtv-sessionId", sessionId);
 
                       navigate(
                         `/problem/${encodeURIComponent(problem.title ?? "")}`,
                         {
-                          state: { problemId: problem.problemId },
+                          state: { problemId: problem.problemId, userId },
                         }
                       );
                     } catch (err) {
