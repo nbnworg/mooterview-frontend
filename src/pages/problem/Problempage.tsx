@@ -7,7 +7,6 @@ import { useEffect, useRef, useState } from "react";
 import { getProblemById } from "../../utils/handlers/getProblemById";
 import type { Problem } from "mooterview-client";
 import ChatBox from "../../components/chatbox/ChatBox";
-import { initialCode } from "../../utils/constants";
 
 const ProblemPage = () => {
   const location = useLocation();
@@ -15,8 +14,7 @@ const ProblemPage = () => {
 
   const [problem, setProblem] = useState<Problem>();
   const [error, setError] = useState<string | null>(null);
-  const [code, setCode] = useState<{ [lang: string]: string }>(initialCode);
-  const [language, setLanguage] = useState("python");
+  const [code, setCode] = useState<string>(""); // Empty code
   const [timeLeft, setTimeLeft] = useState(15 * 60);
 
   const verifySolutionRef = useRef<() => void | null>(null);
@@ -66,18 +64,14 @@ const ProblemPage = () => {
           <p>{problem.problemDescription}</p>
           <ChatBox
             problem={problem}
-            code={code[language]}
             elapsedTime={(problem.averageSolveTime ?? 15) * 60 - timeLeft}
-            onVerifyRef={verifySolutionRef}
-          />
+            onVerifyRef={verifySolutionRef} code={code}          />
         </div>
         <div className="verticalLine"></div>
         <div className="codeEditorAndOptionsContainer">
           <CodeEditor
             code={code}
             setCode={setCode}
-            language={language}
-            setLanguage={setLanguage}
             timeLeft={timeLeft}
             setTimeLeft={setTimeLeft}
           />

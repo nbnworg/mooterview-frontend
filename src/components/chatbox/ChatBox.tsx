@@ -35,7 +35,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
   const [isSolutionVerifiedCorrect, setIsSolutionVerifiedCorrect] =
     useState(false);
   const isSolutionVerifiedCorrectRef = useRef(false);
-  const [isListening, setIsListening] = useState(false);
+  const [, setIsListening] = useState(false);
 
   const {
     transcript,

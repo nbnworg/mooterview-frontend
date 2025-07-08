@@ -1,5 +1,7 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import "./solution.css";
+import { useEffect, useState } from "react";
+import { getSessionById } from "../../utils/handlers/getSessionById"
 
 const Solution = () => {
     const location = useLocation();
@@ -9,6 +11,38 @@ const Solution = () => {
     const handleNavigateHome = () => {
         navigate("/home");
     };
+
+
+    const [notes, setNotes] = useState<{ content: any }[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const sessionId = localStorage.getItem("mtv-sessionId");
+
+  useEffect(() => {
+    const fetchSession = async () => {
+      if (!sessionId) {
+        setError("No session ID found.");
+        return;
+      }
+
+      try {
+        const session = await getSessionById(sessionId);
+        setNotes(session.notes || []);
+      } catch (err) {
+        setError("Failed to fetch session notes.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSession();
+  }, [sessionId]);
+
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p>{error}</p>;
+  const userSolution = notes[1]?.content || "No solution provided.";
+
 
     if (!evaluation) {
         return (
@@ -30,6 +64,27 @@ const Solution = () => {
             <section className="solution-section solution-summary-section">
                 <h2 className="solution-section-title">Summary</h2>
                 <p className="solution-summary-text">{evaluation.summary}</p>
+            </section>
+
+            <section>
+                 <div>
+                    <section className="solution-section solution-summary-section">
+        <h2 className="solution-section-title">Your Solution</h2>
+        
+       <pre
+          style={{
+          
+            padding: "1rem",
+            borderRadius: "6px",
+            overflowX: "auto",
+          }}
+        >
+          {userSolution}
+        </pre>
+          
+       
+      </section>
+    </div>
             </section>
 
             <section className="solution-section solution-alternatives-section">
