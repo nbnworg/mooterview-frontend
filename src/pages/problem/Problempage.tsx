@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Navigate, useLocation,  } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import Navbar from "../../components/navbar/Navbar";
 import "./problem.css";
 import CodeEditor from "../../components/codeEditor/CodeEditor";
