@@ -8,8 +8,10 @@ import { getProblemById } from "../../utils/handlers/getProblemById";
 import type { Problem } from "mooterview-client";
 import ChatBox from "../../components/chatbox/ChatBox";
 
+
 const ProblemPage = () => {
   const location = useLocation();
+ 
   const problemId = location.state?.problemId;
 
   const [problem, setProblem] = useState<Problem>();
@@ -18,6 +20,16 @@ const ProblemPage = () => {
   const [timeLeft, setTimeLeft] = useState(15 * 60);
 
   const verifySolutionRef = useRef<() => void | null>(null);
+  const endSessionRef = useRef<() => void | null>(null);
+
+
+  useEffect(() => {
+  if (timeLeft === 0) {
+    
+    endSessionRef.current?.();     
+  }
+}, [timeLeft]);
+
 
   useEffect(() => {
     if (!problemId) return;
@@ -35,6 +47,9 @@ const ProblemPage = () => {
 
     fetchProblem();
   }, [problemId]);
+
+
+
 
   if (!problemId) {
     return <Navigate to="/home" replace />;
@@ -65,7 +80,8 @@ const ProblemPage = () => {
           <ChatBox
             problem={problem}
             elapsedTime={(problem.averageSolveTime ?? 15) * 60 - timeLeft}
-            onVerifyRef={verifySolutionRef} code={code}          />
+            onVerifyRef={verifySolutionRef} code={code}     onEndRef={endSessionRef}      />
+                  
         </div>
         <div className="verticalLine"></div>
         <div className="codeEditorAndOptionsContainer">

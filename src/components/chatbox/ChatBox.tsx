@@ -11,6 +11,7 @@ interface ChatBoxProps {
     code: string;
     elapsedTime: number;
     onVerifyRef?: React.MutableRefObject<(() => void) | null>;
+    onEndRef?: React.MutableRefObject<(() => void) | null>;
 }
 
 const ChatBox: React.FC<ChatBoxProps> = ({
@@ -18,6 +19,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     code,
     elapsedTime,
     onVerifyRef,
+    onEndRef
 }) => {
     const [messages, setMessages] = useState<any[]>([]);
     const [input, setInput] = useState("");
@@ -50,6 +52,13 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     useEffect(() => {
         messagesRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages]);
+
+    useEffect(() => {
+  if (onEndRef) {
+   onEndRef.current = () => endSession(true);
+  }
+}, [code, problem]);
+
 
     const addBotMessage = async (text: string) => {
         const newMessage = { actor: Actor.INTERVIEWER, message: text };
@@ -114,11 +123,16 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         }
     };
 
-    const endSession = async () => {
-        const wantsSolution = window.confirm(
+    const endSession = async (calledAutomatically:boolean ) => {
+        let wantsSolution = true;
+
+    if (!calledAutomatically) {
+        wantsSolution = window.confirm(
             "Are you sure you want to end session and view real solution?"
         );
-
+    } else {
+        alert(" Your time is finished. Please move to the Evaluation page...");
+    }
         const sessionId = localStorage.getItem("mtv-sessionId");
         if (!sessionId) return;
 
@@ -313,7 +327,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                 </button>
             </form>
 
-            <button className="endSessionButton" onClick={endSession}>
+            <button className="endSessionButton" onClick={()=>endSession(false)}>
                 End Session
             </button>
         </div>
