@@ -86,7 +86,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
 
     const updateChatsInSession = async (newChats: any[]) => {
         const sessionId = localStorage.getItem("mtv-sessionId");
-        console.log("sess", sessionId);
         if (!sessionId) return;
 
         try {
@@ -103,14 +102,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         summary: string;
         alternativeSolutions: string[];
     }> => {
-        console.log(
-            "data",
-            problem.title,
-            problem.problemDescription,
-            codeRef.current,
-            messages
-        );
-        console.log("code", codeRef.current);
 
         const promptKey = "generate-summary";
 
@@ -167,7 +158,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                         },
                     ],
                 });
-                console.log("evaluation", evaluation);
                 navigate(
                     `/solution/${encodeURIComponent(problem.title ?? "")}`,
                     { state: { evaluation }, replace: true }
@@ -181,9 +171,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         }
     };
 
-    // ✅ Initial problem explanation
     useEffect(() => {
-        // if (!sessionId) return;
         const explainProblem = async () => {
             if (hasExplainedRef.current) return;
             hasExplainedRef.current = true;
@@ -193,15 +181,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                 promptKey: "explain-problem",
             });
             await addBotMessage(response);
-
-            // const askAgain = await getPromptResponse({
-            //     actor: Actor.INTERVIEWER,
-            //     context: "Ask the user if they understood the problem",
-            //     promptKey: "ask-understand"
-            // })
-            // await addBotMessage(askAgain);
-            // setMessages([...messages, { actor: Actor.INTERVIEWER, message: "Have you understood the problem?" }])
-            addBotMessage("Have you understood the problem?");
+            await addBotMessage("Have you understood the problem?");
             setStage("ASK_UNDERSTAND");
             stageRef.current = "ASK_UNDERSTAND";
         };
@@ -209,7 +189,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         explainProblem();
     }, [problem]);
 
-    // Auto-tip every 5 mins
     useEffect(() => {
         const interval = setInterval(async () => {
             const elapsed = elapsedTimeRef.current;
@@ -221,7 +200,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                 "Diff:",
                 elapsed - lastAutoTimeRef.current
             );
-            console.log("Interval");
 
             if (
                 !isSolutionVerifiedCorrectRef.current &&
@@ -241,16 +219,13 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                 const prevAnalysisCode = intitalCodeContextRef.current;
 
                 if (phaseRef.current === "CODING_NOT_STARTED") {
-                    console.log("CODING NOT TRIGGERED");
 
-                    const res = await getPromptResponse({
+                    await getPromptResponse({
                         actor: Actor.INTERVIEWER,
                         context: commonContext,
                         promptKey: "nudge-start-coding",
                     }).then(async (response) => await addBotMessage(response));
-                    console.log("res", res);
                 } else if (phaseRef.current === "CODING") {
-                    console.log("this called", phaseRef.current);
                     const response = await getPromptResponse({
                         actor: Actor.INTERVIEWER,
                         context: `
@@ -265,7 +240,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                         ${prevAnalysisCode || "[No previous code analyzed]"}
 
                         Chat history:
-                        ${JSON.stringify(messages.slice(-5), null, 2)}
+                        ${JSON.stringify(messages.slice(-8), null, 2)}
 
                         Evaluate the situation and respond with:
                         - One of: #STUCK, #WRONG_PATH, or #NORMAL
@@ -285,7 +260,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                             context: `${commonContext}\nUser seems stuck. Offer hints or ask them to revisit logic.`,
                             promptKey: "stuck-feedback",
                         });
-                        console.log("tip", tip);
 
                         await addBotMessage(tip);
                     } else if (response.includes("WRONG_PATH")) {
@@ -467,7 +441,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             promptKey,
         });
 
-        console.log("code", currentCode);
 
         if (response.trim().startsWith("Correct")) {
             setIsSolutionVerifiedCorrect(true);

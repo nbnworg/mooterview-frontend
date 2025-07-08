@@ -1,15 +1,6 @@
 import { getPromptResponse } from "./handlers/getPromptResponse";
 import { Actor } from "mooterview-client";
 
-/**
- * Classifies the user's input to determine the intent.
- * Returns one of:
- * - #UNDERSTOOD_CONFIRMATION
- * - #CONFUSED
- * - #REQUESTED_EXAMPLE
- * - #APPROACH_PROVIDED
- * - #OFF_TOPIC
- */
 export const classifyUserMessage = async (input: string, currentStage: string, recentMessages: string[]) => {
     const response = await getPromptResponse({
         actor: Actor.SYSTEM,
