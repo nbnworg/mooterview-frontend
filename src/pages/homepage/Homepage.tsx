@@ -7,21 +7,25 @@ import type { ProblemSummary } from "mooterview-client";
 import { FaPlay } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { getAllProblems } from "../../utils/handlers/getAllProblems";
-// import { createSession } from "../../utils/handlers/createSession";
+import { createSession } from "../../utils/handlers/createSession";
+import { getTokenData } from "../../utils/constants";
+import { Solvedproblems } from "../../utils/handlers/getAllProblems";
 
 const Homepage = () => {
   const [problems, setProblems] = useState<any>();
+  const [solvedProblem, setsolvedProblem] = useState<string[]>([]);
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedLevel, setSelectedLevel] = useState<string>("All");
+  const [solved, setsolved] = useState<string>("All");
   const [searchTerm, setSearchTerm] = useState<string>("");
 
-const data= JSON.parse(
-  localStorage.getItem("userData") || "{}"
+  const data = JSON.parse(
+    localStorage.getItem("userData") || "{}"
   )
   console.log("access token: ", data);
-  
+
   useEffect(() => {
     console.log("before problems");
     const fetchProblems = async () => {
@@ -35,7 +39,7 @@ const data= JSON.parse(
       } catch (error: any) {
         setError(
           error.response?.data ||
-            "Server Is busy, Can't Fetch problem right now."
+          "Server Is busy, Can't Fetch problem right now."
         );
       } finally {
         setLoading(false);
@@ -44,18 +48,37 @@ const data= JSON.parse(
 
     fetchProblems();
   }, []);
-  console.log("problems: ", problems);
 
-  const filterProblems = problems?.filter((problem: ProblemSummary) => {
-    const matchesLevel =
-      selectedLevel === "All" ||
-      problem.level?.toLowerCase() === selectedLevel.toLowerCase();
-    
-    const matchesSearch = problem.title
-      ?.toLowerCase()
-      .includes(searchTerm.toLowerCase());
-    return matchesLevel && matchesSearch;
-  });
+  useEffect(() => {
+    const fetchSolvedProblems = async () => {
+      const result: string[] = await Solvedproblems(getTokenData().id);
+      setsolvedProblem(result);
+    }
+    fetchSolvedProblems();
+  }, [])
+
+  console.log("problems: ", problems);
+const filteredProblems = problems?.filter((problem: ProblemSummary) => {
+  const matchesLevel =
+    selectedLevel === "All" ||
+    problem.level?.toLowerCase() === selectedLevel.toLowerCase();
+
+  const matchesSearch = problem.title
+    ?.toLowerCase()
+    .includes(searchTerm.toLowerCase());
+
+  const isSolved = solvedProblem.includes(String(problem.problemId));
+
+  const matchesSolve =
+    solved === "All" ||
+    (solved === "Solved" && isSolved) ||
+    (solved === "UnSolved" && !isSolved);
+
+  return matchesLevel && matchesSearch && matchesSolve;
+});
+
+
+
 
   return (
     <>
@@ -73,6 +96,18 @@ const data= JSON.parse(
             <option value="Medium">Medium</option>
             <option value="Hard">Hard</option>
           </select>
+
+          <label htmlFor="solveFilter"> Problem Status:</label>
+          <select
+            id="solveFilter"
+            value={solved}
+            onChange={(e) => setsolved(e.target.value)}
+          >
+            <option value="All">All</option>
+            <option value="UnSolved">Unsolved</option>
+            <option value="Solved">Solved</option>
+          </select>
+
           <input
             type="text"
             placeholder="Search problems..."
@@ -105,7 +140,7 @@ const data= JSON.parse(
         ) : !problems || problems?.length === 0 ? (
           <p className="empty">No problems available.</p>
         ) : (
-          filterProblems.map((problem: ProblemSummary) => (
+          filteredProblems.map((problem: ProblemSummary) => (
             <div className="problemCard" key={problem.problemId}>
               <div className="problemSummaryContainer">
                 <p className="problemTitle">{problem.title}</p>
@@ -119,7 +154,7 @@ const data= JSON.parse(
                   {problem.level}
                 </p>
               </div>
-              
+
               <button
                 onClick={async () => {
                   const confirmed = window.confirm(
