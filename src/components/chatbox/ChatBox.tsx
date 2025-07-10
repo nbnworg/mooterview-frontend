@@ -36,6 +36,13 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     useState(false);
   const isSolutionVerifiedCorrectRef = useRef(false);
   const [, setIsListening] = useState(false);
+  const [speechError, setSpeechError] = useState<string | null>(null);
+  const [permissionStatus, setPermissionStatus] = useState<
+    "granted" | "denied" | "prompt" | "unknown"
+  >("unknown");
+  const [microphonePermission, setMicrophonePermission] = useState<
+    "granted" | "denied" | "prompt" | "unknown"
+  >("unknown");
 
   const {
     transcript,
@@ -45,15 +52,77 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     isMicrophoneAvailable,
   } = useSpeechRecognition();
 
+  const sessionId = localStorage.getItem("mtv-sessionId");
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const checkPermissions = async () => {
+      try {
+        const isSecure =
+          window.location.protocol === "https:" ||
+          window.location.hostname === "localhost" ||
+          window.location.hostname === "127.0.0.1";
+
+        if (!isSecure) {
+          setSpeechError(
+            "Speech recognition requires HTTPS. Please use a secure connection."
+          );
+          return;
+        }
+
+        if (navigator.permissions) {
+          try {
+            const permission = await navigator.permissions.query({
+              name: "microphone" as PermissionName,
+            });
+            setMicrophonePermission(permission.state);
+
+            permission.onchange = () => {
+              setMicrophonePermission(permission.state);
+            };
+          } catch (err) {
+            console.warn("Permission API not supported", err);
+            setMicrophonePermission("unknown");
+          }
+        }
+
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+          try {
+            const stream = await navigator.mediaDevices.getUserMedia({
+              audio: true,
+            });
+            stream.getTracks().forEach((track) => track.stop());
+            setMicrophonePermission("granted");
+          } catch (err: any) {
+            console.warn("Microphone access denied or unavailable", err);
+            if (err.name === "NotAllowedError") {
+              setSpeechError(
+                "Microphone permission denied. Please allow microphone access in your browser settings."
+              );
+              setMicrophonePermission("denied");
+            } else if (err.name === "NotFoundError") {
+              setSpeechError(
+                "No microphone found. Please connect a microphone."
+              );
+            } else {
+              setSpeechError("Microphone access error: " + err.message);
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Error checking permissions", err);
+        setSpeechError("Unable to check microphone permissions.");
+      }
+    };
+
+    checkPermissions();
+  }, []);
+
   useEffect(() => {
     if (!isMicrophoneAvailable) {
       console.warn("Microphone not available");
     }
   }, [isMicrophoneAvailable]);
-
-  const sessionId = localStorage.getItem("mtv-sessionId");
-
-  const navigate = useNavigate();
 
   useEffect(() => {
     elapsedTimeRef.current = elapsedTime;
@@ -91,6 +160,20 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     SpeechRecognition.stopListening();
     setIsListening(false);
   };
+
+  useEffect(() => {
+    const handleSpeechError = (event: any) => {
+      console.error("Speech recognition error", event);
+      setSpeechError(`Speech recognition error: ${event.error}`);
+      setIsListening(false);
+    };
+
+    if (window.SpeechRecognition || window.webkitSpeechRecognition) {
+      const recognition = new (window.SpeechRecognition ||
+        window.webkitSpeechRecognition)();
+      recognition.onerror = handleSpeechError;
+    }
+  }, []);
 
   useEffect(() => {
     const handleSpeakingStateChange = (isSpeaking: boolean) => {
@@ -394,7 +477,12 @@ const ChatBox: React.FC<ChatBoxProps> = ({
   };
 
   if (!browserSupportsSpeechRecognition) {
-    return <div>Your browser doesn't support speech recognition.</div>;
+    return (
+      <div>
+        Your browser doesn't support speech recognition. Please use Chrome,
+        Edge, or Safari for voice features.
+      </div>
+    );
   }
 
   return (
