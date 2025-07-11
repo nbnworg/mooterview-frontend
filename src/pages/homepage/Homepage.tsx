@@ -104,8 +104,8 @@ const filteredProblems = problems?.filter((problem: ProblemSummary) => {
             onChange={(e) => setsolved(e.target.value)}
           >
             <option value="All">All</option>
-            <option value="UnSolved">Unsolved</option>
-            <option value="Solved">Solved</option>
+            <option value="Solved">Attempted</option>
+            <option value="UnSolved">Unattempted</option>
           </select>
 
           <input
