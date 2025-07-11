@@ -16,6 +16,7 @@ const SessionOfProblem = () => {
   const sessionId = location.state?.sessionId as string | undefined;
   const [problemTitle, setProblemTitle] = useState<string>("");
   const[ses,setses]=useState<boolean>(false);
+  
 
 
   const [currentSession, setCurrentSession] = useState<Partial<Session> | null>(null);
@@ -30,6 +31,8 @@ useEffect(() => {
 setses(true);
       const result = await getSessionById(sessionId);
       setCurrentSession(result);
+      
+      
 
       
       if (result.problemId) {
@@ -122,6 +125,22 @@ setses(true);
             </div>
           </div>
 
+          <div className="chat-section">
+              <h3 className="section-title">Summary</h3>
+             <div className="chat-container">
+{currentSession.notes?.[0]?.content || "No summary available."}
+
+             </div>
+          </div>
+<br />
+          <div className="chat-section">
+              <h3 className="section-title">Your Code</h3>
+             <div className="chat-container">
+             {currentSession.notes?.[1]?.content || "No summary available."}
+
+             </div>
+          </div>
+<br />
           <div className="chat-section">
             <h3 className="section-title">Chat History</h3>
             {currentSession.chatsQueue?.length ? (
