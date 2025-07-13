@@ -21,6 +21,7 @@ type Stage =
     | "ASK_UNDERSTAND"
     | "WAIT_FOR_APPROACH"
     | "CODING"
+    | "FOLLOW_UP"
     | "SESSION_END";
 
 type Phase =
@@ -249,7 +250,9 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                     });
 
                     if (response.includes("#NORMAL")) {
-                        await addBotMessage(response);
+                        await addBotMessage(
+                            response.replace("#NORMAL", "Good! ")
+                        );
                     }
 
                     if (response.includes("#STUCK")) {
@@ -354,6 +357,30 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                     });
                     await addBotMessage(clarification);
                     break;
+                }
+
+                case "#RIGHT_ANSWER": {
+                  await addBotMessage("Well done, that is correct");
+                  // const response = await getPromptResponse({
+                  //   actor: Actor.INTERVIEWER,
+                  //   context: `Chat transcript: ${JSON.stringify(messages, null, 2)}\n 
+                  //       Problem: ${problem.title}
+                  //       Description: ${problem.problemDescription}`,
+                  //   promptKey: "follow-correct"
+                  // });
+                  break;
+                }
+
+                case "#WRONG_ANSWER": {
+                   const response = await getPromptResponse({
+                    actor: Actor.INTERVIEWER,
+                    context: `Chat transcript: ${JSON.stringify(messages, null, 2)}\n 
+                        Problem: ${problem.title}
+                        Description: ${problem.problemDescription}`,
+                    promptKey: "ack-followup"
+                  });
+                  await addBotMessage(response);
+                  break;
                 }
 
                 case "#REQUESTED_EXAMPLE": {
@@ -550,8 +577,9 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         } catch (err) {
             console.error("Error during message handling", err);
             const errorMsg = {
-                actor: Actor.AI,
-                message: "Sorry, I couldn't process that.",
+                actor: Actor.INTERVIEWER,
+                message:
+                    "I couldn't comprehend due to network issue, can you state that again?",
             };
             const fallbackMessages = [...updatedUserMessages, errorMsg];
             setMessages(fallbackMessages);
@@ -564,7 +592,11 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     const lastWarnTimeRef = useRef(0);
     useEffect(() => {
         const now = Date.now();
-        if (stageRef.current !== "CODING" && code !== "" && now - lastWarnTimeRef.current > 5000) {
+        if (
+            stageRef.current !== "CODING" &&
+            code !== "" &&
+            now - lastWarnTimeRef.current > 5000
+        ) {
             addBotMessage("I'll suggest you to not start coding right now!");
             lastWarnTimeRef.current = now;
         } else {
@@ -581,8 +613,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     const handleVerifyCode = async () => {
         const currentCode = codeRef.current;
 
-        const promptKey = `verify-code`;
-
         const response = await getPromptResponse({
             actor: Actor.INTERVIEWER,
             context: `Problem: ${problem.title}\n${problem.problemStatement}\n
@@ -590,15 +620,27 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                 Description: ${problem.problemStatement}\n
                 Candidate's solution code:\n
                 ${currentCode || "[No code provided]"}`,
-            promptKey,
+            promptKey: "verify-code",
         });
 
+        const followUpResponse = await getPromptResponse({
+          actor: Actor.INTERVIEWER,
+          context: `Problem: ${problem.title}\n${problem.problemStatement}\n
+          Problem: ${problem.title}\n
+          Description: ${problem.problemStatement}\n
+          Candidate's solution code:\n
+          ${currentCode || "[No code provided]"}`,
+          promptKey: "follow-up",
+        });
+        
+        await addBotMessage(response);
+        
         if (response.trim().startsWith("Correct")) {
             setIsSolutionVerifiedCorrect(true);
             isSolutionVerifiedCorrectRef.current = true;
+            stageRef.current = "FOLLOW_UP";
+            await addBotMessage(followUpResponse);
         }
-
-        await addBotMessage(response);
     };
 
     return (

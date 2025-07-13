@@ -35,8 +35,14 @@ export const classifyUserMessage = async (input: string, currentStage: string, r
            - User says "yes" to clarification → #GENERAL_ACKNOWLEDGMENT
            - User asks for help with debugging → #CODING_HELP
            - User talks about unrelated topics → #OFF_TOPIC
-        
-        4. General rules:
+
+        4. If currentStage is "FOLLOW_UP":
+           - If user answers the follow-up question correctly (see context/transcript for question) → #RIGHT_ANSWER
+           - If user answers the follow-up question incorrectly or even slightly incorrect (see context/transcript for question) → #WRONG_ANSWER (not #CONFUSED)
+           - If user asks for clarification on the follow-up question → #REQUESTED_EXAMPLE
+           - If user gives unrelated or off-topic response → #OFF_TOPIC
+
+        5. General rules:
            - If user just says "yes", "okay", "sure" and we're NOT in ASK_UNDERSTAND stage → #GENERAL_ACKNOWLEDGMENT
            - If user describes algorithm/solution steps → #APPROACH_PROVIDED
            - If user asks about problem examples → #REQUESTED_EXAMPLE
@@ -44,6 +50,7 @@ export const classifyUserMessage = async (input: string, currentStage: string, r
            - If user talks about unrelated topics → #OFF_TOPIC
            - If user asks "where do i start or how should i do it" in WAIT_FOR_APPROACH -> #CODING_QUESTION
            - If the user is in WAIT_FOR_APPROACH and asks something out of context or not related to coding problem -> #CODING_QUESTION
+           - If user is in FOLLOW_UP stage never return #CONFUSED.
 
         Respond with ONLY one of:
         #UNDERSTOOD_CONFIRMATION
@@ -54,6 +61,8 @@ export const classifyUserMessage = async (input: string, currentStage: string, r
         #CODING_HELP
         #GENERAL_ACKNOWLEDGMENT
         #OFF_TOPIC
+        #WRONG_ANSWER
+        #RIGHT_ANSWER
     `;
 
     const response = await getPromptResponse({
