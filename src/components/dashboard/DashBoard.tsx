@@ -10,6 +10,7 @@ import './dashboard.css';
 import { getProblemById } from "../../utils/handlers/getProblemById";
 import type { Problem } from "mooterview-client";
 import Navbar from '../navbar/Navbar';
+import Preparation from './preparation';
 
 const DashBoard = () => {
   const [sessions, setSessions] = useState<Session[]>([]);
@@ -97,6 +98,11 @@ setses(false);
         </div>
       </div>
 
+<div className="sessions-section">
+   <Preparation/>
+</div>
+     
+<br />
       <div className="sessions-section">
         <h3 className="section-title">Problem Sessions</h3>
 
