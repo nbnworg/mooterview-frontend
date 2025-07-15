@@ -361,13 +361,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
 
                 case "#RIGHT_ANSWER": {
                   await addBotMessage("Well done, that is correct");
-                  // const response = await getPromptResponse({
-                  //   actor: Actor.INTERVIEWER,
-                  //   context: `Chat transcript: ${JSON.stringify(messages, null, 2)}\n 
-                  //       Problem: ${problem.title}
-                  //       Description: ${problem.problemDescription}`,
-                  //   promptKey: "follow-correct"
-                  // });
                   break;
                 }
 
