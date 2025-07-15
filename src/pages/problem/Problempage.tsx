@@ -13,6 +13,7 @@ const ProblemPage = () => {
   const location = useLocation();
  
   const problemId = location.state?.problemId;
+  const userId = location.state?.userId;
 
   const [problem, setProblem] = useState<Problem>();
   const [error, setError] = useState<string | null>(null);
@@ -80,8 +81,11 @@ const ProblemPage = () => {
           <ChatBox
             problem={problem}
             elapsedTime={(problem.averageSolveTime ?? 15) * 60 - timeLeft}
-            onVerifyRef={verifySolutionRef} code={code}     onEndRef={endSessionRef}      />
-                  
+            onVerifyRef={verifySolutionRef}
+            userId={userId} 
+            code={code}
+            onEndRef={endSessionRef}
+          />
         </div>
         <div className="verticalLine"></div>
         <div className="codeEditorAndOptionsContainer">

@@ -50,6 +50,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
         <Editor
           height="60vh"
           value={code}
+          language="python"
           theme="vs-dark"
           onChange={(value) => setCode(value || "")}
           options={{
