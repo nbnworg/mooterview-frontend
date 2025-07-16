@@ -1,67 +1,67 @@
 .session-container {
-  max-width: 800px;
+  max-width: 80vw;
   margin: 0 auto;
-  padding: 20px;
+  padding: 2vw;
   font-family: Arial, sans-serif;
   background-color: #f5f5f5;
 }
 
 .session-header {
   background: white;
-  padding: 20px;
-  border-radius: 5px;
-  margin-bottom: 20px;
-  border: 1px solid #ddd;
+  padding: 1vw;
+  border-radius: 0.52vw;
+  margin-bottom: 0.1vw;
+  border: 0.052vw solid #ddd;
 }
 
 .session-title {
-  font-size: 24px;
+  font-size: 2vw;
   color: #333;
   margin: 0;
-  font-weight: normal;
+  font-weight: bold;
 }
 
 .session-error {
   color: #d32f2f;
   background-color: #ffebee;
-  padding: 15px;
-  border-radius: 5px;
-  margin-bottom: 20px;
-  border: 1px solid #ffcdd2;
+  padding: 1.4vw;
+  border-radius: 0.21vw;
+  margin-bottom: 1.04vw;
+  border: 0.052vw solid #ffcdd2;
 }
 
 .session-info {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 15px;
-  margin-bottom: 30px;
+  gap: 1.5vw;
+  margin-bottom: 1.56vw;
 }
 
 .info-item {
   background: white;
-  padding: 15px;
-  border-radius: 5px;
-  border: 1px solid #ddd;
+  padding: 1.5vw;
+  border-radius: 0.52vw;
+  border: 0.052vw solid #ddd;
 }
 
 .info-label {
   display: block;
   font-weight: bold;
   color: #333;
-  margin-bottom: 5px;
-  font-size: 14px;
+  margin-bottom: 0.26vw;
+  font-size: 1.1vw;
 }
 
 .info-value {
   color: #666;
-  font-size: 14px;
+  font-size: 1vw;
 }
 
 .status-badge {
   display: inline-block;
-  padding: 5px 10px;
-  border-radius: 3px;
-  font-size: 12px;
+  padding: 0.26vw 0.52vw;
+  border-radius: 0.16vw;
+  font-size: 1vw;
   font-weight: bold;
   text-transform: uppercase;
 }
@@ -83,152 +83,151 @@
 
 .chat-section {
   background: white;
-  border-radius: 5px;
-  padding: 20px;
-  border: 1px solid #ddd;
+  border-radius: 0.26vw;
+  padding: 1.04vw;
+  border: 0.052vw solid #ddd;
 }
 
 .section-title {
-  font-size: 18px;
+  font-size: 1.1vw;
   color: #333;
-  margin: 0 0 20px 0;
+  margin: 0 0 1.04vw 0;
   font-weight: bold;
-  border-bottom: 2px solid #eee;
-  padding-bottom: 10px;
+  border-bottom: 0.104vw solid #eee;
+  padding-bottom: 0.52vw;
 }
 
 .chat-container {
-  max-height: 400px;
+  max-height: 20.83vw;
   overflow-y: auto;
-  border: 1px solid #eee;
-  padding: 10px;
+  border: 0.052vw solid #eee;
+  padding: 0.52vw;
   background-color: #fafafa;
 }
 
 .chat-item {
-  margin-bottom: 15px;
-  padding: 10px;
-  border-radius: 5px;
-  border: 1px solid #ddd;
+  margin-bottom: 0.78vw;
+  padding: 0.52vw;
+  border-radius: 0.26vw;
+  border: 0.052vw solid #ddd;
 }
 
 .chat-interviewer {
   background-color: #e3f2fd;
-  border-left: 3px solid #2196f3;
+  border-left: 0.156vw solid #2196f3;
 }
 
 .chat-candidate {
   background-color: #e8f5e8;
-  border-left: 3px solid #4caf50;
+  border-left: 0.156vw solid #4caf50;
 }
 
 .chat-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 8px;
+  margin-bottom: 0.42vw;
 }
 
 .chat-actor {
   font-weight: bold;
   color: #333;
-  font-size: 14px;
+  font-size: 1.1vw;
 }
 
 .chat-index {
   background-color: #ddd;
   color: #666;
-  padding: 2px 8px;
-  border-radius: 10px;
-  font-size: 12px;
+  padding: 0.1vw 0.42vw;
+  border-radius: 0.52vw;
+  font-size: 0.8vw;
 }
 
 .chat-message {
   line-height: 1.4;
   color: #555;
-  font-size: 14px;
+  font-size: 1vw;
 }
 
 .loading-indicator {
   text-align: center;
-  padding: 40px;
+  padding: 2.08vw;
   color: #666;
-  font-size: 16px;
+  font-size: 0.83vw;
 }
 
 .no-data {
   text-align: center;
-  padding: 30px;
+  padding: 1.56vw;
   color: #999;
   background-color: #f9f9f9;
-  border-radius: 5px;
-  border: 1px solid #eee;
+  border-radius: 0.26vw;
+  border: 0.052vw solid #eee;
 }
-
 
 @media (max-width: 768px) {
   .session-container {
-    padding: 1rem;
+    padding: 2.6vw;
   }
-  
+
   .session-info {
     grid-template-columns: 1fr;
   }
-  
+
   .session-header {
-    padding: 1rem;
+    padding: 2.6vw;
   }
-  
+
   .session-title {
-    font-size: 1.5rem;
+    font-size: 2.6vw;
   }
-  
+
   .chat-item {
-    padding: 1rem;
+    padding: 2.6vw;
   }
-  
+
   .chat-header {
     flex-direction: column;
     align-items: flex-start;
-    gap: 0.5rem;
+    gap: 1.3vw;
   }
 }
 
 @media (max-width: 480px) {
   .info-item {
-    padding: 1rem;
+    padding: 2.6vw;
   }
-  
+
   .chat-section {
-    padding: 1rem;
+    padding: 2.6vw;
   }
-  
+
   .section-title {
-    font-size: 1.2rem;
+    font-size: 2.1vw;
   }
 }
 
 .back-button {
-  margin: 16px 0;
-  padding: 10px 20px;
-  margin-left: 3px;
+  margin: 0.83vw 0;
+  padding: 0.52vw 1.04vw;
+  margin-left: 0.16vw;
   background: linear-gradient(135deg, #835cad 0%, #4b80db 100%);
   color: white;
   border: none;
-  border-radius: 8px;
-  font-size: 16px;
+  border-radius: 0.42vw;
+  font-size: 0.83vw;
   font-weight: 500;
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 0.21vw 0.63vw rgba(0, 0, 0, 0.15);
 }
 
 .back-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+  transform: translateY(-0.1vw);
+  box-shadow: 0 0.31vw 0.83vw rgba(0, 0, 0, 0.2);
 }
 
 .back-button:active {
-  transform: translateY(1px);
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+  transform: translateY(0.05vw);
+  box-shadow: 0 0.16vw 0.42vw rgba(0, 0, 0, 0.1);
 }
