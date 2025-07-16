@@ -7,6 +7,9 @@ import { Actor, type Problem } from "mooterview-client";
 import { useNavigate } from "react-router-dom";
 import { createSession } from "../../utils/handlers/createSession";
 import { classifyUserMessage } from "../../utils/classifyUserMsg";
+import ConfirmationModal from "../Confirmationmodal/Confirmationmodal";
+
+
 
 interface ChatBoxProps {
     problem: Problem;
@@ -16,6 +19,7 @@ interface ChatBoxProps {
     userId: string;
     onEndRef?: React.MutableRefObject<(() => void) | null>;
 }
+
 
 type Stage =
     | "EXPLAIN_PROBLEM"
@@ -37,7 +41,8 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     elapsedTime,
     onVerifyRef,
     userId,
-    onEndRef
+    onEndRef,
+    
 }) => {
     const [messages, setMessages] = useState<any[]>([]);
     const [input, setInput] = useState("");
@@ -55,9 +60,18 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     const intitalCodeContextRef = useRef("");
     const approachAttemptCountRef = useRef(0);
     const hasProvidedApproachRef = useRef(false);
-
     const [_phase, setPhase] = useState<Phase>("CODING_NOT_STARTED");
     const phaseRef = useRef("CODING_NOT_STARTED");
+    
+    const [confirmationModal, setConfirmationModal] = useState<{
+        text1: string;
+        text2: string;
+        btn1Text: string;
+        btn2Text: string;
+        btn1Handler: () => void;
+        btn2Handler: () => void;
+    } | null>(null);
+
 
     const sessionId = localStorage.getItem("mtv-sessionId");
 
@@ -80,10 +94,10 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     }, [messages]);
 
     useEffect(() => {
-  if (onEndRef) {
-   onEndRef.current = () => endSession(true);
-  }
-}, [code, problem]);
+        if (onEndRef) {
+            onEndRef.current = () => endSession(true);
+        }
+    }, [code, problem]);
 
 
     const addBotMessage = async (text: string) => {
@@ -142,50 +156,78 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         }
     };
 
-    const endSession = async (calledAutomatically:boolean ) => {
+    const endSession = async (
+        calledAutomatically: boolean,
+        setConfirmationModal?: React.Dispatch<
+            React.SetStateAction<{
+                text1: string;
+                text2: string;
+                btn1Text: string;
+                btn2Text: string;
+                btn1Handler: () => void;
+                btn2Handler: () => void;
+            } | null>
+        >,
+        skipAutoAlert?: boolean 
+    ) => {
         let wantsSolution = true;
 
-    if (!calledAutomatically) {
-        wantsSolution = window.confirm(
-            "Are you sure you want to end session and view real solution?"
-        );
-    } else {
-        alert(" Your time is finished. Please move to the Evaluation page...");
-    }
+        if (!calledAutomatically) {
+            if (setConfirmationModal) {
+                setConfirmationModal({
+                    text1: "Are you sure?",
+                    text2: "This will end your session and take you to the evaluation.",
+                    btn1Text: "Yes, End Session",
+                    btn2Text: "Cancel",
+                    btn1Handler: () => {
+                        setConfirmationModal(null);
+                        endSession(true, undefined, true); 
+                    },
+                    btn2Handler: () => setConfirmationModal(null),
+                });
+            }
+            return;
+        } else if (!skipAutoAlert) {
+            alert("Your time is finished. Please move to the Evaluation page...");
+        }
+
         const sessionId = localStorage.getItem("mtv-sessionId");
-        if (!sessionId) return;
+        console.log("session id at end session :", sessionId);
 
         try {
-            await updateSessionById({
-                sessionId,
-                endTime: new Date().toISOString(),
-            });
-
-            localStorage.removeItem("mtv-sessionId");
-            if (wantsSolution) {
-                const evaluation = await generateEvaluationSummary();
+            if (sessionId) {
                 await updateSessionById({
                     sessionId,
-                    notes: [
-                        { content: evaluation.summary },
-                        {
-                            content:
-                                codeRef.current.trim() || "No code provided",
-                        },
-                    ],
+                    endTime: new Date().toISOString(),
                 });
-                navigate(
-                    `/solution/${encodeURIComponent(problem.title ?? "")}`,
-                    { state: { evaluation }, replace: true }
-                );
+                
+                localStorage.removeItem("mtv-sessionId");
+                if (wantsSolution) {
+                    const evaluation = await generateEvaluationSummary();
+                    await updateSessionById({
+                        sessionId,
+                        notes: [
+                            { content: evaluation.summary },
+                            {
+                                content: codeRef.current.trim() || "No code provided",
+                            },
+                        ],
+                    });
+                    navigate(
+                        `/solution/${encodeURIComponent(problem.title ?? "")}`,
+                        { state: { evaluation, sessionId }, replace: true }
+                    );
+                } else {
+                    navigate("/home", { replace: true });
+                }
             } else {
-                alert("Session ended successfully.");
+                console.log("session id is", sessionId);
                 navigate("/home", { replace: true });
             }
         } catch (err) {
             console.error("Failed to end session", err);
         }
-    };
+    };  
 
     useEffect(() => {
         const explainProblem = async () => {
@@ -228,9 +270,8 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                     phaseRef.current = "CODING";
                 }
 
-                const commonContext = `Problem: ${problem.title}\n\n${
-                    problem.problemDescription
-                }
+                const commonContext = `Problem: ${problem.title}\n\n${problem.problemDescription
+                    }
                     Elapsed time: ${Math.floor(elapsed / 60)} minutes`;
                 const prevAnalysisCode = intitalCodeContextRef.current;
 
@@ -374,20 +415,20 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                 }
 
                 case "#RIGHT_ANSWER": {
-                  await addBotMessage("Well done, that is correct");
-                  break;
+                    await addBotMessage("Well done, that is correct");
+                    break;
                 }
 
                 case "#WRONG_ANSWER": {
-                   const response = await getPromptResponse({
-                    actor: Actor.INTERVIEWER,
-                    context: `Chat transcript: ${JSON.stringify(messages, null, 2)}\n 
+                    const response = await getPromptResponse({
+                        actor: Actor.INTERVIEWER,
+                        context: `Chat transcript: ${JSON.stringify(messages, null, 2)}\n 
                         Problem: ${problem.title}
                         Description: ${problem.problemDescription}`,
-                    promptKey: "ack-followup"
-                  });
-                  await addBotMessage(response);
-                  break;
+                        promptKey: "ack-followup"
+                    });
+                    await addBotMessage(response);
+                    break;
                 }
 
                 case "#REQUESTED_EXAMPLE": {
@@ -577,10 +618,12 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                         userId,
                         problemId: problem.problemId || "",
                     });
+                    console.log("session id at coding stage is ", sessionId);
                     localStorage.setItem("mtv-sessionId", sessionId);
                     updateChatsInSession([...messages]);
                 }
             }
+
         } catch (err) {
             console.error("Error during message handling", err);
             const errorMsg = {
@@ -618,37 +661,41 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     }, [code, problem]);
 
     const handleVerifyCode = async () => {
-        const currentCode = codeRef.current;
+        try {
 
-        const response = await getPromptResponse({
-            actor: Actor.INTERVIEWER,
-            context: `Problem: ${problem.title}\n${problem.problemStatement}\n
-                Problem: ${problem.title}\n
-                Description: ${problem.problemStatement}\n
-                Candidate's solution code:\n
-                ${currentCode || "[No code provided]"}`,
-            promptKey: "verify-code",
-        });
+            const currentCode = codeRef.current;
 
-        const followUpResponse = await getPromptResponse({
-          actor: Actor.INTERVIEWER,
-          context: `Problem: ${problem.title}\n${problem.problemStatement}\n
-          Problem: ${problem.title}\n
+            const response = await getPromptResponse({
+                actor: Actor.INTERVIEWER,
+                context: `Problem: ${problem.title}\n${problem.problemStatement}\n
           Description: ${problem.problemStatement}\n
           Candidate's solution code:\n
           ${currentCode || "[No code provided]"}`,
-          promptKey: "follow-up",
-        });
-        
-        await addBotMessage(response);
-        
-        if (response.trim().startsWith("Correct")) {
-            setIsSolutionVerifiedCorrect(true);
-            isSolutionVerifiedCorrectRef.current = true;
-            stageRef.current = "FOLLOW_UP";
-            await addBotMessage(followUpResponse);
-        }
+                promptKey: "verify-code",
+            });
+
+            const followUpResponse = await getPromptResponse({
+                actor: Actor.INTERVIEWER,
+                context: `Problem: ${problem.title}\n${problem.problemStatement}\n
+          Description: ${problem.problemStatement}\n
+          Candidate's solution code:\n
+          ${currentCode || "[No code provided]"}`,
+                promptKey: "follow-up",
+            });
+
+            await addBotMessage(response);
+
+            if (response.trim().startsWith("Correct")) {
+                setIsSolutionVerifiedCorrect(true);
+                isSolutionVerifiedCorrectRef.current = true;
+                stageRef.current = "FOLLOW_UP";
+                await addBotMessage(followUpResponse);
+            }
+        } catch (error) {
+            console.error("Error verifying code:", error);
+        } 
     };
+
 
     return (
         <div className="chatbox">
@@ -683,9 +730,15 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                 </button>
             </form>
 
-            <button className="endSessionButton" onClick={()=>endSession(false)}>
+            <button
+                className="endSessionButton"
+                onClick={() => endSession(false, setConfirmationModal)}
+            >
                 End Session
             </button>
+
+            {confirmationModal && <ConfirmationModal modalData={confirmationModal} />}
+
         </div>
     );
 };

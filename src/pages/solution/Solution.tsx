@@ -6,18 +6,17 @@ import { getSessionById } from "../../utils/handlers/getSessionById"
 const Solution = () => {
     const location = useLocation();
     const navigate = useNavigate();
-    const evaluation = location.state?.evaluation;
-
-    const handleNavigateHome = () => {
-        navigate("/home");
-    };
-
-
-    const [notes, setNotes] = useState<{ content: any }[]>([]);
+  const evaluation = location.state?.evaluation;
+  const sessionId = location.state?.sessionId;
+  
+  const handleNavigateHome = () => {
+    navigate("/home");
+  };
+  
+  
+  const [notes, setNotes] = useState<{ content: any }[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-
-  const sessionId = localStorage.getItem("mtv-sessionId");
 
   useEffect(() => {
     const fetchSession = async () => {

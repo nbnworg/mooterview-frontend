@@ -11,7 +11,6 @@ import ChatBox from "../../components/chatbox/ChatBox";
 
 const ProblemPage = () => {
   const location = useLocation();
- 
   const problemId = location.state?.problemId;
   const userId = location.state?.userId;
 
@@ -25,11 +24,11 @@ const ProblemPage = () => {
 
 
   useEffect(() => {
-  if (timeLeft === 0) {
-    
-    endSessionRef.current?.();     
-  }
-}, [timeLeft]);
+    if (timeLeft === 0) {
+
+      endSessionRef.current?.();
+    }
+  }, [timeLeft]);
 
 
   useEffect(() => {
@@ -71,6 +70,7 @@ const ProblemPage = () => {
     );
   }
 
+
   return (
     <>
       <Navbar />
@@ -82,10 +82,11 @@ const ProblemPage = () => {
             problem={problem}
             elapsedTime={(problem.averageSolveTime ?? 15) * 60 - timeLeft}
             onVerifyRef={verifySolutionRef}
-            userId={userId} 
+            userId={userId}
             code={code}
             onEndRef={endSessionRef}
           />
+
         </div>
         <div className="verticalLine"></div>
         <div className="codeEditorAndOptionsContainer">
@@ -97,10 +98,10 @@ const ProblemPage = () => {
           />
           <button
             className="verifyCodeButton"
-            onClick={() => verifySolutionRef.current?.()}
-          >
-            Verify Code
+            onClick={() => verifySolutionRef.current?.()}          >
+           Verify Code
           </button>
+
         </div>
       </section>
     </>

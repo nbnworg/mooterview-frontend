@@ -1,4 +1,4 @@
-import  { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import type { Session } from "mooterview-client";
 import { getAllSessionByUserId } from '../../utils/handlers/getAllSessionById';
 import { getTokenData } from '../../utils/constants';
@@ -18,7 +18,7 @@ const DashBoard = () => {
   const [error, setError] = useState<string | null>(null);
   const [userData, setuserData] = useState<GetUserByIdOutput>();
   const [problems, setProblems] = useState<{ [key: string]: string }>({});
-   const[ses,setses]=useState<boolean>(false);
+  const [ses, setses] = useState<boolean>(false);
 
 
   useEffect(() => {
@@ -28,24 +28,31 @@ const DashBoard = () => {
         setError(null);
         setses(true);
         const response: any = await getAllSessionByUserId(getTokenData().id);
-        const fetchedSessions: Session[] = response.sessions;
+        let fetchedSessions: Session[] = response.sessions;
         setSessions(fetchedSessions);
 
+        fetchedSessions = fetchedSessions.sort((a, b) => {
+          const timeA = new Date(a.startTime ?? 0).getTime();
+          const timeB = new Date(b.startTime ?? 0).getTime();
+          return timeB - timeA;
+        });
+
+
         const fetchedProblems: { [key: string]: string } = {};
-await Promise.all(
-  fetchedSessions.map(async (session:any) => {
-    if (!fetchedProblems[session.problemId]) {
-      try {
-        const problem: Problem = await getProblemById(session.problemId);
-        fetchedProblems[session.problemId] = problem.title || "Untitled" ;
-      } catch {
-        fetchedProblems[session.problemId] = "Title not found";
-      }
-    }
-  })
-);
-setProblems(fetchedProblems);
-setses(false);
+        await Promise.all(
+          fetchedSessions.map(async (session: any) => {
+            if (!fetchedProblems[session.problemId]) {
+              try {
+                const problem: Problem = await getProblemById(session.problemId);
+                fetchedProblems[session.problemId] = problem.title || "Untitled";
+              } catch {
+                fetchedProblems[session.problemId] = "Title not found";
+              }
+            }
+          })
+        );
+        setProblems(fetchedProblems);
+        setses(false);
 
 
       } catch (error: any) {
@@ -74,6 +81,8 @@ setses(false);
     fetchSessions();
   }, []);
 
+  console.log("all session are", sessions);
+
   const formatTime = (timeString: string | undefined) => {
     if (!timeString) return 'N/A';
     const date = new Date(timeString);
@@ -81,9 +90,9 @@ setses(false);
   };
 
   return (
-    
+
     <div className="dashboard-container">
-      <Navbar/>
+      <Navbar />
       <div className="user-profile-section">
         <div className="profile-card">
           <div className="avatar-container">
@@ -98,18 +107,18 @@ setses(false);
         </div>
       </div>
 
-<div className="sessions-section">
-   <Preparation/>
-</div>
-     
-<br />
+      <div className="sessions-section">
+        <Preparation />
+      </div>
+
+      <br />
       <div className="sessions-section">
         <h3 className="section-title">Problem Sessions</h3>
 
         {loading || ses && <div className="loading">Loading...</div>}
         {error && <p className="error-message">{error}</p>}
 
-        
+
         {!ses && <div className="sessions-list">
           {sessions.map((session, index) => (
             <Link
@@ -124,7 +133,7 @@ setses(false);
               <div className="session-details">
                 <div className="session-problem-id">
                   <strong>Problem:</strong>{" "}
-  {problems[session.problemId ?? ""] ?? "Loading..."}
+                  {problems[session.problemId ?? ""] ?? "Loading..."}
                 </div>
                 <div className="session-time">
                   <strong>Started:</strong> {formatTime(session.startTime)}
