@@ -263,6 +263,13 @@ const ChatBox: React.FC<ChatBoxProps> = ({
   const handleVerifyCode = async () => {
     const currentCode = codeRef.current;
 
+    if (!currentCode) {
+      await addBotMessage(
+        "It looks like you haven't written any code yet. Kindly implementing Your solution."
+      );
+      return;
+    }
+
     const testCases = await generateTestCasesWithAI(problem);
     if (!testCases || testCases.length === 0) {
       await addBotMessage(
