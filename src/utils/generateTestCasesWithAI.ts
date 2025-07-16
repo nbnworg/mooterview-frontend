@@ -13,10 +13,8 @@ export const generateTestCasesWithAI = async (
 ): Promise<TestCase[]> => {
   const prompt = `
 You are a test case generator for coding problems.
-
 Problem Title: ${problem.title}
 Description: ${problem.problemDescription}
-
 Generate exactly 3 Python test cases in the following strict JSON format:
 [
   { "input": [...], "expected": ..., "explanation": "..." },

@@ -200,13 +200,10 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           actor: Actor.INTERVIEWER,
           context: `Problem: ${problem.title}\n\n${problem.problemDescription}
                     You are acting as a human coding interviewer.
-
           It’s been ${Math.floor(
             elapsed / 60
           )} minutes since the interview started. The candidate is working on the following problem:
-
           "${problem.title}"
-
           Their current code is:
           ${codeSnapshot || "[No code written yet]"}`,
           promptKey: autoPrompt,
@@ -293,17 +290,14 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     const context = `
 Problem Title: ${problem.title}
 Description: ${problem.problemDescription}
-
 Candidate's Code:
 ${currentCode || "[No code submitted]"}
-
 Rubric Evaluation:
 - Correctness: ${rubricResult.rubricScores.correctness}
 - Edge Cases: ${rubricResult.rubricScores.edgeCases}
 - Performance: ${rubricResult.rubricScores.performance}
 - Structure: ${rubricResult.rubricScores.structureChoice}
 - Readability: ${rubricResult.rubricScores.readability}
-
 Generated Test Cases:
 ${testCaseText}
 `.trim();
