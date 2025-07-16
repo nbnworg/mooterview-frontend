@@ -6,7 +6,7 @@ import { getPromptResponse } from "../../utils/handlers/getPromptResponse";
 import { updateSessionById } from "../../utils/handlers/updateSessionById";
 import { Actor, type Problem } from "mooterview-client";
 import { useNavigate } from "react-router-dom";
-import { evaluateSolutionWithRubric } from "../../utils/2. evaluateSolutionWithRubric";
+import { evaluateSolutionWithRubric } from "../../utils/evaluateSolutionWithRubric";
 import { generateTestCasesWithAI } from "../../utils/generateTestCasesWithAI";
 
 interface ChatBoxProps {
