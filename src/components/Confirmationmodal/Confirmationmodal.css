@@ -1,0 +1,80 @@
+.confirmation-modal-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(4px);
+  z-index: 50;
+}
+
+.confirmation-modal-container {
+  background-color: #f9fbfd; 
+  border-radius: 0.75rem;
+  padding: 2rem;
+  max-width: 30rem;
+  width: 100%;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  border: 1px solid #e0e6ed;
+}
+
+.confirmation-modal-content {
+  color: #141b26; 
+  margin-top: 0.5rem;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.confirmation-text {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+
+.confirmation-subtext {
+  font-size: 0.95rem;
+  color: #2b3542; 
+  margin-bottom: 1.5rem;
+}
+
+.confirmation-btn-group {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.confirmation-icon-btn {
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  background-color: #3b82f6; 
+  color: white;
+  text-align: center;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: transform 0.2s ease, background-color 0.3s ease;
+  border: none;
+}
+
+.confirmation-icon-btn:hover {
+  transform: scale(0.95);
+  background-color: #2563eb; 
+}
+
+.confirmation-cancel-btn {
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  background-color: #ef4444; 
+  color: white;
+  font-weight: 500;
+  font-size: 14px;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  border: none;
+}
+
+.confirmation-cancel-btn:hover {
+  background-color: #dc2626; 
+  transform: scale(0.97);
+}

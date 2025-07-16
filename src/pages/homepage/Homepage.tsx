@@ -7,7 +7,17 @@ import type { ProblemSummary } from "mooterview-client";
 import { FaPlay } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { getAllProblems } from "../../utils/handlers/getAllProblems";
-// import { createSession } from "../../utils/handlers/createSession";
+import ConfirmationModal from "../../components/Confirmationmodal/Confirmationmodal";
+
+interface ConfirmationModalData {
+  text1: string;
+  text2: string;
+  btn1Text: string;
+  btn2Text: string;
+  btn1Handler: () => void;
+  btn2Handler: () => void;
+}
+
 
 const Homepage = () => {
   const [problems, setProblems] = useState<any>();
@@ -16,12 +26,14 @@ const Homepage = () => {
   const [error, setError] = useState<string | null>(null);
   const [selectedLevel, setSelectedLevel] = useState<string>("All");
   const [searchTerm, setSearchTerm] = useState<string>("");
+  const [confirmationModal, setConfirmationModal] = useState<ConfirmationModalData | null>(null)
 
-const data= JSON.parse(
-  localStorage.getItem("userData") || "{}"
+
+  const data = JSON.parse(
+    localStorage.getItem("userData") || "{}"
   )
   console.log("access token: ", data);
-  
+
   useEffect(() => {
     console.log("before problems");
     const fetchProblems = async () => {
@@ -35,7 +47,7 @@ const data= JSON.parse(
       } catch (error: any) {
         setError(
           error.response?.data ||
-            "Server Is busy, Can't Fetch problem right now."
+          "Server Is busy, Can't Fetch problem right now."
         );
       } finally {
         setLoading(false);
@@ -50,7 +62,7 @@ const data= JSON.parse(
     const matchesLevel =
       selectedLevel === "All" ||
       problem.level?.toLowerCase() === selectedLevel.toLowerCase();
-    
+
     const matchesSearch = problem.title
       ?.toLowerCase()
       .includes(searchTerm.toLowerCase());
@@ -82,18 +94,21 @@ const data= JSON.parse(
         </div>
         <button
           className="createProblemButton"
-          onClick={() => {
-            const confirm = window.confirm(
-              "This will redirect you to create your own problem.\nOnly do this if the problem you want doesn't exist."
-            );
-            if (confirm) {
-              navigate("/create-a-problem");
-            }
-          }}
+
+
+          onClick={() =>
+            setConfirmationModal({
+              text1: "This will redirect you to create your own problem.",
+              text2: "Only do this if the problem you want doesn't exist.",
+              btn1Text: "Create Problem",
+              btn2Text: "Cancel",
+              btn1Handler: () => navigate("/create-a-problem"),
+              btn2Handler: () => setConfirmationModal(null),
+            })}
         >
           Practice New Problem
         </button>
-      </div>
+      </div >
 
       <section className="homepage" id="homePage">
         {loading ? (
@@ -119,46 +134,43 @@ const data= JSON.parse(
                   {problem.level}
                 </p>
               </div>
-              
+
               <button
-                onClick={async () => {
-                  const confirmed = window.confirm(
-                    "Are you sure you want to start the interview for this problem?"
-                  );
-                  if (confirmed) {
-                    const userData = JSON.parse(
-                      localStorage.getItem("userData") || "{}"
-                    );
-                    const userId = userData.id;
+                onClick={() => {
+                  setConfirmationModal({
+                    text1: "Are you sure you want to start the interview?",
+                    text2: `Problem: "${problem.title}"`,
+                    btn1Text: "Start Interview",
+                    btn2Text: "Cancel",
+                    btn1Handler: () => {
+                      const userData = JSON.parse(localStorage.getItem("userData") || "{}");
+                      const userId = userData.id;
 
-                    try {
-                      // const sessionId = await createSession({
-                      //   userId,
-                      //   problemId: problem.problemId || "",
-                      // });
-
+                      
+                      // const sessionId = await createSession({ userId, problemId: problem.problemId || "" });
                       // localStorage.setItem("mtv-sessionId", sessionId);
 
-                      navigate(
-                        `/problem/${encodeURIComponent(problem.title ?? "")}`,
-                        {
-                          state: { problemId: problem.problemId, userId },
-                        }
-                      );
-                    } catch (err) {
-                      console.error("Failed to create session", err);
-                      alert("Failed to start interview. Try again.");
-                    }
-                  }
+                      navigate(`/problem/${encodeURIComponent(problem.title ?? "")}`, {
+                        state: { problemId: problem.problemId, userId },
+                      });
+
+                      setConfirmationModal(null);
+                    },
+                    btn2Handler: () => setConfirmationModal(null),
+                  });
                 }}
                 className="startInterviewButton"
               >
                 <FaPlay />
               </button>
+
+
             </div>
           ))
         )}
       </section>
+      {confirmationModal && <ConfirmationModal modalData={confirmationModal} />}
+
     </>
   );
 };
