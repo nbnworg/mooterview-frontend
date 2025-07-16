@@ -11,6 +11,7 @@ import ConfirmationModal from "../../components/Confirmationmodal/Confirmationmo
 import { getTokenData } from "../../utils/constants";
 import { Solvedproblems } from "../../utils/handlers/getAllProblems";
 
+
 interface ConfirmationModalData {
   text1: string;
   text2: string;
@@ -19,6 +20,7 @@ interface ConfirmationModalData {
   btn1Handler: () => void;
   btn2Handler: () => void;
 }
+
 
 const Homepage = () => {
   const [problems, setProblems] = useState<any>();
@@ -175,7 +177,6 @@ const Homepage = () => {
                     btn1Handler: () => {
                       const userData = JSON.parse(localStorage.getItem("userData") || "{}");
                       const userId = userData.id;
-
 
                       // const sessionId = await createSession({ userId, problemId: problem.problemId || "" });
                       // localStorage.setItem("mtv-sessionId", sessionId);
