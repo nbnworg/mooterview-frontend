@@ -8,29 +8,26 @@ import { getProblemById } from "../../utils/handlers/getProblemById";
 import type { Problem } from "mooterview-client";
 import ChatBox from "../../components/chatbox/ChatBox";
 
-
 const ProblemPage = () => {
   const location = useLocation();
- 
+
   const problemId = location.state?.problemId;
   const userId = location.state?.userId;
 
   const [problem, setProblem] = useState<Problem>();
   const [error, setError] = useState<string | null>(null);
-  const [code, setCode] = useState<string>(""); // Empty code
+  const [code, setCode] = useState<string>("");
   const [timeLeft, setTimeLeft] = useState(15 * 60);
+  const [verifyLoading, setVerifyLoading] = useState(false);
 
   const verifySolutionRef = useRef<() => void | null>(null);
   const endSessionRef = useRef<() => void | null>(null);
 
-
   useEffect(() => {
-  if (timeLeft === 0) {
-    
-    endSessionRef.current?.();     
-  }
-}, [timeLeft]);
-
+    if (timeLeft === 0) {
+      endSessionRef.current?.();
+    }
+  }, [timeLeft]);
 
   useEffect(() => {
     if (!problemId) return;
@@ -48,9 +45,6 @@ const ProblemPage = () => {
 
     fetchProblem();
   }, [problemId]);
-
-
-
 
   if (!problemId) {
     return <Navigate to="/home" replace />;
@@ -82,7 +76,7 @@ const ProblemPage = () => {
             problem={problem}
             elapsedTime={(problem.averageSolveTime ?? 15) * 60 - timeLeft}
             onVerifyRef={verifySolutionRef}
-            userId={userId} 
+            userId={userId}
             code={code}
             onEndRef={endSessionRef}
           />
@@ -97,9 +91,16 @@ const ProblemPage = () => {
           />
           <button
             className="verifyCodeButton"
-            onClick={() => verifySolutionRef.current?.()}
+            onClick={async () => {
+              if (verifySolutionRef.current) {
+                setVerifyLoading(true);
+                await verifySolutionRef.current();
+                setVerifyLoading(false);
+              }
+            }}
+            disabled={verifyLoading}
           >
-            Verify Code
+            {verifyLoading ? "Verifying..." : "Verify Code"}
           </button>
         </div>
       </section>
