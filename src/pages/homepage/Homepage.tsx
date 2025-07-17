@@ -7,7 +7,6 @@ import type { ProblemSummary } from "mooterview-client";
 import { FaPlay } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { getAllProblems } from "../../utils/handlers/getAllProblems";
-import { createSession } from "../../utils/handlers/createSession";
 import { getTokenData } from "../../utils/constants";
 import { Solvedproblems } from "../../utils/handlers/getAllProblems";
 
