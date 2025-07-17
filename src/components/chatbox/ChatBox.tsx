@@ -163,30 +163,30 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         endTime: new Date().toISOString(),
       });
 
-      localStorage.removeItem("mtv-sessionId");
-      if (wantsSolution) {
-        const evaluation = await generateEvaluationSummary();
-        await updateSessionById({
-          sessionId,
-          notes: [
-            { content: evaluation.summary },
-            {
-              content: codeRef.current.trim() || "No code provided",
-            },
-          ],
-        });
-        navigate(`/solution/${encodeURIComponent(problem.title ?? "")}`, {
-          state: { evaluation },
-          replace: true,
-        });
-      } else {
-        alert("Session ended successfully.");
-        navigate("/home", { replace: true });
-      }
-    } catch (err) {
-      console.error("Failed to end session", err);
-    }
-  };
+            if (wantsSolution) {
+                const evaluation = await generateEvaluationSummary();
+                await updateSessionById({
+                    sessionId,
+                    notes: [
+                        { content: evaluation.summary },
+                        {
+                            content:
+                                codeRef.current.trim() || "No code provided",
+                        },
+                    ],
+                });
+                navigate(
+                    `/solution/${encodeURIComponent(problem.title ?? "")}`,
+                    { state: { evaluation }, replace: true }
+                );
+            } else {
+                alert("Session ended successfully.");
+                navigate("/home", { replace: true });
+            }
+        } catch (err) {
+            console.error("Failed to end session", err);
+        }
+    };
 
   useEffect(() => {
     const explainProblem = async () => {
