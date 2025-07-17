@@ -161,7 +161,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                 endTime: new Date().toISOString(),
             });
 
-            localStorage.removeItem("mtv-sessionId");
             if (wantsSolution) {
                 const evaluation = await generateEvaluationSummary();
                 await updateSessionById({

@@ -130,10 +130,18 @@ const SessionOfProblem = () => {
                         <br />
                         <div className="chat-section">
                             <h3 className="section-title">Your Code</h3>
-                            <div className="chat-container">
+                            <pre
+                                style={{
+                                    padding: "1rem",
+                                    borderRadius: "6px",
+                                    overflowX: "auto",
+                                }}
+                            >
+                                {" "}
+                                className="chat-container"
                                 {currentSession.notes?.[1]?.content ||
-                                    "No summary available."}
-                            </div>
+                                    "No code available."}
+                            </pre>
                         </div>
                         <br />
                         <div className="chat-section">

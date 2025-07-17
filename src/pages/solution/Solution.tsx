@@ -1,7 +1,7 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import "./solution.css";
 import { useEffect, useState } from "react";
-import { getSessionById } from "../../utils/handlers/getSessionById"
+import { getSessionById } from "../../utils/handlers/getSessionById";
 
 const Solution = () => {
     const location = useLocation();
@@ -12,37 +12,38 @@ const Solution = () => {
         navigate("/home");
     };
 
-
     const [notes, setNotes] = useState<{ content: any }[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
 
-  const sessionId = localStorage.getItem("mtv-sessionId");
+    const sessionId = localStorage.getItem("mtv-sessionId");
+    console.log("sessionId", sessionId);
 
-  useEffect(() => {
-    const fetchSession = async () => {
-      if (!sessionId) {
-        setError("No session ID found.");
-        return;
-      }
+    useEffect(() => {
+        const fetchSession = async () => {
+            if (!sessionId) {
+                setError("No session ID found.");
+                navigate("/home");
+                return;
+            }
 
-      try {
-        const session = await getSessionById(sessionId);
-        setNotes(session.notes || []);
-      } catch (err) {
-        setError("Failed to fetch session notes.");
-      } finally {
-        setLoading(false);
-      }
-    };
+            try {
+                const session = await getSessionById(sessionId);
+                console.log("session", session);
+                setNotes(session.notes || []);
+            } catch (err) {
+                setError("Failed to fetch session notes.");
+            } finally {
+                setLoading(false);
+            }
+        };
 
-    fetchSession();
-  }, [sessionId]);
+        fetchSession();
+    }, [sessionId]);
 
-  if (loading) return <p>Loading...</p>;
-  if (error) return <p>{error}</p>;
-  const userSolution = notes[1]?.content || "No solution provided.";
-
+    if (loading) return <p>Loading...</p>;
+    if (error) return <p>{error}</p>;
+    const userSolution = notes[1]?.content || "No solution provided.";
 
     if (!evaluation) {
         return (
@@ -67,24 +68,23 @@ const Solution = () => {
             </section>
 
             <section>
-                 <div>
+                <div>
                     <section className="solution-section solution-summary-section">
-        <h2 className="solution-section-title">Your Solution</h2>
-        
-       <pre
-          style={{
-          
-            padding: "1rem",
-            borderRadius: "6px",
-            overflowX: "auto",
-          }}
-        >
-          {userSolution}
-        </pre>
-          
-       
-      </section>
-    </div>
+                        <h2 className="solution-section-title">
+                            Your Solution
+                        </h2>
+
+                        <pre
+                            style={{
+                                padding: "1rem",
+                                borderRadius: "6px",
+                                overflowX: "auto",
+                            }}
+                        >
+                            {userSolution}
+                        </pre>
+                    </section>
+                </div>
             </section>
 
             <section className="solution-section solution-alternatives-section">
