@@ -1,5 +1,5 @@
 import React from "react";
-import "./ConfirmationModal.css";
+import "./Confirmationmodal.css";
 
 interface ModalData {
   text1: string;
