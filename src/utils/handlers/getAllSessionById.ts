@@ -15,7 +15,7 @@ export const getAllSessionByUserId = async (userId: string): Promise<Session[]> 
         Authorization: `Bearer ${tokenData.accessToken}`,
       },
     });
-
+    
     return response.data;
   } catch (error: any) {
     if (error?.response?.data?.error === "Invalid or expired token") {

@@ -8,6 +8,8 @@ import { FaPlay } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { getAllProblems } from "../../utils/handlers/getAllProblems";
 import ConfirmationModal from "../../components/Confirmationmodal/Confirmationmodal";
+import { getTokenData } from "../../utils/constants";
+import { Solvedproblems } from "../../utils/handlers/getAllProblems";
 
 interface ConfirmationModalData {
   text1: string;
@@ -18,16 +20,16 @@ interface ConfirmationModalData {
   btn2Handler: () => void;
 }
 
-
 const Homepage = () => {
   const [problems, setProblems] = useState<any>();
+  const [solvedProblem, setsolvedProblem] = useState<string[]>([]);
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedLevel, setSelectedLevel] = useState<string>("All");
+  const [solved, setsolved] = useState<string>("All");
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [confirmationModal, setConfirmationModal] = useState<ConfirmationModalData | null>(null)
-
 
   const data = JSON.parse(
     localStorage.getItem("userData") || "{}"
@@ -56,9 +58,17 @@ const Homepage = () => {
 
     fetchProblems();
   }, []);
+  useEffect(() => {
+    const fetchSolvedProblems = async () => {
+      const result: string[] = await Solvedproblems(getTokenData().id);
+      setsolvedProblem(result);
+    };
+    fetchSolvedProblems();
+  }, []);
+
   console.log("problems: ", problems);
 
-  const filterProblems = problems?.filter((problem: ProblemSummary) => {
+  const filteredProblems = problems?.filter((problem: ProblemSummary) => {
     const matchesLevel =
       selectedLevel === "All" ||
       problem.level?.toLowerCase() === selectedLevel.toLowerCase();
@@ -66,7 +76,15 @@ const Homepage = () => {
     const matchesSearch = problem.title
       ?.toLowerCase()
       .includes(searchTerm.toLowerCase());
-    return matchesLevel && matchesSearch;
+
+    const isSolved = solvedProblem.includes(String(problem.problemId));
+
+    const matchesSolve =
+      solved === "All" ||
+      (solved === "Solved" && isSolved) ||
+      (solved === "UnSolved" && !isSolved);
+
+    return matchesLevel && matchesSearch && matchesSolve;
   });
 
   return (
@@ -85,6 +103,18 @@ const Homepage = () => {
             <option value="Medium">Medium</option>
             <option value="Hard">Hard</option>
           </select>
+
+          <label htmlFor="solveFilter"> Problem Status:</label>
+          <select
+            id="solveFilter"
+            value={solved}
+            onChange={(e) => setsolved(e.target.value)}
+          >
+            <option value="All">All</option>
+            <option value="Solved">Attempted</option>
+            <option value="UnSolved">Unattempted</option>
+          </select>
+
           <input
             type="text"
             placeholder="Search problems..."
@@ -120,7 +150,7 @@ const Homepage = () => {
         ) : !problems || problems?.length === 0 ? (
           <p className="empty">No problems available.</p>
         ) : (
-          filterProblems.map((problem: ProblemSummary) => (
+          filteredProblems.map((problem: ProblemSummary) => (
             <div className="problemCard" key={problem.problemId}>
               <div className="problemSummaryContainer">
                 <p className="problemTitle">{problem.title}</p>
@@ -146,7 +176,7 @@ const Homepage = () => {
                       const userData = JSON.parse(localStorage.getItem("userData") || "{}");
                       const userId = userData.id;
 
-                      
+
                       // const sessionId = await createSession({ userId, problemId: problem.problemId || "" });
                       // localStorage.setItem("mtv-sessionId", sessionId);
 
