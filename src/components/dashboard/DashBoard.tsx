@@ -13,177 +13,155 @@ import Navbar from "../navbar/Navbar";
 import Preparation from "./preparation";
 
 const DashBoard = () => {
-    const [sessions, setSessions] = useState<Session[]>([]);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const [userData, setuserData] = useState<GetUserByIdOutput>();
-    const [problems, setProblems] = useState<{ [key: string]: string }>({});
-    const [ses, setses] = useState<boolean>(false);
+  const [sessions, setSessions] = useState<Session[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [userData, setuserData] = useState<GetUserByIdOutput>();
+  const [problems, setProblems] = useState<{ [key: string]: string }>({});
+  const [ses, setses] = useState<boolean>(false);
 
-    useEffect(() => {
-        const fetchSessions = async () => {
-            try {
-                setLoading(true);
-                setError(null);
-                setses(true);
-                const response: any = await getAllSessionByUserId(
-                    getTokenData().id
-                );
-                const fetchedSessions: Session[] = response.sessions;
+  useEffect(() => {
+    const fetchSessions = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        setses(true);
 
-                fetchedSessions.sort((a, b) => {
-                  const aTime = new Date(a.startTime ?? "").getTime();
-                  console.log(aTime);
-                  
-                  const bTime = new Date(b.startTime ?? "").getTime();
-                  console.log(bTime);
-                  return bTime - aTime;
-                });
+        const response: any = await getAllSessionByUserId(getTokenData().id);
+        let fetchedSessions: Session[] = response.sessions;
 
-                setSessions(fetchedSessions);
+        fetchedSessions = fetchedSessions.sort((a, b) => {
+          const timeA = new Date(a.startTime ?? 0).getTime();
+          const timeB = new Date(b.startTime ?? 0).getTime();
+          return timeB - timeA;
+        });
 
-                const fetchedProblems: { [key: string]: string } = {};
-                await Promise.all(
-                    fetchedSessions.map(async (session: any) => {
-                        if (!fetchedProblems[session.problemId]) {
-                            try {
-                                const problem: Problem = await getProblemById(
-                                    session.problemId
-                                );
-                                fetchedProblems[session.problemId] =
-                                    problem.title || "Untitled";
-                            } catch {
-                                fetchedProblems[session.problemId] =
-                                    "Title not found";
-                            }
-                        }
-                    })
-                );
-                setProblems(fetchedProblems);
-                setses(false);
-            } catch (error: any) {
-                setError("Something went wrong while fetching sessions.");
-            } finally {
-                setLoading(false);
+        setSessions(fetchedSessions);
+
+        const fetchedProblems: { [key: string]: string } = {};
+        await Promise.all(
+          fetchedSessions.map(async (session: any) => {
+            if (!fetchedProblems[session.problemId]) {
+              try {
+                const problem: Problem = await getProblemById(session.problemId);
+                fetchedProblems[session.problemId] = problem.title || "Untitled";
+              } catch {
+                fetchedProblems[session.problemId] = "Title not found";
+              }
             }
-        };
-
-        const fetchUserInfo = async () => {
-            try {
-                setLoading(true);
-                setError(null);
-
-                const response: any = await getUserById(getTokenData().id);
-                setuserData(response);
-            } catch (error: any) {
-                setError(
-                    "Something went wrong while fetching userInfomation at dashboard.tsx."
-                );
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchUserInfo();
-        fetchSessions();
-    }, []);
-
-    const formatTime = (timeString: string | undefined) => {
-        if (!timeString) return "N/A";
-        const date = new Date(timeString);
-        return (
-            date.toLocaleDateString() +
-            " " +
-            date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+          })
         );
+        setProblems(fetchedProblems);
+      } catch (error: any) {
+        setError("Something went wrong while fetching sessions.");
+      } finally {
+        setses(false);
+        setLoading(false);
+      }
     };
 
+    const fetchUserInfo = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response: any = await getUserById(getTokenData().id);
+        setuserData(response);
+      } catch (error: any) {
+        setError("Something went wrong while fetching user information.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserInfo();
+    fetchSessions();
+  }, []);
+
+  const formatTime = (timeString: string | undefined) => {
+    if (!timeString) return "N/A";
+    const date = new Date(timeString);
     return (
-        <div className="dashboard-container">
-            <Navbar />
-            <div className="user-profile-section">
-                <div className="profile-card">
-                    <div className="avatar-container">
-                        <img
-                            src={avatarImage}
-                            alt="Profile Avatar"
-                            className="profile-avatar"
-                        />
-                    </div>
-                    <div className="user-info">
-                        <h2 className="user-name">
-                            {userData?.fullName || "Loading..."}
-                        </h2>
-                        <p className="user-username">@{userData?.username}</p>
-                        <p className="user-email">{userData?.email}</p>
-                        <p className="user-location"> {userData?.location}</p>
-                    </div>
-                </div>
-            </div>
-
-            <div className="sessions-section">
-                <Preparation />
-            </div>
-
-            <br />
-            <div className="sessions-section">
-                <h3 className="section-title">Problem Sessions</h3>
-
-                {loading || (ses && <div className="loading">Loading...</div>)}
-                {error && <p className="error-message">{error}</p>}
-
-                {!ses && (
-                    <div className="sessions-list">
-                        {sessions.map((session, index) => (
-                            <Link
-                                key={session.sessionId}
-                                to="/session"
-                                state={{ sessionId: session.sessionId }}
-                                className="session-item"
-                            >
-                                <div className="session-number">
-                                    {index + 1}
-                                </div>
-                                <div className="session-details">
-                                    <div className="session-problem-id">
-                                        <strong>Problem:</strong>{" "}
-                                        {problems[session.problemId ?? ""] ??
-                                            "Loading..."}
-                                    </div>
-                                    <div className="session-time">
-                                        <strong>Started:</strong>{" "}
-                                        {formatTime(session.startTime)}
-                                        {session.endTime && (
-                                            <span className="end-time">
-                                                <strong> | Ended:</strong>{" "}
-                                                {formatTime(session.endTime)}
-                                            </span>
-                                        )}
-                                    </div>
-                                </div>
-                                <div className="session-status">
-                                    <span
-                                        className={`status-badge ${session.problemStatus
-                                            ?.toLowerCase()
-                                            .replace(" ", "-")}`}
-                                    >
-                                        {session.problemStatus}
-                                    </span>
-                                </div>
-                                <div className="session-arrow">→</div>
-                            </Link>
-                        ))}
-                    </div>
-                )}
-
-                {sessions.length === 0 && !loading && (
-                    <div className="no-sessions">
-                        <p>No sessions found.</p>
-                    </div>
-                )}
-            </div>
-        </div>
+      date.toLocaleDateString() +
+      " " +
+      date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
     );
+  };
+
+  return (
+    <div className="dashboard-container">
+      <Navbar />
+      <div className="user-profile-section">
+        <div className="profile-card">
+          <div className="avatar-container">
+            <img src={avatarImage} alt="Profile Avatar" className="profile-avatar" />
+          </div>
+          <div className="user-info">
+            <h2 className="user-name">{userData?.fullName || "Loading..."}</h2>
+            <p className="user-username">@{userData?.username}</p>
+            <p className="user-email">{userData?.email}</p>
+            <p className="user-location">{userData?.location}</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="sessions-section">
+        <Preparation />
+      </div>
+
+      <br />
+      <div className="sessions-section">
+        <h3 className="section-title">Problem Sessions</h3>
+
+        {loading || (ses && <div className="loading">Loading...</div>)}
+        {error && <p className="error-message">{error}</p>}
+
+        {!ses && (
+          <div className="sessions-list">
+            {sessions.map((session, index) => (
+              <Link
+                key={session.sessionId}
+                to="/session"
+                state={{ sessionId: session.sessionId }}
+                className="session-item"
+              >
+                <div className="session-number">{index + 1}</div>
+                <div className="session-details">
+                  <div className="session-problem-id">
+                    <strong>Problem:</strong>{" "}
+                    {problems[session.problemId ?? ""] ?? "Loading..."}
+                  </div>
+                  <div className="session-time">
+                    <strong>Started:</strong> {formatTime(session.startTime)}
+                    {session.endTime && (
+                      <span className="end-time">
+                        <strong> | Ended:</strong> {formatTime(session.endTime)}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className="session-status">
+                  <span
+                    className={`status-badge ${session.problemStatus
+                      ?.toLowerCase()
+                      .replace(" ", "-")}`}
+                  >
+                    {session.problemStatus}
+                  </span>
+                </div>
+                <div className="session-arrow">→</div>
+              </Link>
+            ))}
+          </div>
+        )}
+
+        {sessions.length === 0 && !loading && (
+          <div className="no-sessions">
+            <p>No sessions found.</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
 };
 
 export default DashBoard;

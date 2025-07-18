@@ -10,6 +10,7 @@ import { createSession } from "../../utils/handlers/createSession";
 import { classifyUserMessage } from "../../utils/classifyUserMsg";
 import { evaluateSolutionWithRubric } from "../../utils/evaluateSolutionWithRubric";
 import { generateTestCasesWithAI } from "../../utils/generateTestCasesWithAI";
+import ConfirmationModal from "../Confirmationmodal/Confirmationmodal";
 
 interface ChatBoxProps {
   problem: Problem;
@@ -65,6 +66,16 @@ const ChatBox: React.FC<ChatBoxProps> = ({
   const sessionId = localStorage.getItem("mtv-sessionId");
 
   const navigate = useNavigate();
+
+  const [confirmationModal, setConfirmationModal] = useState<{
+    text1: string;
+    text2: string;
+    btn1Text: string;
+    btn2Text: string;
+    btn1Handler: () => void;
+    btn2Handler: () => void;
+  } | null>(null);
+
 
   useEffect(() => {
     elapsedTimeRef.current = elapsedTime;
@@ -144,18 +155,50 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     }
   };
 
-  const endSession = async (calledAutomatically: boolean) => {
+  const endSession = async (
+    calledAutomatically: boolean,
+    setConfirmationModal?: React.Dispatch<
+      React.SetStateAction<{
+        text1: string;
+        text2: string;
+        btn1Text: string;
+        btn2Text: string;
+        btn1Handler: () => void;
+        btn2Handler: () => void;
+      } | null>
+    >,
+    skipAutoAlert?: boolean
+  ) => {
+
+
     let wantsSolution = true;
 
     if (!calledAutomatically) {
-      wantsSolution = window.confirm(
-        "Are you sure you want to end session and view real solution?"
-      );
-    } else {
-      alert(" Your time is finished. Please move to the Evaluation page...");
+      if (setConfirmationModal) {
+        setConfirmationModal({
+          text1: "Are you sure?",
+          text2: "This will end your session and take you to the evaluation.",
+          btn1Text: "Yes, End Session",
+          btn2Text: "Cancel",
+          btn1Handler: () => {
+            setConfirmationModal(null);
+            endSession(true, undefined, true);
+          },
+          btn2Handler: () => setConfirmationModal(null),
+        });
+      }
+      return;
+    } else if (!skipAutoAlert) {
+      alert("Your time is finished. Please move to the Evaluation page...");
     }
+
     const sessionId = localStorage.getItem("mtv-sessionId");
-    if (!sessionId) return;
+    console.log("session id at end session :", sessionId);
+    if (!sessionId) {
+      console.log("session id is", sessionId);
+      navigate("/home", { replace: true });
+      return;
+    }
 
     try {
       await updateSessionById({
@@ -163,30 +206,32 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         endTime: new Date().toISOString(),
       });
 
-            if (wantsSolution) {
-                const evaluation = await generateEvaluationSummary();
-                await updateSessionById({
-                    sessionId,
-                    notes: [
-                        { content: evaluation.summary },
-                        {
-                            content:
-                                codeRef.current.trim() || "No code provided",
-                        },
-                    ],
-                });
-                navigate(
-                    `/solution/${encodeURIComponent(problem.title ?? "")}`,
-                    { state: { evaluation }, replace: true }
-                );
-            } else {
-                alert("Session ended successfully.");
-                navigate("/home", { replace: true });
-            }
-        } catch (err) {
-            console.error("Failed to end session", err);
-        }
-    };
+      localStorage.removeItem("mtv-sessionId");
+
+      if (wantsSolution) {
+        const evaluation = await generateEvaluationSummary();
+
+        await updateSessionById({
+          sessionId,
+          notes: [
+            { content: evaluation.summary },
+            {
+              content: codeRef.current.trim() || "No code provided",
+            },
+          ],
+        });
+
+        navigate(`/solution/${encodeURIComponent(problem.title ?? "")}`, {
+          state: { evaluation, sessionId },
+          replace: true,
+        });
+      } else {
+        navigate("/home", { replace: true });
+      }
+    } catch (err) {
+      console.error("Failed to end session", err);
+    }
+  };
 
   useEffect(() => {
     const explainProblem = async () => {
@@ -229,9 +274,8 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           phaseRef.current = "CODING";
         }
 
-        const commonContext = `Problem: ${problem.title}\n\n${
-          problem.problemDescription
-        }
+        const commonContext = `Problem: ${problem.title}\n\n${problem.problemDescription
+          }
                     Elapsed time: ${Math.floor(elapsed / 60)} minutes`;
         const prevAnalysisCode = intitalCodeContextRef.current;
 
@@ -326,10 +370,10 @@ const ChatBox: React.FC<ChatBoxProps> = ({
               actor: Actor.INTERVIEWER,
               context: `User confirmed understanding. Ask them to explain their approach.
                             Chat transcript: ${JSON.stringify(
-                              messages,
-                              null,
-                              2
-                            )}\n 
+                messages,
+                null,
+                2
+              )}\n 
                             Problem: ${problem.title}
                             Description: ${problem.problemDescription}
                         `,
@@ -346,10 +390,10 @@ const ChatBox: React.FC<ChatBoxProps> = ({
               context: `User confirmed understanding during coding phase. Provide encouragement or next steps.
                             Current stage: ${currentStage}
                             Chat transcript: ${JSON.stringify(
-                              messages,
-                              null,
-                              2
-                            )}
+                messages,
+                null,
+                2
+              )}
                             Problem: ${problem.title}
                             Description: ${problem.problemDescription}`,
               promptKey: "coding-encouragement",
@@ -411,10 +455,10 @@ const ChatBox: React.FC<ChatBoxProps> = ({
               actor: Actor.INTERVIEWER,
               context: `User has shared an approach. Evaluate it and respond with one of "#CORRECT" or "#WRONG" followed by your message.
                             Chat transcript: ${JSON.stringify(
-                              messages,
-                              null,
-                              2
-                            )}\n 
+                messages,
+                null,
+                2
+              )}\n 
                             Problem: ${problem.title}
                             Description: ${problem.problemDescription}`,
               promptKey: "ack-approach",
@@ -441,10 +485,10 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                   actor: Actor.INTERVIEWER,
                   context: `User has given an incorrect approach. Ask them to try again.
                                     Chat transcript: ${JSON.stringify(
-                                      messages,
-                                      null,
-                                      2
-                                    )}`,
+                    messages,
+                    null,
+                    2
+                  )}`,
                   promptKey: "repeat-ask",
                 });
                 await addBotMessage(response);
@@ -456,10 +500,10 @@ const ChatBox: React.FC<ChatBoxProps> = ({
               context: `User is asking a follow-up question. Provide helpful guidance.
                             Current stage: ${currentStage}
                             Chat transcript: ${JSON.stringify(
-                              messages,
-                              null,
-                              2
-                            )}
+                messages,
+                null,
+                2
+              )}
                             Problem: ${problem.title}
                             Description: ${problem.problemDescription}`,
               promptKey: "general-guidance",
@@ -478,10 +522,10 @@ const ChatBox: React.FC<ChatBoxProps> = ({
               actor: Actor.INTERVIEWER,
               context: `
                             Chat transcript: ${JSON.stringify(
-                              messages.slice(-3),
-                              null,
-                              2
-                            )}
+                messages.slice(-3),
+                null,
+                2
+              )}
                             Problem: ${problem.title}
                             Description: ${problem.problemDescription}`,
               promptKey: "ask-approach-before-coding",
@@ -492,10 +536,10 @@ const ChatBox: React.FC<ChatBoxProps> = ({
               actor: Actor.INTERVIEWER,
               context: `User is asking a coding question. Provide helpful guidance on where to start or how to proceed.
                             Chat transcript: ${JSON.stringify(
-                              messages,
-                              null,
-                              2
-                            )}
+                messages,
+                null,
+                2
+              )}
                             Problem: ${problem.title}
                             Description: ${problem.problemDescription}
                             Current code: ${codeRef.current}`,
@@ -547,10 +591,10 @@ const ChatBox: React.FC<ChatBoxProps> = ({
               actor: Actor.INTERVIEWER,
               context: `User is asking a question during coding phase. Provide helpful guidance.
                             Chat transcript: ${JSON.stringify(
-                              messages,
-                              null,
-                              2
-                            )}
+                messages,
+                null,
+                2
+              )}
                             Problem: ${problem.title}
                             Description: ${problem.problemDescription}
                             Current code: ${codeRef.current}`,
@@ -724,9 +768,12 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         </button>
       </form>
 
-      <button className="endSessionButton" onClick={() => endSession(false)}>
+      <button className="endSessionButton" onClick={() => endSession(false, setConfirmationModal)}>
         End Session
       </button>
+
+      {confirmationModal && <ConfirmationModal modalData={confirmationModal} />}
+
     </div>
   );
 };

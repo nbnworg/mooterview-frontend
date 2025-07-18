@@ -10,7 +10,6 @@ import ChatBox from "../../components/chatbox/ChatBox";
 
 const ProblemPage = () => {
   const location = useLocation();
-
   const problemId = location.state?.problemId;
   const userId = location.state?.userId;
 
@@ -81,7 +80,9 @@ const ProblemPage = () => {
             onEndRef={endSessionRef}
           />
         </div>
+
         <div className="verticalLine"></div>
+
         <div className="codeEditorAndOptionsContainer">
           <CodeEditor
             code={code}
@@ -89,6 +90,7 @@ const ProblemPage = () => {
             timeLeft={timeLeft}
             setTimeLeft={setTimeLeft}
           />
+
           <button
             className="verifyCodeButton"
             onClick={async () => {
