@@ -11,7 +11,6 @@ const Solution = () => {
     const handleNavigateHome = () => {
         navigate("/home");
     };
-
     const [notes, setNotes] = useState<{ content: any }[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
@@ -44,7 +43,6 @@ const Solution = () => {
     if (loading) return <p>Loading...</p>;
     if (error) return <p>{error}</p>;
     const userSolution = notes[1]?.content || "No solution provided.";
-
     if (!evaluation) {
         return (
             <div className="solution-container solution-no-data">
@@ -70,9 +68,7 @@ const Solution = () => {
             <section>
                 <div>
                     <section className="solution-section solution-summary-section">
-                        <h2 className="solution-section-title">
-                            Your Solution
-                        </h2>
+                        <h2 className="solution-section-title">Your Solution</h2>
 
                         <pre
                             style={{
@@ -84,6 +80,60 @@ const Solution = () => {
                             {userSolution}
                         </pre>
                     </section>
+                </div>
+            </section>
+
+            <section className="solution-section solution-alternatives-section">
+                <h2 className="solution-section-title">Alternative Solutions</h2>
+                <ul className="solution-list solution-code-list">
+                    {evaluation.alternativeSolutions.map((item: string, idx: number) => (
+                        <li
+                            key={idx}
+                            className="solution-list-item solution-code-list-item"
+                        >
+                            <pre className="solution-code-block">
+                                <code className="solution-code-content">{item}</code>
+                            </pre>
+                        </li>
+                    ))}
+                </ul>
+            </section>
+
+            <button className="return-home-button" onClick={handleNavigateHome}>
+                Return to home page
+            </button>
+        </div>
+    );
+
+
+    return (
+        <div className="solution-container">
+            <h1 className="solution-main-title">Interview Evaluation</h1>
+
+            <section className="solution-section solution-summary-section">
+                <h2 className="solution-section-title">Summary</h2>
+                <p className="solution-summary-text">{evaluation.summary}</p>
+            </section>
+
+            <section>
+                <div>
+                    <section className="solution-section solution-summary-section">
+                        <h2 className="solution-section-title">Your Solution</h2>
+
+                        <pre
+                            style={{
+
+                                padding: "1rem",
+                                borderRadius: "6px",
+                                overflowX: "auto",
+                            }}
+                        >
+                            {userSolution}
+                        </pre>
+
+
+                    </section>
+
                 </div>
             </section>
 
