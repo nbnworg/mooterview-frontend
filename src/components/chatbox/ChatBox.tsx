@@ -55,13 +55,11 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     useState(false);
   const isSolutionVerifiedCorrectRef = useRef(false);
   const stageRef = useRef<Stage>("EXPLAIN_PROBLEM");
-  const [_stage, setStage] = useState<Stage>("EXPLAIN_PROBLEM");
   const intitalCodeContextRef = useRef("");
   const approachAttemptCountRef = useRef(0);
   const hasProvidedApproachRef = useRef(false);
 
-  const [_phase, setPhase] = useState<Phase>("CODING_NOT_STARTED");
-  const phaseRef = useRef("CODING_NOT_STARTED");
+  const phaseRef = useRef<Phase>("CODING_NOT_STARTED");
 
   const sessionId = localStorage.getItem("mtv-sessionId");
 
@@ -244,7 +242,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
       });
       await addBotMessage(response);
       await addBotMessage("Have you understood the problem?");
-      setStage("ASK_UNDERSTAND");
       stageRef.current = "ASK_UNDERSTAND";
     };
 
@@ -254,15 +251,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
   useEffect(() => {
     const interval = setInterval(async () => {
       const elapsed = elapsedTimeRef.current;
-      console.log(
-        "Elapsed:",
-        elapsed,
-        "LastAuto:",
-        lastAutoTimeRef.current,
-        "Diff:",
-        elapsed - lastAutoTimeRef.current
-      );
-
+      
       if (
         !isSolutionVerifiedCorrectRef.current &&
         elapsed - lastAutoTimeRef.current >= 300
@@ -270,7 +259,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         lastAutoTimeRef.current = elapsed;
         const codeSnapshot = codeRef.current?.trim() || "";
         if (codeSnapshot.length > 20) {
-          setPhase("CODING");
           phaseRef.current = "CODING";
         }
 
@@ -313,7 +301,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           }
 
           if (response.includes("#STUCK")) {
-            setPhase("stuckWhileCoding");
             phaseRef.current = "stuckWhileCoding";
             const tip = await getPromptResponse({
               actor: Actor.INTERVIEWER,
@@ -323,7 +310,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
 
             await addBotMessage(tip);
           } else if (response.includes("WRONG_PATH")) {
-            setPhase("goingOnWrongPath");
             phaseRef.current = "goingOnWrongPath";
             const warning = await getPromptResponse({
               actor: Actor.INTERVIEWER,
@@ -333,7 +319,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             await addBotMessage(warning);
           }
           intitalCodeContextRef.current = codeSnapshot;
-          setPhase("CODING");
           phaseRef.current = "CODING";
         }
       }
@@ -380,7 +365,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
               promptKey: "ask-approach",
             });
             await addBotMessage(followup);
-            setStage("WAIT_FOR_APPROACH");
             stageRef.current = "WAIT_FOR_APPROACH";
             approachAttemptCountRef.current = 0;
             hasProvidedApproachRef.current = false;
@@ -466,7 +450,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
 
             if (ack.includes("#CORRECT")) {
               await addBotMessage("Okay, you can start coding now.");
-              setStage("CODING");
               stageRef.current = "CODING";
               hasProvidedApproachRef.current = true;
             } else {
@@ -477,7 +460,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                 await addBotMessage(
                   "That's okay, you can start coding now and we'll work through it together."
                 );
-                setStage("CODING");
                 stageRef.current = "CODING";
                 hasProvidedApproachRef.current = true;
               } else {
