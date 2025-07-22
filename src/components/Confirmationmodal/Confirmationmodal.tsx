@@ -14,7 +14,6 @@ interface ConfirmationModalProps {
   modalData: ModalData;
 }
 
-
 const IconBtn: React.FC<{
   text: string;
   onclick: () => void;

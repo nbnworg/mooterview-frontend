@@ -47,6 +47,8 @@ const CreateProblem = () => {
           Authorization: `Bearer ${tokenData.accessToken}`,
         },
       });
+      localStorage.removeItem("cachedProblems");
+
 
       setSuccess("Problem created successfully!");
       setFormData({
