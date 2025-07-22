@@ -89,6 +89,7 @@ const SessionOfProblem = () => {
                                 <span className="info-label">Problem :</span>
                                 <span className="info-value">{problemTitle}</span>
                             </div>
+
                             <div className="info-item">
                                 <span className="info-label">Status:</span>
                                 <span className={`status-badge ${currentSession.problemStatus}`}>
@@ -96,31 +97,31 @@ const SessionOfProblem = () => {
                                 </span>
                             </div>
 
-
                             <div className="info-item">
                                 <span className="info-label">Start Time:</span>
                                 <span className="info-value">{formatDate(currentSession.startTime)}</span>
                             </div>
+
                             <div className="info-item">
                                 <span className="info-label">End Time:</span>
                                 <span className="info-value">
                                     {currentSession.endTime ? formatDate(currentSession.endTime) : "In Progress"}
                                 </span>
                             </div>
+
                             <div className="info-item">
                                 <span className="info-label">Duration:</span>
                                 <span className="info-value">{calculateDuration()}</span>
                             </div>
+
                             <div className="info-item">
                                 <span className="info-label">Total Messages:</span>
                                 <span className="info-value">{currentSession.chatsQueue?.length || 0}</span>
                             </div>
-
-
-                        </div >
+                        </div>
 
                         {/* Summary */}
-                        < div className="chat-section" >
+                        <div className="chat-section">
                             <div
                                 className="section-title toggle-title"
                                 onClick={() => setShowSummary(!showSummary)}
@@ -134,8 +135,8 @@ const SessionOfProblem = () => {
                                     {currentSession.notes?.[0]?.content || "No summary available."}
                                 </div>
                             </div>
+                        </div>
 
-                        </div >
                         <br />
 
                         <div className="chat-section">
@@ -151,9 +152,9 @@ const SessionOfProblem = () => {
                                 <pre className="chat-container code-block">
                                     {currentSession.notes?.[1]?.content || "No code available."}
                                 </pre>
-
                             )}
                         </div>
+
                         <br />
 
                         <div className="chat-section">
@@ -187,13 +188,14 @@ const SessionOfProblem = () => {
                                     </div>
                                 ))}
                         </div>
+
                     </>
                 ) : (
-    !error && <div className="loading-indicator">Loading session information...</div>
-)}
-<button className="back-button" onClick={() => navigate("/dashboard")}>
-    Back
-</button>
+                    !error && <div className="loading-indicator">Loading session information...</div>
+                )}
+                <button className="back-button" onClick={() => navigate("/dashboard")}>
+                    Back
+                </button>
             </div >
         </div >
     );
