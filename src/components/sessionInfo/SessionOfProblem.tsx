@@ -89,7 +89,14 @@ const SessionOfProblem = () => {
                                 <span className="info-label">Problem :</span>
                                 <span className="info-value">{problemTitle}</span>
                             </div>
-                           
+                            <div className="info-item">
+                                <span className="info-label">Status:</span>
+                                <span className={`status-badge ${currentSession.problemStatus}`}>
+                                    {currentSession.problemStatus || "Unknown"}
+                                </span>
+                            </div>
+
+
                             <div className="info-item">
                                 <span className="info-label">Start Time:</span>
                                 <span className="info-value">{formatDate(currentSession.startTime)}</span>
@@ -104,10 +111,16 @@ const SessionOfProblem = () => {
                                 <span className="info-label">Duration:</span>
                                 <span className="info-value">{calculateDuration()}</span>
                             </div>
-                            
-                        </div>
+                            <div className="info-item">
+                                <span className="info-label">Total Messages:</span>
+                                <span className="info-value">{currentSession.chatsQueue?.length || 0}</span>
+                            </div>
 
-                        <div className="chat-section">
+
+                        </div >
+
+                        {/* Summary */}
+                        < div className="chat-section" >
                             <div
                                 className="section-title toggle-title"
                                 onClick={() => setShowSummary(!showSummary)}
@@ -122,7 +135,7 @@ const SessionOfProblem = () => {
                                 </div>
                             </div>
 
-                        </div>
+                        </div >
                         <br />
 
                         <div className="chat-section">
@@ -176,13 +189,13 @@ const SessionOfProblem = () => {
                         </div>
                     </>
                 ) : (
-                    !error && <div className="loading-indicator">Loading session information...</div>
-                )}
-                <button className="back-button" onClick={() => navigate("/dashboard")}>
-                    Back
-                </button>
-            </div>
-        </div>
+    !error && <div className="loading-indicator">Loading session information...</div>
+)}
+<button className="back-button" onClick={() => navigate("/dashboard")}>
+    Back
+</button>
+            </div >
+        </div >
     );
 };
 
