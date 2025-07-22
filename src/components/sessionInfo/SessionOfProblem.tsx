@@ -20,7 +20,6 @@ const SessionOfProblem = () => {
     const [currentSession, setCurrentSession] = useState<Partial<Session> | null>(null);
     const [error, setError] = useState<string | null>(null);
 
-    // Toggle states
     const [showSummary, setShowSummary] = useState<boolean>(true);
     const [showCode, setShowCode] = useState<boolean>(false);
     const [showChat, setShowChat] = useState<boolean>(false);
@@ -60,15 +59,20 @@ const SessionOfProblem = () => {
         const start = new Date(currentSession.startTime);
         const end = currentSession.endTime ? new Date(currentSession.endTime) : new Date();
         const diffMs = end.getTime() - start.getTime();
-        const diffMins = Math.floor(diffMs / 60000);
-        const diffHours = Math.floor(diffMins / 60);
-        const remainingMins = diffMins % 60;
 
-        if (diffHours > 0) {
-            return `${diffHours}h ${remainingMins}m`;
+        const totalSeconds = Math.floor(diffMs / 1000);
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
+
+        if (hours > 0) {
+            return `${hours}h ${minutes}m ${seconds}s`;
+        } else if (minutes > 0) {
+            return `${minutes}m ${seconds}s`;
         }
-        return `${diffMins}m`;
+        return `${seconds}s`;
     };
+
 
     return (
         <div>
@@ -85,12 +89,7 @@ const SessionOfProblem = () => {
                                 <span className="info-label">Problem :</span>
                                 <span className="info-value">{problemTitle}</span>
                             </div>
-                            <div className="info-item">
-                                <span className="info-label">Status:</span>
-                                <span className={`status-badge ${currentSession.problemStatus}`}>
-                                    {currentSession.problemStatus || "Unknown"}
-                                </span>
-                            </div>
+                           
                             <div className="info-item">
                                 <span className="info-label">Start Time:</span>
                                 <span className="info-value">{formatDate(currentSession.startTime)}</span>
@@ -105,13 +104,9 @@ const SessionOfProblem = () => {
                                 <span className="info-label">Duration:</span>
                                 <span className="info-value">{calculateDuration()}</span>
                             </div>
-                            <div className="info-item">
-                                <span className="info-label">Total Messages:</span>
-                                <span className="info-value">{currentSession.chatsQueue?.length || 0}</span>
-                            </div>
+                            
                         </div>
 
-                        {/* Summary */}
                         <div className="chat-section">
                             <div
                                 className="section-title toggle-title"
@@ -130,7 +125,6 @@ const SessionOfProblem = () => {
                         </div>
                         <br />
 
-                        {/* Your Code */}
                         <div className="chat-section">
                             <div
                                 className="section-title toggle-title"
@@ -149,7 +143,6 @@ const SessionOfProblem = () => {
                         </div>
                         <br />
 
-                        {/* Chat History */}
                         <div className="chat-section">
                             <div
                                 className="section-title toggle-title"
