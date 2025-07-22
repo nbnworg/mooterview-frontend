@@ -6,6 +6,8 @@ import "./sessionOfProblem.css";
 import { useNavigate } from "react-router-dom";
 import { getProblemById } from "../../utils/handlers/getProblemById";
 import Navbar from "../navbar/Navbar";
+import { IoChevronDown, IoChevronUp } from "react-icons/io5";
+
 
 const SessionOfProblem = () => {
     const navigate = useNavigate();
@@ -15,9 +17,14 @@ const SessionOfProblem = () => {
     const [problemTitle, setProblemTitle] = useState<string>("");
     const [ses, setses] = useState<boolean>(false);
 
-    const [currentSession, setCurrentSession] =
-        useState<Partial<Session> | null>(null);
+    const [currentSession, setCurrentSession] = useState<Partial<Session> | null>(null);
     const [error, setError] = useState<string | null>(null);
+
+    // Toggle states
+    const [showSummary, setShowSummary] = useState<boolean>(true);
+    const [showCode, setShowCode] = useState<boolean>(false);
+    const [showChat, setShowChat] = useState<boolean>(false);
+
     useEffect(() => {
         const fetchSessionById = async () => {
             try {
@@ -51,9 +58,7 @@ const SessionOfProblem = () => {
         if (!currentSession?.startTime) return "N/A";
 
         const start = new Date(currentSession.startTime);
-        const end = currentSession.endTime
-            ? new Date(currentSession.endTime)
-            : new Date();
+        const end = currentSession.endTime ? new Date(currentSession.endTime) : new Date();
         const diffMs = end.getTime() - start.getTime();
         const diffMins = Math.floor(diffMs / 60000);
         const diffHours = Math.floor(diffMins / 60);
@@ -78,115 +83,109 @@ const SessionOfProblem = () => {
                         <div className="session-info">
                             <div className="info-item">
                                 <span className="info-label">Problem :</span>
-                                <span className="info-value">
-                                    {problemTitle}
-                                </span>
+                                <span className="info-value">{problemTitle}</span>
                             </div>
                             <div className="info-item">
                                 <span className="info-label">Status:</span>
-                                <span
-                                    className={`status-badge ${currentSession.problemStatus}`}
-                                >
+                                <span className={`status-badge ${currentSession.problemStatus}`}>
                                     {currentSession.problemStatus || "Unknown"}
                                 </span>
                             </div>
                             <div className="info-item">
                                 <span className="info-label">Start Time:</span>
-                                <span className="info-value">
-                                    {formatDate(currentSession.startTime)}
-                                </span>
+                                <span className="info-value">{formatDate(currentSession.startTime)}</span>
                             </div>
                             <div className="info-item">
                                 <span className="info-label">End Time:</span>
                                 <span className="info-value">
-                                    {currentSession.endTime
-                                        ? formatDate(currentSession.endTime)
-                                        : "In Progress"}
+                                    {currentSession.endTime ? formatDate(currentSession.endTime) : "In Progress"}
                                 </span>
                             </div>
                             <div className="info-item">
                                 <span className="info-label">Duration:</span>
-                                <span className="info-value">
-                                    {calculateDuration()}
-                                </span>
+                                <span className="info-value">{calculateDuration()}</span>
                             </div>
                             <div className="info-item">
-                                <span className="info-label">
-                                    Total Messages:
-                                </span>
-                                <span className="info-value">
-                                    {currentSession.chatsQueue?.length || 0}
-                                </span>
+                                <span className="info-label">Total Messages:</span>
+                                <span className="info-value">{currentSession.chatsQueue?.length || 0}</span>
                             </div>
                         </div>
 
+                        {/* Summary */}
                         <div className="chat-section">
-                            <h3 className="section-title">Summary</h3>
-                            <div className="chat-container">
-                                {currentSession.notes?.[0]?.content ||
-                                    "No summary available."}
-                            </div>
-                        </div>
-                        <br />
-                        <div className="chat-section">
-                            <h3 className="section-title">Your Code</h3>
-                            <pre
-                                style={{
-                                    padding: "1rem",
-                                    borderRadius: "6px",
-                                    overflowX: "auto",
-                                }}
+                            <div
+                                className="section-title toggle-title"
+                                onClick={() => setShowSummary(!showSummary)}
                             >
-                                {" "}
-                                className="chat-container"
-                                {currentSession.notes?.[1]?.content ||
-                                    "No code available."}
-                            </pre>
+                                <span>Summary</span>
+                                {showSummary ? <IoChevronUp /> : <IoChevronDown />}
+                            </div>
+
+                            <div className={`toggle-content ${showSummary ? "toggle-content--open" : ""}`}>
+                                <div className="chat-container ">
+                                    {currentSession.notes?.[0]?.content || "No summary available."}
+                                </div>
+                            </div>
+
                         </div>
                         <br />
+
+                        {/* Your Code */}
                         <div className="chat-section">
-                            <h3 className="section-title">Chat History</h3>
-                            {currentSession.chatsQueue?.length ? (
-                                <div className="chat-container">
-                                    {currentSession.chatsQueue.map(
-                                        (chat, index) => (
+                            <div
+                                className="section-title toggle-title"
+                                onClick={() => setShowCode(!showCode)}
+                            >
+                                <span>Your Code</span>
+                                {showCode ? <IoChevronUp /> : <IoChevronDown />}
+                            </div>
+
+                            {showCode && (
+                                <pre className="chat-container code-block">
+                                    {currentSession.notes?.[1]?.content || "No code available."}
+                                </pre>
+
+                            )}
+                        </div>
+                        <br />
+
+                        {/* Chat History */}
+                        <div className="chat-section">
+                            <div
+                                className="section-title toggle-title"
+                                onClick={() => setShowChat(!showChat)}
+                            >
+                                <span>Chat History</span>
+                                {showChat ? <IoChevronUp /> : <IoChevronDown />}
+                            </div>
+
+                            {showChat &&
+                                (currentSession.chatsQueue?.length ? (
+                                    <div className="chat-container">
+                                        {currentSession.chatsQueue.map((chat, index) => (
                                             <div
                                                 key={index}
                                                 className={`chat-item chat-${chat?.actor?.toLowerCase()}`}
                                             >
                                                 <div className="chat-header">
-                                                    <span className="chat-actor">
-                                                        {chat.actor}
-                                                    </span>
-                                                    <span className="chat-index">
-                                                        #{index + 1}
-                                                    </span>
+                                                    <span className="chat-actor">{chat.actor}</span>
+                                                    <span className="chat-index">#{index + 1}</span>
                                                 </div>
-                                                <div className="chat-message">
-                                                    {chat.message}
-                                                </div>
+                                                <div className="chat-message">{chat.message}</div>
                                             </div>
-                                        )
-                                    )}
-                                </div>
-                            ) : (
-                                <div className="no-data">
-                                    <p>No chat messages found.</p>
-                                </div>
-                            )}
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="no-data">
+                                        <p>No chat messages found.</p>
+                                    </div>
+                                ))}
                         </div>
                     </>
                 ) : (
-                    !error && (
-                        <div className="loading-indicator">
-                            Loading session information...
-                        </div>
-                    )
+                    !error && <div className="loading-indicator">Loading session information...</div>
                 )}
-                <button
-                    className="back-button"
-                    onClick={() => navigate("/dashboard")}
-                >
+                <button className="back-button" onClick={() => navigate("/dashboard")}>
                     Back
                 </button>
             </div>

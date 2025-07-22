@@ -38,21 +38,39 @@ const Homepage = () => {
   )
   console.log("access token: ", data);
 
+
+  const CACHE_KEY = "cachedProblems";
+  const CACHE_DURATION = 2 * 60 * 60 * 1000; 
+
   useEffect(() => {
-    console.log("before problems");
     const fetchProblems = async () => {
+      setLoading(true);
+      setError(null);
+
       try {
-        setLoading(true);
-        setError(null);
-        console.log("here 1");
-        const problems: ProblemSummary[] = await getAllProblems();
-        console.log("here 2");
-        setProblems(problems);
-      } catch (error: any) {
-        setError(
-          error.response?.data ||
-          "Server Is busy, Can't Fetch problem right now."
+        const cached = localStorage.getItem(CACHE_KEY);
+        const now = new Date().getTime();
+
+        if (cached) {
+          const { problems, timestamp } = JSON.parse(cached);
+
+          if (now - timestamp < CACHE_DURATION) {
+            setProblems(problems);
+            setLoading(false);
+            return;
+          } else {
+            localStorage.removeItem(CACHE_KEY);
+          }
+        }
+
+        const freshProblems = await getAllProblems();
+        localStorage.setItem(
+          CACHE_KEY,
+          JSON.stringify({ problems: freshProblems, timestamp: now })
         );
+        setProblems(freshProblems);
+      } catch (err) {
+        setError("Failed to load problems");
       } finally {
         setLoading(false);
       }
@@ -60,6 +78,9 @@ const Homepage = () => {
 
     fetchProblems();
   }, []);
+
+
+
   useEffect(() => {
     const fetchSolvedProblems = async () => {
       const result: string[] = await Solvedproblems(getTokenData().id);

@@ -30,6 +30,7 @@ const DashBoard = () => {
         const response: any = await getAllSessionByUserId(getTokenData().id);
         let fetchedSessions: Session[] = response.sessions;
 
+        // Sort sessions by most recent start time
         fetchedSessions = fetchedSessions.sort((a, b) => {
           const timeA = new Date(a.startTime ?? 0).getTime();
           const timeB = new Date(b.startTime ?? 0).getTime();
@@ -38,19 +39,22 @@ const DashBoard = () => {
 
         setSessions(fetchedSessions);
 
+        const uniqueProblemIds = [
+          ...new Set(fetchedSessions.map((s) => s.problemId).filter(Boolean)),
+        ];
         const fetchedProblems: { [key: string]: string } = {};
+
         await Promise.all(
-          fetchedSessions.map(async (session: any) => {
-            if (!fetchedProblems[session.problemId]) {
-              try {
-                const problem: Problem = await getProblemById(session.problemId);
-                fetchedProblems[session.problemId] = problem.title || "Untitled";
-              } catch {
-                fetchedProblems[session.problemId] = "Title not found";
-              }
+          uniqueProblemIds.map(async (problemId: any) => {
+            try {
+              const problem: Problem = await getProblemById(problemId);
+              fetchedProblems[problemId] = problem.title || "Untitled";
+            } catch {
+              fetchedProblems[problemId] = "Title not found";
             }
           })
         );
+
         setProblems(fetchedProblems);
       } catch (error: any) {
         setError("Something went wrong while fetching sessions.");
@@ -59,6 +63,7 @@ const DashBoard = () => {
         setLoading(false);
       }
     };
+
 
     const fetchUserInfo = async () => {
       try {
