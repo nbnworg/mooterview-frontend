@@ -602,6 +602,11 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           break;
         }
 
+        case "#INTERVIEW_END": {
+          addBotMessage("The interview is over now, you can head back!");
+          break;
+        }
+
         default: {
           if (currentStage === "CODING") {
             const response = await getPromptResponse({
