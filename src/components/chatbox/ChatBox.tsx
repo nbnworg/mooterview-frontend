@@ -327,6 +327,8 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     return () => clearInterval(interval);
   }, [problem]);
 
+  let followUp, questionCounterValue: {number: number};
+  const handleFollowUp = useRef(0);
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim()) return;
@@ -401,7 +403,32 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         }
 
         case "#RIGHT_ANSWER": {
-          await addBotMessage("Well done, that is correct");
+          if(handleFollowUp.current === 0) {
+             followUp = await getPromptResponse({
+              actor: Actor.SYSTEM,
+              context: `Chat transcrpt: ${JSON.stringify(messages, null, 2)}
+                        Problem: ${problem.title}
+                        Description: ${problem.problemDescription}
+              `,
+              promptKey: "follow-up-question-counter"
+            });
+            handleFollowUp.current += 1;
+            questionCounterValue = JSON.parse(followUp);
+          }
+
+          if(questionCounterValue.number) {
+            const response = await getPromptResponse({
+              actor: Actor.AI,
+              context: `Chat transcrpt: ${JSON.stringify(messages, null, 2)}
+                        Problem: ${problem.title}
+                        Description: ${problem.problemDescription}`,
+              promptKey: "repeat-follow-up"
+            });
+            await addBotMessage(response);
+            questionCounterValue.number -= 1;
+          } else {
+            await addBotMessage("Well done, that is correct");
+          }
           break;
         }
 
@@ -693,27 +720,11 @@ const ChatBox: React.FC<ChatBoxProps> = ({
 
     await addBotMessage(response);
 
-    // const followUpResponse = await getPromptResponse({
-    //   actor: Actor.INTERVIEWER,
-    //   context,
-    //   promptKey: "follow-up",
-    // });
-
-    // await addBotMessage(response);
-
-    // if (response.trim().startsWith("Correct")) {
-    //   setIsSolutionVerifiedCorrect(true);
-    //   isSolutionVerifiedCorrectRef.current = true;
-    //   stageRef.current = "FOLLOW_UP";
-    //   await addBotMessage(followUpResponse);
-    // }
-
     if (response.trim().startsWith("Correct")) {
       setIsSolutionVerifiedCorrect(true);
       isSolutionVerifiedCorrectRef.current = true;
       stageRef.current = "FOLLOW_UP";
 
-      // Step 7: Generate follow-up question
       const followUpResponse = await getPromptResponse({
         actor: Actor.INTERVIEWER,
         context,
