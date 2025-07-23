@@ -342,6 +342,8 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     await updateChatsInSession([userMsg]);
 
     const currentStage = stageRef.current;
+    const codeSnapshot = codeRef.current?.trim() || "";
+
 
     try {
       const classification = await classifyUserMessage(
@@ -406,9 +408,10 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           if(handleFollowUp.current === 0) {
              followUp = await getPromptResponse({
               actor: Actor.SYSTEM,
-              context: `Chat transcrpt: ${JSON.stringify(messages, null, 2)}
-                        Problem: ${problem.title}
-                        Description: ${problem.problemDescription}
+              context: `Chat transcrpt: ${JSON.stringify(messages, null, 2)}\n
+                        Problem: ${problem.title}\n
+                        Description: ${problem.problemDescription}\n
+                        Code: ${codeSnapshot}
               `,
               promptKey: "follow-up-question-counter"
             });
@@ -419,9 +422,10 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           if(questionCounterValue.number) {
             const response = await getPromptResponse({
               actor: Actor.AI,
-              context: `Chat transcrpt: ${JSON.stringify(messages, null, 2)}
-                        Problem: ${problem.title}
-                        Description: ${problem.problemDescription}`,
+              context: `Chat transcrpt: ${JSON.stringify(messages, null, 2)}\n
+                        Problem: ${problem.title}\n
+                        Description: ${problem.problemDescription}\n
+                        Code: ${codeSnapshot}`,
               promptKey: "repeat-follow-up"
             });
             await addBotMessage(response);
