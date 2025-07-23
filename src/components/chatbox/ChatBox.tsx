@@ -65,6 +65,9 @@ const ChatBox: React.FC<ChatBoxProps> = ({
 
   const navigate = useNavigate();
 
+  const approachTextRef = useRef<string>("");
+
+
   const [confirmationModal, setConfirmationModal] = useState<{
     text1: string;
     text2: string;
@@ -435,6 +438,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             currentStage === "WAIT_FOR_APPROACH" &&
             !hasProvidedApproachRef.current
           ) {
+           
             const ack = await getPromptResponse({
               actor: Actor.INTERVIEWER,
               context: `User has shared an approach. Evaluate it and respond with one of "#CORRECT" or "#WRONG" followed by your message.
@@ -450,6 +454,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
 
             if (ack.includes("#CORRECT")) {
               await addBotMessage("Okay, you can start coding now.");
+               approachTextRef.current = input;
               stageRef.current = "CODING";
               hasProvidedApproachRef.current = true;
             } else {
@@ -647,6 +652,43 @@ const ChatBox: React.FC<ChatBoxProps> = ({
       );
       return;
     }
+
+
+     // ✅ Step: Check if code follows user's described approach
+  if (approachTextRef.current.trim()) {
+    const approachCheckResponse = await getPromptResponse({
+      actor: Actor.INTERVIEWER,
+      context: `
+        The candidate initially described the following approach:
+
+        ${approachTextRef.current}
+
+        Their final submitted code is:
+
+        ${currentCode}
+
+        Does this code follow the candidate's described approach? 
+        Respond strictly in one of the following formats:
+        - "#MATCH: <short reason>"
+        - "#MISMATCH: <short reason>"
+      `,
+      promptKey: "check-approach-alignment",
+    });
+
+    if (approachCheckResponse.includes("#MISMATCH")) {
+      await addBotMessage(
+        approachCheckResponse.replace(
+          "#MISMATCH:",
+          "⚠️ Your code does not seem to follow the approach you described: "
+        )
+      );
+    } else if (approachCheckResponse.includes("#MATCH")) {
+      await addBotMessage(
+        "✅ Your code matches the approach you described."
+      );
+    }
+  }
+
 
     const testCases = await generateTestCasesWithAI(problem);
     if (!testCases || testCases.length === 0) {
