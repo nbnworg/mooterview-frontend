@@ -29,11 +29,12 @@ nav {
 }
 
 .brandLogo {
-  height: 40px;
+  height: 2.1vw; 
   object-fit: contain;
-  margin-right: 2px;
+  margin-right: 2px; 
   background: transparent;
 }
+
 
 .brandText {
   font-size: 1.5rem;
