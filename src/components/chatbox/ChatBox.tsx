@@ -415,11 +415,13 @@ const ChatBox: React.FC<ChatBoxProps> = ({
               `,
               promptKey: "follow-up-question-counter"
             });
+            console.log(followUp);
             handleFollowUp.current += 1;
-            questionCounterValue = JSON.parse(followUp);
+            questionCounterValue = { number: Number(JSON.parse(followUp).number) };
+            console.log('questionCounterValue', questionCounterValue)
           }
 
-          if(questionCounterValue.number) {
+          if(questionCounterValue.number !== 0) {
             const response = await getPromptResponse({
               actor: Actor.AI,
               context: `Chat transcrpt: ${JSON.stringify(messages, null, 2)}\n
@@ -428,6 +430,8 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                         Code: ${codeSnapshot}`,
               promptKey: "repeat-follow-up"
             });
+            console.log("Value", questionCounterValue.number);
+            
             await addBotMessage(response);
             questionCounterValue.number -= 1;
           } else {
