@@ -12,13 +12,35 @@ nav {
   gap: 3vw;
 }
 
+.logoContainer {
+  display: flex;
+  align-items: center;
+}
+
+
 .brandName {
+  display: flex;
+  align-items: center;
   color: var(--primary);
   font-size: 1.5vw;
   font-weight: 700;
   font-family: "Cascadia Code";
   text-decoration: none;
 }
+
+.brandLogo {
+  height: 40px;
+  object-fit: contain;
+  margin-right: 2px;
+  background: transparent;
+}
+
+.brandText {
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+
 
 .navMenuLinks,
 .navMenuLinksButton {
