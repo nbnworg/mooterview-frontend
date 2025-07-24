@@ -41,6 +41,9 @@ export const classifyUserMessage = async (input: string, currentStage: string, r
            - If user answers the follow-up question incorrectly or even slightly incorrect (see context/transcript for question) → #WRONG_ANSWER (not #CONFUSED)
            - If user asks for clarification on the follow-up question → #REQUESTED_EXAMPLE
            - If user gives unrelated or off-topic response → #OFF_TOPIC
+         
+        5. If currentStage is "SESSION_END":
+           - If user asks anything in this stage → #INTERVIEW_END
 
         5. General rules:
            - If user just says "yes", "okay", "sure" and we're NOT in ASK_UNDERSTAND stage → #GENERAL_ACKNOWLEDGMENT
@@ -63,6 +66,7 @@ export const classifyUserMessage = async (input: string, currentStage: string, r
         #OFF_TOPIC
         #WRONG_ANSWER
         #RIGHT_ANSWER
+        #INTERVIEW_END
     `;
 
     const response = await getPromptResponse({
