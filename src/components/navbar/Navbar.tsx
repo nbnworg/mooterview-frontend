@@ -6,6 +6,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { FiLogOut } from "react-icons/fi";
 import ConfirmationModal from "../Confirmationmodal/Confirmationmodal";
+import mooLogo from "../../assets/moo_logo_1.png";
 
 interface ConfirmationModalData {
   text1: string;
@@ -30,9 +31,12 @@ const Navbar = () => {
 
   return (
     <nav>
-      <div className="logoContainer">
-        <a href="/" className="brandName">Mooterview</a>
-      </div>
+      <Link to="/" className="brandName">
+        <img src={mooLogo} alt="Moo Logo" className="brandLogo" />
+        <span className="brandText">Moo</span>
+      </Link>
+
+
       {isLoggedIn ? (
         <div className="navMenu">
           <button className="profileAvatar"
