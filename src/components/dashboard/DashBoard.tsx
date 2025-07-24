@@ -144,16 +144,7 @@ const DashBoard = () => {
                     )}
                   </div>
                 </div>
-                <div className="session-status">
-                  <span
-                    className={`status-badge ${session.problemStatus
-                      ?.toLowerCase()
-                      .replace(" ", "-")}`}
-                  >
-                    {session.problemStatus}
-                  </span>
-                </div>
-                <div className="session-arrow">→</div>
+               
               </Link>
             ))}
           </div>
