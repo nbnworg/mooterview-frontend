@@ -667,28 +667,19 @@ const ChatBox: React.FC<ChatBoxProps> = ({
 
         ${currentCode}
 
-        Does this code follow the candidate's described approach? 
-        Respond strictly in one of the following formats:
-        - "#MATCH: <short reason>"
-        - "#MISMATCH: <short reason>"
       `,
       promptKey: "check-approach-alignment",
     });
-
-    if (approachCheckResponse.includes("#MISMATCH")) {
-      await addBotMessage(
-        approachCheckResponse.replace(
-          "#MISMATCH:",
-          "⚠️ Your code does not seem to follow the approach you described: "
-        )
-      );
-    } else if (approachCheckResponse.includes("#MATCH")) {
-      await addBotMessage(
-        "✅ Your code matches the approach you described."
-      );
-    }
+ if (approachCheckResponse.includes("#MISMATCH")) {
+    await addBotMessage(
+      approachCheckResponse.replace(
+        "#MISMATCH:",
+        "⚠️ Your code does not seem to follow the approach you described: "
+      )
+    )
+    return;
   }
-
+  }
 
     const testCases = await generateTestCasesWithAI(problem);
     if (!testCases || testCases.length === 0) {
