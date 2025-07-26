@@ -4,8 +4,19 @@ import { getAllSessionByUserId } from "../../utils/handlers/getAllSessionById";
 import { getTokenData } from "../../utils/constants";
 import { getPromptResponse } from "../../utils/handlers/getPromptResponse";
 import './dashboard.css';
+import {
+  getCachedReport,
+  saveReportToCache,
+} from "../../utils/localStorageReport";
 
-const Preparation = () => {
+interface PreparationProps {
+  sessions: Session[];
+}
+
+
+
+const Preparation: React.FC<PreparationProps> = ({ sessions }) => {
+
   const [gptSummary, setGptSummary] = useState({
     headline: "",
     summary: "",
@@ -20,24 +31,39 @@ const Preparation = () => {
         setLoading(true);
         setError(null);
 
-        const response: any = await getAllSessionByUserId(getTokenData().id);
-        let fetchedSessions: Session[] = response.sessions;
+        if (!sessions.length) return;
+        const sorted = sessions
+          .filter((s) => s.startTime)
+          .sort(
+            (a, b) =>
+              new Date(b.startTime ?? 0).getTime() -
+              new Date(a.startTime ?? 0).getTime()
+          );
+        const latestSessionId = sorted[sorted.length-1].sessionId;
 
-        fetchedSessions.sort(
-          (a, b) => new Date(b.startTime || "").getTime() - new Date(a.startTime || "").getTime()
-        );
-        fetchedSessions = fetchedSessions.slice(0, 5);
+        const cached = getCachedReport();
+        if (cached && cached.latestSessionId === latestSessionId) {
+          setGptSummary(cached.report);
+          console.log("api not called and now returning");
+          
+          return;
+        }
 
-        const extractedSessionData = fetchedSessions.map((session) => ({
-          chatsQueue: session.chatsQueue,
+
+
+        setLoading(true);
+        setError(null);
+
+        const extracted = sorted.slice(0, 5).map((session) => ({
+          chatsQueue: session.chatsQueue || [],
           note0: session.notes?.[0] || null,
           note1: session.notes?.[1] || null,
           problemId: session.problemId,
         }));
 
-        const sessionContext = extractedSessionData
+        const sessionContext = extracted
           .map((session, i) => {
-            const chatMessages = session.chatsQueue ||[]
+            const chatMessages = session.chatsQueue || []
               .map((chat: any) => `• ${chat.role}: ${chat.content}`)
               .join("\n");
 
@@ -64,20 +90,16 @@ ${chatMessages}`;
           promptKey,
         });
 
-        try {
-          const parsed = JSON.parse(gptResponse);
-          setGptSummary({
-            headline: parsed.headline || "",
-            summary: parsed.summary || "",
-            overallReadiness: parsed.overallReadiness || "",
-          });
-        } catch (err) {
-          setGptSummary({
-            headline: "Invalid GPT response",
-            summary: gptResponse,
-            overallReadiness: "",
-          });
-        }
+        const parsed = JSON.parse(gptResponse);
+        const report = {
+          headline: parsed.headline || "",
+          summary: parsed.summary || "",
+          overallReadiness: parsed.overallReadiness || "",
+        };
+
+        saveReportToCache(latestSessionId, report);
+        console.log("api called");
+        setGptSummary(report);
       } catch (err) {
         setError("Failed to fetch sessions.");
         console.error(err);
@@ -87,21 +109,21 @@ ${chatMessages}`;
     };
 
     fetchSessionsAndCallGPT();
-  }, []);
+  }, [sessions]);
 
   return (
     <div >
       <h3 className="section-title"> Preparation Report</h3>
-      
+
       {loading && <p> Loading...</p>}
       {error && <p style={{ color: "red" }}>{error}</p>}
 
       {gptSummary.summary && (
         <div>
-           <p><strong>🏁Overall Readiness score:{gptSummary.overallReadiness}</strong></p>
+          <p><strong>🏁Overall Readiness score:{gptSummary.overallReadiness}</strong></p>
           <h4> {gptSummary.headline}.</h4>
           <p style={{ whiteSpace: "pre-wrap" }}>{gptSummary.summary}</p>
-         
+
         </div>
       )}
     </div>

@@ -11,6 +11,7 @@ import { classifyUserMessage } from "../../utils/classifyUserMsg";
 import { evaluateSolutionWithRubric } from "../../utils/evaluateSolutionWithRubric";
 import { generateTestCasesWithAI } from "../../utils/generateTestCasesWithAI";
 import ConfirmationModal from "../Confirmationmodal/Confirmationmodal";
+import { clearCachedReport } from "../../utils/localStorageReport";
 
 interface ChatBoxProps {
   problem: Problem;
@@ -639,6 +640,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             problemId: problem.problemId || "",
           });
           localStorage.setItem("mtv-sessionId", sessionId);
+          clearCachedReport();
           updateChatsInSession([...messages]);
         }
       }
