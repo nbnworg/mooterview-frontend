@@ -44,7 +44,6 @@ const Preparation: React.FC<PreparationProps> = ({ sessions }) => {
         const cached = getCachedReport();
         if (cached && cached.latestSessionId === latestSessionId) {
           setGptSummary(cached.report);
-          console.log("api not called and now returning");
           
           return;
         }
@@ -98,7 +97,6 @@ ${chatMessages}`;
         };
 
         saveReportToCache(latestSessionId, report);
-        console.log("api called");
         setGptSummary(report);
       } catch (err) {
         setError("Failed to fetch sessions.");
