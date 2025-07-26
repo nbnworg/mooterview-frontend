@@ -1,7 +1,5 @@
 import { useState, useEffect } from "react";
 import type { Session } from "mooterview-client";
-import { getAllSessionByUserId } from "../../utils/handlers/getAllSessionById";
-import { getTokenData } from "../../utils/constants";
 import { getPromptResponse } from "../../utils/handlers/getPromptResponse";
 import './dashboard.css';
 import {
