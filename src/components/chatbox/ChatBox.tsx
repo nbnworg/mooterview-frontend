@@ -330,6 +330,8 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     return () => clearInterval(interval);
   }, [problem]);
 
+  let followUp, questionCounterValue: {number: number};
+  const handleFollowUp = useRef(0);
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim()) return;
@@ -343,6 +345,8 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     await updateChatsInSession([userMsg]);
 
     const currentStage = stageRef.current;
+    const codeSnapshot = codeRef.current?.trim() || "";
+
 
     try {
       const classification = await classifyUserMessage(
@@ -404,7 +408,38 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         }
 
         case "#RIGHT_ANSWER": {
-          await addBotMessage("Well done, that is correct");
+          if(handleFollowUp.current === 0) {
+             followUp = await getPromptResponse({
+              actor: Actor.SYSTEM,
+              context: `Chat transcrpt: ${JSON.stringify(messages, null, 2)}\n
+                        Problem: ${problem.title}\n
+                        Description: ${problem.problemDescription}\n
+                        Code: ${codeSnapshot}
+              `,
+              promptKey: "follow-up-question-counter"
+            });
+            console.log(followUp);
+            handleFollowUp.current += 1;
+            questionCounterValue = { number: Number(JSON.parse(followUp).number) };
+            console.log('questionCounterValue', questionCounterValue)
+          }
+
+          if(questionCounterValue.number !== 0) {
+            const response = await getPromptResponse({
+              actor: Actor.AI,
+              context: `Chat transcrpt: ${JSON.stringify(messages, null, 2)}\n
+                        Problem: ${problem.title}\n
+                        Description: ${problem.problemDescription}\n
+                        Code: ${codeSnapshot}`,
+              promptKey: "repeat-follow-up"
+            });
+            console.log("Value", questionCounterValue.number);
+            
+            await addBotMessage(response);
+            questionCounterValue.number -= 1;
+          } else {
+            await addBotMessage("Well done, that is correct");
+          }
           break;
         }
 
@@ -572,6 +607,11 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           break;
         }
 
+        case "#INTERVIEW_END": {
+          addBotMessage("The interview is over now, you can head back!");
+          break;
+        }
+
         default: {
           if (currentStage === "CODING") {
             const response = await getPromptResponse({
@@ -726,27 +766,11 @@ const ChatBox: React.FC<ChatBoxProps> = ({
 
     await addBotMessage(response);
 
-    // const followUpResponse = await getPromptResponse({
-    //   actor: Actor.INTERVIEWER,
-    //   context,
-    //   promptKey: "follow-up",
-    // });
-
-    // await addBotMessage(response);
-
-    // if (response.trim().startsWith("Correct")) {
-    //   setIsSolutionVerifiedCorrect(true);
-    //   isSolutionVerifiedCorrectRef.current = true;
-    //   stageRef.current = "FOLLOW_UP";
-    //   await addBotMessage(followUpResponse);
-    // }
-
     if (response.trim().startsWith("Correct")) {
       setIsSolutionVerifiedCorrect(true);
       isSolutionVerifiedCorrectRef.current = true;
       stageRef.current = "FOLLOW_UP";
 
-      // Step 7: Generate follow-up question
       const followUpResponse = await getPromptResponse({
         actor: Actor.INTERVIEWER,
         context,
