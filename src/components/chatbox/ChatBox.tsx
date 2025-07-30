@@ -194,9 +194,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     }
 
     const sessionId = localStorage.getItem("mtv-sessionId");
-    console.log("session id at end session :", sessionId);
     if (!sessionId) {
-      console.log("session id is", sessionId);
       navigate("/home", { replace: true });
       return;
     }
@@ -418,10 +416,8 @@ const ChatBox: React.FC<ChatBoxProps> = ({
               `,
               promptKey: "follow-up-question-counter"
             });
-            console.log(followUp);
             handleFollowUp.current += 1;
             questionCounterValue = { number: Number(JSON.parse(followUp).number) };
-            console.log('questionCounterValue', questionCounterValue)
           }
 
           if(questionCounterValue.number !== 0) {
@@ -433,7 +429,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                         Code: ${codeSnapshot}`,
               promptKey: "repeat-follow-up"
             });
-            console.log("Value", questionCounterValue.number);
             
             await addBotMessage(response);
             questionCounterValue.number -= 1;
@@ -490,6 +485,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             if (ack.includes("#CORRECT")) {
               await addBotMessage("Okay, you can start coding now.");
                approachTextRef.current = input;
+               console.log('approachTextRef.current.trim()', approachTextRef.current.trim())
               stageRef.current = "CODING";
               hasProvidedApproachRef.current = true;
             } else {
@@ -666,10 +662,11 @@ const ChatBox: React.FC<ChatBoxProps> = ({
   useEffect(() => {
     const now = Date.now();
     if (
-      stageRef.current !== "CODING" &&
+      stageRef.current !== "CODING" && stageRef.current !== "SESSION_END" && stageRef.current !== "FOLLOW_UP" &&
       code !== "" &&
       now - lastWarnTimeRef.current > 5000
     ) {
+      console.log('stageRef.current', stageRef.current);
       addBotMessage("I'll suggest you to not start coding right now!");
       lastWarnTimeRef.current = now;
     } else {
@@ -696,29 +693,28 @@ const ChatBox: React.FC<ChatBoxProps> = ({
 
      // ✅ Step: Check if code follows user's described approach
   if (approachTextRef.current.trim()) {
+    console.log('approachTextRef.current.trim()', approachTextRef.current.trim())
     const approachCheckResponse = await getPromptResponse({
       actor: Actor.INTERVIEWER,
       context: `
         The candidate initially described the following approach:
-
         ${approachTextRef.current}
 
         Their final submitted code is:
-
         ${currentCode}
-
       `,
       promptKey: "check-approach-alignment",
     });
- if (approachCheckResponse.includes("#MISMATCH")) {
-    await addBotMessage(
-      approachCheckResponse.replace(
-        "#MISMATCH:",
-        "⚠️ Your code does not seem to follow the approach you described: "
-      )
-    )
-    return;
-  }
+    console.log('approachCheckResponse', approachCheckResponse);
+    if (approachCheckResponse.includes("#MISMATCH")) {
+       await addBotMessage(
+         approachCheckResponse.replace(
+           "#MISMATCH:",
+           "⚠️ Your code does not seem to follow the approach you described: "
+         )
+       )
+       return;
+     }
   }
 
     const testCases = await generateTestCasesWithAI(problem);
