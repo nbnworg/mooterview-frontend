@@ -110,7 +110,7 @@ const DashBoard = () => {
       </div>
 
       <div className="sessions-section">
-        <Preparation />
+        <Preparation sessions={sessions} />
       </div>
 
       <br />
@@ -144,7 +144,7 @@ const DashBoard = () => {
                     )}
                   </div>
                 </div>
-               
+
               </Link>
             ))}
           </div>
