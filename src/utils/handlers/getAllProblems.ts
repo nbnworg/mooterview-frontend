@@ -11,8 +11,6 @@ export const getAllProblems = async (): Promise<ProblemSummary[]> => {
     const response = await axios.get(`${BASE_URL}/problems`, {
       headers: { Authorization: `Bearer ${tokenData.accessToken}` },
     });
-    console.log("token data is ",tokenData)
-    console.log("here 4");
     return response.data.problems as ProblemSummary[];
   } catch (error: any) {
     if (error?.response?.data?.error === "Invalid or expired token") {
