@@ -33,10 +33,10 @@ const Homepage = () => {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [confirmationModal, setConfirmationModal] = useState<ConfirmationModalData | null>(null)
 
-  const data = JSON.parse(
+  JSON.parse(
     localStorage.getItem("userData") || "{}"
   )
-  console.log("access token: ", data);
+  // console.log("access token: ", data);
 
 
   const CACHE_KEY = "cachedProblems";
@@ -88,8 +88,6 @@ const Homepage = () => {
     };
     fetchSolvedProblems();
   }, []);
-
-  console.log("problems: ", problems);
 
   const filteredProblems = problems?.filter((problem: ProblemSummary) => {
     const matchesLevel =
