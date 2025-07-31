@@ -694,8 +694,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
       return;
     }
 
-
-     // ✅ Step: Check if code follows user's described approach
   if (approachTextRef.current.trim()) {
     console.log('approachTextRef.current.trim()', approachTextRef.current.trim())
     const approachCheckResponse = await getPromptResponse({
@@ -714,7 +712,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
        await addBotMessage(
          approachCheckResponse.replace(
            "#MISMATCH:",
-           "⚠️ Your code does not seem to follow the approach you described: "
+           "Your code does not seem to follow the approach you described: "
          )
        )
        return;
