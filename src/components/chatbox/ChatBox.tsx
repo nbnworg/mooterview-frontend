@@ -548,7 +548,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         }
 
         case "#PROBLEM_EXPLANATION": {
-          addBotMessage("Okay, you can explain the problem now!");
+          addBotMessage("Okay, you can explain the approach now!");
           break;
         }
 

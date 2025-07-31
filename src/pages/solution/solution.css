@@ -143,7 +143,7 @@ body {
     }
 
     .solution-section-title {
-        font-size: 1.083vw;
+        font-size: 1vw;
     }
 
     .solution-code-block {
@@ -164,7 +164,7 @@ body {
     padding-left: 3vw;
     margin-top: 1vh;
     margin-bottom: 2vh;
-    font-size: 1.2vw;
+    font-size: .93vw;
     line-height: 1.6;
 }
 
@@ -186,7 +186,6 @@ body {
 .weak {
     font-weight: 600;
     color: #dc2626;
-    /* red */
 }
 
 .strong-result {
