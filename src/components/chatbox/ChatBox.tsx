@@ -65,6 +65,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
   const phaseRef = useRef<Phase>("CODING_NOT_STARTED");
 
   const sessionId = localStorage.getItem("mtv-sessionId");
+  const [rubricResult, setrubricResult] = useState<any>();
 
   const navigate = useNavigate();
 
@@ -224,7 +225,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         });
 
         navigate(`/solution/${encodeURIComponent(problem.title ?? "")}`, {
-          state: { evaluation, sessionId },
+          state: { evaluation, sessionId, rubricResult },
           replace: true,
         });
       } else {
@@ -494,8 +495,8 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                approachTextRef.current = input;
               stageRef.current = "CODING";
               hasProvidedApproachRef.current = true;
-               if ( onApproachCorrectChange) {
-                     onApproachCorrectChange(true); 
+               if (onApproachCorrectChange) {
+                    onApproachCorrectChange(true); 
                  }
             } else {
               await addBotMessage(ack.replace("#WRONG", "").trim());
@@ -730,6 +731,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     }
 
     const rubricResult = await evaluateSolutionWithRubric(currentCode);
+    setrubricResult(rubricResult);
 
     const testCaseText = testCases
       .map(
