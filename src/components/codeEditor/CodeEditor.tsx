@@ -8,6 +8,7 @@ interface CodeEditorProps {
   setCode: React.Dispatch<React.SetStateAction<string>>;
   timeLeft: number;
   setTimeLeft: React.Dispatch<React.SetStateAction<number>>;
+  disabled?: boolean;
 }
 
 const CodeEditor: React.FC<CodeEditorProps> = ({
@@ -15,6 +16,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
   setCode,
   timeLeft,
   setTimeLeft,
+  disabled
 }) => {
   const editorRef = useRef<HTMLDivElement>(null);
 
@@ -46,17 +48,22 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
         <div className="timerContainer">{formatTime(timeLeft)}</div>
       </div>
 
-      <div ref={editorRef} className="codeEditor">
-        <Editor
+      <div
+  ref={editorRef}
+  className={`codeEditor ${disabled ? "disabled-editor" : ""}`}
+>        <Editor
           height="60vh"
           value={code}
           language="python"
           theme="vs-dark"
           onChange={(value) => setCode(value || "")}
           options={{
-            placeholder: "Start writing your code here...",
+             placeholder: disabled
+      ? "First answer the question asked in the box on the lefthand side."
+      : "Start writing your code here ...",
             fontSize: 16,
             minimap: { enabled: false },
+            readOnly: disabled
           }}
         />
       </div>
