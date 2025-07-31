@@ -69,44 +69,70 @@ const Solution = () => {
 
       {rubricResult && (
         <section className="solution-section solution-rubric-section">
-          <h2 className="solution-section-title">Evaluation</h2>
-          <p className="solution-summary-text">
-            {rubricResult.isCorrect
-              ? "The solution is overall correct."
-              : "The solution does not meet all the expected criteria."}{" "}
-            In terms of correctness, the logic is{" "}
-            {rubricResult.rubricScores.correctness === "strong"
-              ? "accurate and well-structured"
-              : rubricResult.rubricScores.correctness === "mixed"
-                ? "partially correct and may miss certain scenarios"
-                : "flawed or incomplete"}.
-            Edge cases are{" "}
-            {rubricResult.rubricScores.edgeCases === "strong"
-              ? "handled thoroughly"
-              : rubricResult.rubricScores.edgeCases === "mixed"
-                ? "partially covered"
-                : "not adequately considered"}.
-            From a performance perspective, the code is{" "}
-            {rubricResult.rubricScores.performance === "strong"
-              ? "efficient and optimized"
-              : rubricResult.rubricScores.performance === "mixed"
-                ? "functional but could benefit from optimization"
-                : "slow or inefficient"}.
-            The choice of structure and implementation approach is{" "}
-            {rubricResult.rubricScores.structureChoice === "strong"
-              ? "appropriate and thoughtful"
-              : rubricResult.rubricScores.structureChoice === "mixed"
-                ? "acceptable but not ideal"
-                : "unclear or misaligned with the problem"}.
-            Lastly, the code's readability is{" "}
-            {rubricResult.rubricScores.readability === "strong"
-              ? "excellent, making it easy to follow"
-              : rubricResult.rubricScores.readability === "mixed"
-                ? "moderate but could be improved with formatting"
-                : "difficult to read or poorly structured"}.
-          </p>
+          <h2 className="solution-section-title">Evaluation Summary</h2>
+          <ul className="solution-rubric-list">
+            <li>
+              <strong>Overall:</strong>{" "}
+              <span className={rubricResult.isCorrect ? "strong-result" : "weak-result"}>
+                {rubricResult.isCorrect
+                  ? "The solution is overall correct."
+                  : "The solution does not meet all the expected criteria."}
+              </span>
+            </li>
+            <li>
+              <strong>Correctness:</strong>{" "}
+              <span className={rubricResult.rubricScores.correctness}>
+                {rubricResult.rubricScores.correctness === "strong"
+                  ? "Strong – Accurate and well-structured."
+                  : rubricResult.rubricScores.correctness === "mixed"
+                    ? "Mixed – Partially correct and may miss certain scenarios."
+                    : "Weak – Flawed or incomplete."}
+              </span>
+            </li>
+            <li>
+              <strong>Edge Case Handling:</strong>{" "}
+              <span className={rubricResult.rubricScores.edgeCases}>
+                {rubricResult.rubricScores.edgeCases === "strong"
+                  ? "Strong – Thoroughly handled."
+                  : rubricResult.rubricScores.edgeCases === "mixed"
+                    ? "Mixed – Partially covered."
+                    : "Weak – Not adequately considered."}
+              </span>
+            </li>
+            <li>
+              <strong>Performance:</strong>{" "}
+              <span className={rubricResult.rubricScores.performance}>
+                {rubricResult.rubricScores.performance === "strong"
+                  ? "Strong – Efficient and optimized."
+                  : rubricResult.rubricScores.performance === "mixed"
+                    ? "Mixed – Functional but could benefit from optimization."
+                    : "Weak – Slow or inefficient."}
+              </span>
+            </li>
+            <li>
+              <strong>Structure & Implementation:</strong>{" "}
+              <span className={rubricResult.rubricScores.structureChoice}>
+                {rubricResult.rubricScores.structureChoice === "strong"
+                  ? "Strong – Appropriate and thoughtful."
+                  : rubricResult.rubricScores.structureChoice === "mixed"
+                    ? "Mixed – Acceptable but not ideal."
+                    : "Weak – Unclear or misaligned with the problem."}
+              </span>
+            </li>
+            <li>
+              <strong>Readability:</strong>{" "}
+              <span className={rubricResult.rubricScores.readability}>
+                {rubricResult.rubricScores.readability === "strong"
+                  ? "Strong – Excellent, easy to follow."
+                  : rubricResult.rubricScores.readability === "mixed"
+                    ? "Mixed – Moderate, could be improved."
+                    : "Weak – Difficult to read or poorly structured."}
+              </span>
+            </li>
+          </ul>
         </section>
       )}
+
 
 
 
