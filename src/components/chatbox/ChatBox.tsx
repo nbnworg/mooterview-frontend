@@ -329,7 +329,8 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     return () => clearInterval(interval);
   }, [problem]);
 
-  let followUp, questionCounterValue: {number: number};
+  let followUp;
+  const questionCounterValueRef = useRef<{ number: number } | null>(null);
   const handleFollowUp = useRef(0);
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -406,15 +407,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           break;
         }
 
-        // case "#UNDERSTOOD_PROBLEM": {
-        //   const confirmation = await getPromptResponse({
-        //     actor: Actor.INTERVIEWER,
-        //     context: `User `,
-        //     promptKey: ``
-        //   })
-        //   break
-        // }
-
         case "#RIGHT_ANSWER": {
           if(handleFollowUp.current === 0) {
              followUp = await getPromptResponse({
@@ -427,10 +419,12 @@ const ChatBox: React.FC<ChatBoxProps> = ({
               promptKey: "follow-up-question-counter"
             });
             handleFollowUp.current += 1;
-            questionCounterValue = { number: Number(JSON.parse(followUp).number) };
+            questionCounterValueRef.current = { number: Number(JSON.parse(followUp).number) };
+            console.log('handleFollowUp.current', handleFollowUp.current);
+            console.log('counter', questionCounterValueRef.current);
           }
 
-          if(questionCounterValue.number !== 0) {
+          if(questionCounterValueRef.current && questionCounterValueRef.current.number !== 0) {
             const response = await getPromptResponse({
               actor: Actor.AI,
               context: `Chat transcrpt: ${JSON.stringify(messages, null, 2)}\n
@@ -441,9 +435,10 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             });
             
             await addBotMessage(response);
-            questionCounterValue.number -= 1;
+            questionCounterValueRef.current.number -= 1;
           } else {
             await addBotMessage("Well done, that is correct");
+            stageRef.current = "SESSION_END";
           }
           break;
         }
@@ -461,12 +456,15 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         }
 
         case "#REQUESTED_EXAMPLE": {
+          console.log('currentStahe', currentStage);
           const exampleResponse = await getPromptResponse({
             actor: Actor.INTERVIEWER,
-            context: `User asked for an example. Provide a concise input/output example and repeat the original prompt.
+            context: `User asked for an example or to rephrase the question.\n
                         Chat transcript: ${JSON.stringify(messages, null, 2)}\n 
                         Problem: ${problem.title}
-                        Description: ${problem.problemDescription}`,
+                        Description: ${problem.problemDescription}
+                        Current stage: ${currentStage}
+                        `,
             promptKey: "provide-example",
           });
           await addBotMessage(exampleResponse);
@@ -543,6 +541,11 @@ const ChatBox: React.FC<ChatBoxProps> = ({
 
         case "#PROBLEM_EXPLANATION": {
           addBotMessage("Okay, you can explain the problem now!");
+          break;
+        }
+
+        case "#RESPOND": {
+          addBotMessage("Okay, go ahead");
           break;
         }
 
