@@ -678,22 +678,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     setLoading(false);
   };
 
-  const lastWarnTimeRef = useRef(0);
-  useEffect(() => {
-    const now = Date.now();
-    if (
-      stageRef.current !== "CODING" && stageRef.current !== "SESSION_END" && stageRef.current !== "FOLLOW_UP" &&
-      code !== "" &&
-      now - lastWarnTimeRef.current > 5000
-    ) {
-      console.log('stageRef.current', stageRef.current);
-      addBotMessage("I'll suggest you to not start coding right now!");
-      lastWarnTimeRef.current = now;
-    } else {
-      codeRef.current = code;
-    }
-  }, [code]);
-
   useEffect(() => {
     if (onVerifyRef) {
       onVerifyRef.current = handleVerifyCode;
