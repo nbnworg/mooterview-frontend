@@ -491,13 +491,15 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             });
 
             if (ack.includes("#CORRECT")) {
-              await addBotMessage("Okay, you can start coding now .");
-               approachTextRef.current = input;
-              stageRef.current = "CODING";
-              hasProvidedApproachRef.current = true;
-               if (onApproachCorrectChange) {
+                await addBotMessage(
+                  "Alright, you can start coding now.\nIf you get stuck at any point, feel free to ask for help. Once you've completed your code, click on 'Verify Code' button to check your solution."
+                );
+                approachTextRef.current = input;
+                stageRef.current = "CODING";
+                hasProvidedApproachRef.current = true;
+                if (onApproachCorrectChange) {
                     onApproachCorrectChange(true); 
-                 }
+                }
             } else {
               await addBotMessage(ack.replace("#WRONG", "").trim());
               approachAttemptCountRef.current += 1;
