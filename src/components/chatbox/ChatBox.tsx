@@ -420,8 +420,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             });
             handleFollowUp.current += 1;
             questionCounterValueRef.current = { number: Number(JSON.parse(followUp).number) };
-            console.log('handleFollowUp.current', handleFollowUp.current);
-            console.log('counter', questionCounterValueRef.current);
           }
 
           if(questionCounterValueRef.current && questionCounterValueRef.current.number !== 0) {
@@ -456,7 +454,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         }
 
         case "#REQUESTED_EXAMPLE": {
-          console.log('currentStahe', currentStage);
           const exampleResponse = await getPromptResponse({
             actor: Actor.INTERVIEWER,
             context: `User asked for an example or to rephrase the question.\n
@@ -493,7 +490,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             if (ack.includes("#CORRECT")) {
               await addBotMessage("Okay, you can start coding now.");
                approachTextRef.current = input;
-               console.log('approachTextRef.current.trim()', approachTextRef.current.trim())
               stageRef.current = "CODING";
               hasProvidedApproachRef.current = true;
             } else {
@@ -587,7 +583,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         }
 
         case "#CODING_HELP": {
-          console.log('${codeRef.current}', codeRef.current)
           const response = await getPromptResponse({
             actor: Actor.INTERVIEWER,
             context: `User needs help with coding/debugging. Provide specific assistance.
@@ -695,7 +690,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     }
 
   if (approachTextRef.current.trim()) {
-    console.log('approachTextRef.current.trim()', approachTextRef.current.trim())
     const approachCheckResponse = await getPromptResponse({
       actor: Actor.INTERVIEWER,
       context: `
@@ -707,7 +701,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
       `,
       promptKey: "check-approach-alignment",
     });
-    console.log('approachCheckResponse', approachCheckResponse);
     if (approachCheckResponse.includes("#MISMATCH")) {
        await addBotMessage(
          approachCheckResponse.replace(

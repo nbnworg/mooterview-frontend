@@ -61,6 +61,7 @@ export const classifyUserMessage = async (input: string, currentStage: string, r
         Respond with ONLY one of:
         #UNDERSTOOD_CONFIRMATION
         #PROBLEM_EXPLANATION
+        #RESPOND
         #CONFUSED
         #REQUESTED_EXAMPLE
         #APPROACH_PROVIDED
@@ -78,9 +79,6 @@ export const classifyUserMessage = async (input: string, currentStage: string, r
         context: context,
         promptKey: "classify-user-response",
     });
-
-    console.log('currentStage', currentStage);
-    console.log("Response", response);
     
     return response.trim();
 };
