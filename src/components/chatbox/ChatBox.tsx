@@ -59,6 +59,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
   const intitalCodeContextRef = useRef("");
   const approachAttemptCountRef = useRef(0);
   const hasProvidedApproachRef = useRef(false);
+  const [rubricResult, setrubricResult] = useState<any>();
 
   const phaseRef = useRef<Phase>("CODING_NOT_STARTED");
 
@@ -222,7 +223,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         });
 
         navigate(`/solution/${encodeURIComponent(problem.title ?? "")}`, {
-          state: { evaluation, sessionId },
+          state: { evaluation, sessionId, rubricResult },
           replace: true,
         });
       } else {
@@ -253,7 +254,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
   useEffect(() => {
     const interval = setInterval(async () => {
       const elapsed = elapsedTimeRef.current;
-      
+
       if (
         !isSolutionVerifiedCorrectRef.current &&
         elapsed - lastAutoTimeRef.current >= 300
@@ -329,7 +330,9 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     return () => clearInterval(interval);
   }, [problem]);
 
-  let followUp, questionCounterValue: {number: number};
+  let followUp;
+  const questionCounterRef = useRef<{ number: number }>({ number: 0 });
+
   const handleFollowUp = useRef(0);
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -407,37 +410,82 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         }
 
         case "#RIGHT_ANSWER": {
-          if(handleFollowUp.current === 0) {
-             followUp = await getPromptResponse({
+          if (handleFollowUp.current === 0) {
+            followUp = await getPromptResponse({
               actor: Actor.SYSTEM,
-              context: `Chat transcrpt: ${JSON.stringify(messages, null, 2)}\n
-                        Problem: ${problem.title}\n
-                        Description: ${problem.problemDescription}\n
-                        Code: ${codeSnapshot}
-              `,
-              promptKey: "follow-up-question-counter"
+              context: `Chat transcript: ${JSON.stringify(messages, null, 2)}\n
+        Problem: ${problem.title}\n
+        Description: ${problem.problemDescription}\n
+        Code: ${codeSnapshot}
+    `,
+              promptKey: "follow-up-question-counter",
             });
             handleFollowUp.current += 1;
-            questionCounterValue = { number: Number(JSON.parse(followUp).number) };
+            questionCounterRef.current.number = Number(JSON.parse(followUp).number);
           }
 
-          if(questionCounterValue.number !== 0) {
+          if (questionCounterRef.current.number !== 0) {
+            const recentChatTranscript = messages.slice(-12);
+            const lastUserMsg = [...messages].reverse().find(msg => msg.actor === Actor.USER);
+            const lastBotMsg = [...messages].reverse().find(msg => msg.actor === Actor.INTERVIEWER);
+
             const response = await getPromptResponse({
               actor: Actor.AI,
-              context: `Chat transcrpt: ${JSON.stringify(messages, null, 2)}\n
-                        Problem: ${problem.title}\n
-                        Description: ${problem.problemDescription}\n
-                        Code: ${codeSnapshot}`,
-              promptKey: "repeat-follow-up"
+              promptKey: "repeat-follow-up",
+              context: `
+Problem: ${problem.title}
+Description: ${problem.problemDescription}
+
+Candidate's Code:
+${codeSnapshot}
+
+Chat History (Last 12 messages):
+${JSON.stringify(recentChatTranscript, null, 2)}
+
+Last Bot Question:
+${lastBotMsg?.message || "[No bot question]"}
+
+User's Answer:
+${lastUserMsg?.message || "[No user answer]"}
+`,
             });
-            
-            await addBotMessage(response);
-            questionCounterValue.number -= 1;
-          } else {
+
+            const lower = response.toLowerCase();
+            const isNowCorrect = lower.includes("correct") || lower.includes("you're right") || lower.includes("exactly");
+
+            if (isNowCorrect) {
+              await addBotMessage("👍 Thanks for correcting it — that’s right now!");
+              questionCounterRef.current.number -= 1;
+
+              // Fetch and ask next follow-up
+              if (questionCounterRef.current.number > 0) {
+                const nextFollowup = await getPromptResponse({
+                  actor: Actor.AI,
+                  promptKey: "repeat-follow-up",
+                  context: `
+Problem: ${problem.title}
+Description: ${problem.problemDescription}
+Candidate's Code:
+${codeSnapshot}
+Chat History (Last 12 messages):
+${JSON.stringify(messages.slice(-12), null, 2)}
+`,
+                });
+                await addBotMessage(nextFollowup);
+                questionCounterRef.current.number -= 1;
+              }
+            } else {
+              await addBotMessage(response); // still incorrect or vague
+              // don't decrement again here (or do it depending on how many retries you allow)
+            }
+          }
+          else {
             await addBotMessage("Well done, that is correct");
           }
           break;
         }
+
+
 
         case "#WRONG_ANSWER": {
           const response = await getPromptResponse({
@@ -469,7 +517,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             currentStage === "WAIT_FOR_APPROACH" &&
             !hasProvidedApproachRef.current
           ) {
-           
+
             const ack = await getPromptResponse({
               actor: Actor.INTERVIEWER,
               context: `User has shared an approach. Evaluate it and respond with one of "#CORRECT" or "#WRONG" followed by your message.
@@ -485,8 +533,8 @@ const ChatBox: React.FC<ChatBoxProps> = ({
 
             if (ack.includes("#CORRECT")) {
               await addBotMessage("Okay, you can start coding now.");
-               approachTextRef.current = input;
-               console.log('approachTextRef.current.trim()', approachTextRef.current.trim())
+              approachTextRef.current = input;
+              console.log('approachTextRef.current.trim()', approachTextRef.current.trim())
               stageRef.current = "CODING";
               hasProvidedApproachRef.current = true;
             } else {
@@ -693,31 +741,31 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     }
 
 
-     // ✅ Step: Check if code follows user's described approach
-  if (approachTextRef.current.trim()) {
-    console.log('approachTextRef.current.trim()', approachTextRef.current.trim())
-    const approachCheckResponse = await getPromptResponse({
-      actor: Actor.INTERVIEWER,
-      context: `
+    // ✅ Step: Check if code follows user's described approach
+    if (approachTextRef.current.trim()) {
+      console.log('approachTextRef.current.trim()', approachTextRef.current.trim())
+      const approachCheckResponse = await getPromptResponse({
+        actor: Actor.INTERVIEWER,
+        context: `
         The candidate initially described the following approach:
         ${approachTextRef.current}
 
         Their final submitted code is:
         ${currentCode}
       `,
-      promptKey: "check-approach-alignment",
-    });
-    console.log('approachCheckResponse', approachCheckResponse);
-    if (approachCheckResponse.includes("#MISMATCH")) {
-       await addBotMessage(
-         approachCheckResponse.replace(
-           "#MISMATCH:",
-           "⚠️ Your code does not seem to follow the approach you described: "
-         )
-       )
-       return;
-     }
-  }
+        promptKey: "check-approach-alignment",
+      });
+      console.log('approachCheckResponse', approachCheckResponse);
+      if (approachCheckResponse.includes("#MISMATCH")) {
+        await addBotMessage(
+          approachCheckResponse.replace(
+            "#MISMATCH:",
+            "⚠️ Your code does not seem to follow the approach you described: "
+          )
+        )
+        return;
+      }
+    }
 
     const testCases = await generateTestCasesWithAI(problem);
     if (!testCases || testCases.length === 0) {
@@ -728,6 +776,8 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     }
 
     const rubricResult = await evaluateSolutionWithRubric(currentCode);
+    console.log("rubrik all all DATA : ", rubricResult);
+    setrubricResult(rubricResult);
 
     const testCaseText = testCases
       .map(
@@ -775,8 +825,22 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         promptKey: "follow-up",
       });
 
-      await addBotMessage(followUpResponse);
+      // Fetch total number of follow-up questions
+      followUp = await getPromptResponse({
+        actor: Actor.SYSTEM,
+        context: `Chat transcript: ${JSON.stringify(messages, null, 2)}\n
+              Problem: ${problem.title}
+              Description: ${problem.problemDescription}
+              Code: ${currentCode}`,
+        promptKey: "follow-up-question-counter",
+      });
+
+      handleFollowUp.current += 1;
+      questionCounterRef.current.number = Number(JSON.parse(followUp).number);
+
+      await addBotMessage(followUpResponse); // Ask first follow-up
     }
+
   };
 
   return (
