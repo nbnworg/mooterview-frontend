@@ -36,8 +36,6 @@ const Homepage = () => {
   JSON.parse(
     localStorage.getItem("userData") || "{}"
   )
-  // console.log("access token: ", data);
-
 
   const CACHE_KEY = "cachedProblems";
   const CACHE_DURATION = 2 * 60 * 60 * 1000; 
