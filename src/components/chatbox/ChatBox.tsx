@@ -20,6 +20,7 @@ interface ChatBoxProps {
   onVerifyRef?: React.MutableRefObject<(() => void) | null>;
   userId: string;
   onEndRef?: React.MutableRefObject<(() => void) | null>;
+  onApproachCorrectChange?: (isCorrect: boolean) => void;
 }
 
 type Stage =
@@ -43,6 +44,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
   onVerifyRef,
   userId,
   onEndRef,
+  onApproachCorrectChange,
 }) => {
   const [messages, setMessages] = useState<any[]>([]);
   const [input, setInput] = useState("");
@@ -488,10 +490,13 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             });
 
             if (ack.includes("#CORRECT")) {
-              await addBotMessage("Okay, you can start coding now.");
+              await addBotMessage("Okay, you can start coding now .");
                approachTextRef.current = input;
               stageRef.current = "CODING";
               hasProvidedApproachRef.current = true;
+               if ( onApproachCorrectChange) {
+                     onApproachCorrectChange(true); 
+                 }
             } else {
               await addBotMessage(ack.replace("#WRONG", "").trim());
               approachAttemptCountRef.current += 1;
@@ -502,6 +507,10 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                 );
                 stageRef.current = "CODING";
                 hasProvidedApproachRef.current = true;
+                if (onApproachCorrectChange) {
+                    onApproachCorrectChange(true); 
+                 }
+                 
               } else {
                 const response = await getPromptResponse({
                   actor: Actor.INTERVIEWER,

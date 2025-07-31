@@ -18,6 +18,8 @@ const ProblemPage = () => {
   const [code, setCode] = useState<string>("");
   const [timeLeft, setTimeLeft] = useState(15 * 60);
   const [verifyLoading, setVerifyLoading] = useState(false);
+  const [isEditorEnabled, setIsEditorEnabled] = useState(false);
+
 
   const verifySolutionRef = useRef<() => void | null>(null);
   const endSessionRef = useRef<() => void | null>(null);
@@ -78,19 +80,21 @@ const ProblemPage = () => {
             userId={userId}
             code={code}
             onEndRef={endSessionRef}
+            onApproachCorrectChange={(isCorrect) => setIsEditorEnabled(isCorrect)}
           />
         </div>
 
         <div className="verticalLine"></div>
 
         <div className="codeEditorAndOptionsContainer">
-          <CodeEditor
+           <CodeEditor
             code={code}
             setCode={setCode}
             timeLeft={timeLeft}
             setTimeLeft={setTimeLeft}
+           disabled={!isEditorEnabled}
           />
-
+          
           <button
             className="verifyCodeButton"
             onClick={async () => {

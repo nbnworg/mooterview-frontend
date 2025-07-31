@@ -49,3 +49,9 @@
   border-radius: 0.5vw;
   outline: none;
 }
+
+.disabled-editor {
+  position: relative;
+  opacity:0.9;
+  pointer-events: none; 
+}
