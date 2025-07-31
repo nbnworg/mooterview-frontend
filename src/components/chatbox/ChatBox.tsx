@@ -355,7 +355,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
 
       switch (classification) {
         case "#UNDERSTOOD_CONFIRMATION": {
-          if (currentStage === "ASK_UNDERSTAND") {
+          if (currentStage === "ASK_UNDERSTAND" || currentStage === "WAIT_FOR_APPROACH") {
             const followup = await getPromptResponse({
               actor: Actor.INTERVIEWER,
               context: `User confirmed understanding. Ask them to explain their approach.
@@ -404,6 +404,15 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           await addBotMessage(clarification);
           break;
         }
+
+        // case "#UNDERSTOOD_PROBLEM": {
+        //   const confirmation = await getPromptResponse({
+        //     actor: Actor.INTERVIEWER,
+        //     context: `User `,
+        //     promptKey: ``
+        //   })
+        //   break
+        // }
 
         case "#RIGHT_ANSWER": {
           if(handleFollowUp.current === 0) {
@@ -531,6 +540,11 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           break;
         }
 
+        case "#PROBLEM_EXPLANATION": {
+          addBotMessage("Okay, you can explain the problem now!");
+          break;
+        }
+
         case "#CODING_QUESTION": {
           if (
             currentStage === "WAIT_FOR_APPROACH" &&
@@ -569,10 +583,11 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         }
 
         case "#CODING_HELP": {
+          console.log('${codeRef.current}', codeRef.current)
           const response = await getPromptResponse({
             actor: Actor.INTERVIEWER,
             context: `User needs help with coding/debugging. Provide specific assistance.
-                        Chat transcript: ${JSON.stringify(messages, null, 2)}
+                        Chat transcript: ${JSON.stringify(messages.slice(-5), null, 2)}
                         Problem: ${problem.title}
                         Description: ${problem.problemDescription}
                         Current code: ${codeRef.current}`,

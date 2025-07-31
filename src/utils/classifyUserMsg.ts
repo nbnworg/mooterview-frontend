@@ -14,7 +14,7 @@ export const classifyUserMessage = async (input: string, currentStage: string, r
         The user just said: "${input}"
 
         Recent chat history:
-        ${JSON.stringify(recentMessages.slice(-6), null, 2)}
+        ${JSON.stringify(recentMessages, null, 2)}
 
         IMPORTANT CLASSIFICATION RULES:
         
@@ -28,12 +28,14 @@ export const classifyUserMessage = async (input: string, currentStage: string, r
            - User explains their solution approach/algorithm → #APPROACH_PROVIDED
            - User asks for example → #REQUESTED_EXAMPLE
            - User talks about unrelated topics → #OFF_TOPIC
+           - User was not able to answer, so he was explained the question again and has said yes and it is clear to him now → #UNDERSTOOD_CONFIRMATION
+           - User says yes to interviewer's last question → #PROBLEM_EXPLANATION
         
         3. If currentStage is "CODING":
            - User explains an approach → #APPROACH_PROVIDED (only if they haven't started coding yet)
            - User asks coding questions, "where do I start", "how do I..." → #CODING_QUESTION
            - User says "yes" to clarification → #GENERAL_ACKNOWLEDGMENT
-           - User asks for help with debugging → #CODING_HELP
+           - User asks for help with debugging or says "am i doing this right" or "is this correct" → #CODING_HELP
            - User talks about unrelated topics → #OFF_TOPIC
 
         4. If currentStage is "FOLLOW_UP":
@@ -57,6 +59,7 @@ export const classifyUserMessage = async (input: string, currentStage: string, r
 
         Respond with ONLY one of:
         #UNDERSTOOD_CONFIRMATION
+        #PROBLEM_EXPLANATION
         #CONFUSED
         #REQUESTED_EXAMPLE
         #APPROACH_PROVIDED
@@ -75,5 +78,8 @@ export const classifyUserMessage = async (input: string, currentStage: string, r
         promptKey: "classify-user-response",
     });
 
+    console.log('currentStage', currentStage);
+    console.log("Response", response);
+    
     return response.trim();
 };
