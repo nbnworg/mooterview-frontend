@@ -486,7 +486,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             });
 
             if (ack.includes("#CORRECT")) {
-              await addBotMessage("Okay, you can start coding now in the editor given on the right side.");
+              await addBotMessage("Okay, you can start coding now .");
                approachTextRef.current = input;
                console.log('approachTextRef.current.trim()', approachTextRef.current.trim())
               stageRef.current = "CODING";

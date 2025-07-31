@@ -58,9 +58,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
           theme="vs-dark"
           onChange={(value) => setCode(value || "")}
           options={{
-             placeholder: disabled
-      ? "First answer the question asked in the box on the lefthand side."
-      : "Start writing your code here ...",
+             placeholder: "Start writing your code here ...",
             fontSize: 16,
             minimap: { enabled: false },
             readOnly: disabled
