@@ -8,6 +8,7 @@ const Solution = () => {
   const navigate = useNavigate();
 
   const evaluation = location.state?.evaluation;
+  const rubricResult = location.state?.rubricResult;
   const stateSessionId = location.state?.sessionId;
   const localSessionId = localStorage.getItem("mtv-sessionId");
   const sessionId = stateSessionId || localSessionId;
@@ -65,6 +66,75 @@ const Solution = () => {
         <h2 className="solution-section-title">Summary</h2>
         <p className="solution-summary-text">{evaluation.summary}</p>
       </section>
+
+      {rubricResult && (
+        <section className="solution-section solution-rubric-section">
+          <h2 className="solution-section-title">Evaluation Summary</h2>
+          <ul className="solution-rubric-list">
+            <li>
+              <strong>Overall:</strong>{" "}
+              <span className={rubricResult.isCorrect ? "strong-result" : "weak-result"}>
+                {rubricResult.isCorrect
+                  ? "The solution is overall correct."
+                  : "The solution does not meet all the expected criteria."}
+              </span>
+            </li>
+            <li>
+              <strong>Correctness:</strong>{" "}
+              <span className={rubricResult.rubricScores.correctness}>
+                {rubricResult.rubricScores.correctness === "strong"
+                  ? "Strong – Accurate and well-structured."
+                  : rubricResult.rubricScores.correctness === "mixed"
+                    ? "Mixed – Partially correct and may miss certain scenarios."
+                    : "Weak – Flawed or incomplete."}
+              </span>
+            </li>
+            <li>
+              <strong>Edge Case Handling:</strong>{" "}
+              <span className={rubricResult.rubricScores.edgeCases}>
+                {rubricResult.rubricScores.edgeCases === "strong"
+                  ? "Strong – Thoroughly handled."
+                  : rubricResult.rubricScores.edgeCases === "mixed"
+                    ? "Mixed – Partially covered."
+                    : "Weak – Not adequately considered."}
+              </span>
+            </li>
+            <li>
+              <strong>Performance:</strong>{" "}
+              <span className={rubricResult.rubricScores.performance}>
+                {rubricResult.rubricScores.performance === "strong"
+                  ? "Strong – Efficient and optimized."
+                  : rubricResult.rubricScores.performance === "mixed"
+                    ? "Mixed – Functional but could benefit from optimization."
+                    : "Weak – Slow or inefficient."}
+              </span>
+            </li>
+            <li>
+              <strong>Structure & Implementation:</strong>{" "}
+              <span className={rubricResult.rubricScores.structureChoice}>
+                {rubricResult.rubricScores.structureChoice === "strong"
+                  ? "Strong – Appropriate and thoughtful."
+                  : rubricResult.rubricScores.structureChoice === "mixed"
+                    ? "Mixed – Acceptable but not ideal."
+                    : "Weak – Unclear or misaligned with the problem."}
+              </span>
+            </li>
+            <li>
+              <strong>Readability:</strong>{" "}
+              <span className={rubricResult.rubricScores.readability}>
+                {rubricResult.rubricScores.readability === "strong"
+                  ? "Strong – Excellent, easy to follow."
+                  : rubricResult.rubricScores.readability === "mixed"
+                    ? "Mixed – Moderate, could be improved."
+                    : "Weak – Difficult to read or poorly structured."}
+              </span>
+            </li>
+          </ul>
+        </section>
+      )}
+
+
+
 
       <section className="solution-section solution-summary-section">
         <h2 className="solution-section-title">Your Solution</h2>

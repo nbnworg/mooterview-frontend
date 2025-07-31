@@ -45,9 +45,6 @@ const Preparation: React.FC<PreparationProps> = ({ sessions }) => {
           
           return;
         }
-
-
-
         setLoading(true);
         setError(null);
 
@@ -116,7 +113,7 @@ ${chatMessages}`;
 
       {gptSummary.summary && (
         <div>
-          <p><strong>🏁Overall Readiness score:{gptSummary.overallReadiness}</strong></p>
+          <p><strong>🏁Overall Readiness score: {gptSummary.overallReadiness}</strong></p>
           <h4> {gptSummary.headline}.</h4>
           <p style={{ whiteSpace: "pre-wrap" }}>{gptSummary.summary}</p>
 

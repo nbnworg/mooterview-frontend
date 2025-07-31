@@ -65,6 +65,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
   const phaseRef = useRef<Phase>("CODING_NOT_STARTED");
 
   const sessionId = localStorage.getItem("mtv-sessionId");
+  const [rubricResult, setrubricResult] = useState<any>();
 
   const navigate = useNavigate();
 
@@ -224,7 +225,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         });
 
         navigate(`/solution/${encodeURIComponent(problem.title ?? "")}`, {
-          state: { evaluation, sessionId },
+          state: { evaluation, sessionId, rubricResult },
           replace: true,
         });
       } else {
@@ -490,13 +491,15 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             });
 
             if (ack.includes("#CORRECT")) {
-              await addBotMessage("Okay, you can start coding now .");
-               approachTextRef.current = input;
-              stageRef.current = "CODING";
-              hasProvidedApproachRef.current = true;
-               if ( onApproachCorrectChange) {
-                     onApproachCorrectChange(true); 
-                 }
+                await addBotMessage(
+                  "Alright, you can start coding now.\nIf you get stuck at any point, feel free to ask for help. Once you've completed your code, click on 'Verify Code' button to check your solution."
+                );
+                approachTextRef.current = input;
+                stageRef.current = "CODING";
+                hasProvidedApproachRef.current = true;
+                if (onApproachCorrectChange) {
+                    onApproachCorrectChange(true); 
+                }
             } else {
               await addBotMessage(ack.replace("#WRONG", "").trim());
               approachAttemptCountRef.current += 1;
@@ -545,7 +548,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         }
 
         case "#PROBLEM_EXPLANATION": {
-          addBotMessage("Okay, you can explain the problem now!");
+          addBotMessage("Okay, you can explain the approach now!");
           break;
         }
 
@@ -730,6 +733,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     }
 
     const rubricResult = await evaluateSolutionWithRubric(currentCode);
+    setrubricResult(rubricResult);
 
     const testCaseText = testCases
       .map(
