@@ -35,7 +35,7 @@ export const classifyUserMessage = async (input: string, currentStage: string, r
            - User explains an approach → #APPROACH_PROVIDED (only if they haven't started coding yet)
            - User asks coding questions, "where do I start", "how do I..." → #CODING_QUESTION
            - User says "yes" to clarification → #GENERAL_ACKNOWLEDGMENT
-           - User asks for help with debugging or says "am i doing this right" or "is this correct" → #CODING_HELP
+           - User asks for help with debugging or says "am i doing this right" or "is this correct" or "am i going in right direction" → #CODING_HELP
            - User talks about unrelated topics → #OFF_TOPIC
 
         4. If currentStage is "FOLLOW_UP":
