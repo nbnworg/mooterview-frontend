@@ -74,7 +74,7 @@ export const useChatAuth = ({
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chat]);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!input.trim()) return;
 
     const currentStep = steps[stepIndex];
@@ -98,7 +98,7 @@ export const useChatAuth = ({
     setStepIndex(nextIndex);
 
     if (nextIndex === steps.length) {
-      void handleFinalSubmit(updatedFormData);
+      await handleFinalSubmit(updatedFormData);
     }
   };
 

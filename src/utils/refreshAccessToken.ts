@@ -15,8 +15,8 @@ export const refreshAccessToken = async () => {
 
     const updated = {
       ...tokens,
-      accessToken: response.data.accessToken,
-      idToken: response.data.idToken,
+      accessToken: response.data.AccessToken,
+      idToken: response.data.IdToken,
     };
 
     localStorage.setItem("userData", JSON.stringify(updated));
