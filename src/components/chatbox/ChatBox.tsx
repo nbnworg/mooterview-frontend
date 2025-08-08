@@ -664,6 +664,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           const sessionId = await createSession({
             userId,
             problemId: problem.problemId || "",
+            problemType: problem.problemType
           });
           localStorage.setItem("mtv-sessionId", sessionId);
           clearCachedReport();

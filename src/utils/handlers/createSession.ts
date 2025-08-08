@@ -7,15 +7,18 @@ import { refreshAccessToken } from "../refreshAccessToken";
 export const createSession = async ({
   userId,
   problemId,
+  problemType
 }: {
   userId: string;
   problemId: string;
+  problemType: string
 }) => {
   const startTime = new Date().toISOString();
 
   const payload = {
     userId,
     problemId,
+    problemType,
     chatsQueue: [],
     startTime,
     endTime: "",

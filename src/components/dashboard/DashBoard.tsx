@@ -11,6 +11,7 @@ import { getProblemById } from "../../utils/handlers/getProblemById";
 import type { Problem } from "mooterview-client";
 import Navbar from "../navbar/Navbar";
 import Preparation from "./preparation";
+import PreparetionChart from "./userChart";
 
 const DashBoard = () => {
   const [sessions, setSessions] = useState<Session[]>([]);
@@ -19,6 +20,7 @@ const DashBoard = () => {
   const [userData, setuserData] = useState<GetUserByIdOutput>();
   const [problems, setProblems] = useState<{ [key: string]: string }>({});
   const [ses, setses] = useState<boolean>(false);
+  const [problemType, setProblemType] = useState<{[key: string]: number}>({});
 
   useEffect(() => {
     const fetchSessions = async () => {
@@ -36,8 +38,14 @@ const DashBoard = () => {
           const timeB = new Date(b.startTime ?? 0).getTime();
           return timeB - timeA;
         });
-
         setSessions(fetchedSessions);
+
+        const counts: { [key: string]: number } = {};
+          fetchedSessions.forEach(session => {
+          const type = session.problemType || "Unknown";
+          counts[type] = (counts[type] || 0) + 1;
+        });
+        setProblemType(counts);
 
         const uniqueProblemIds = [
           ...new Set(fetchedSessions.map((s) => s.problemId).filter(Boolean)),
@@ -111,6 +119,10 @@ const DashBoard = () => {
 
       <div className="sessions-section">
         <Preparation sessions={sessions} />
+      </div>
+
+      <div className="sessions-section">
+        <PreparetionChart chartData={problemType}/>
       </div>
 
       <br />
