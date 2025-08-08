@@ -3,12 +3,14 @@ import { BASE_URL, getTokenData } from "./constants";
 
 export const refreshAccessToken = async () => {
   const tokens = getTokenData();
+
   if (!tokens?.refreshToken) {
-    window.location.href = "/log-in";
+    localStorage.removeItem("userData");
+    window.location.replace("/log-in");
     throw new Error("No refresh token available.");
   }
 
- try {
+  try {
     const response = await axios.post(`${BASE_URL}/auth/refresh`, {
       refreshToken: tokens.refreshToken,
     });
@@ -22,8 +24,8 @@ export const refreshAccessToken = async () => {
     localStorage.setItem("userData", JSON.stringify(updated));
     return updated.accessToken;
   } catch (err) {
-    
-    window.location.href = "/log-in";
+    localStorage.removeItem("userData");
+    window.location.replace("/log-in");
     throw new Error("Token refresh failed");
   }
 };

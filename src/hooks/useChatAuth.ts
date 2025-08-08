@@ -74,7 +74,7 @@ export const useChatAuth = ({
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chat]);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!input.trim()) return;
 
     const currentStep = steps[stepIndex];
@@ -98,7 +98,7 @@ export const useChatAuth = ({
     setStepIndex(nextIndex);
 
     if (nextIndex === steps.length) {
-      void handleFinalSubmit(updatedFormData);
+      await handleFinalSubmit(updatedFormData);
     }
   };
 
@@ -126,11 +126,9 @@ export const useChatAuth = ({
       } else {
         resUserId = response.data.userId;
         tokens = {
-          accessToken:
-            response.data.loginResponse.AuthenticationResult.accessToken,
-          idToken: response.data.loginResponse.AuthenticationResult.idToken,
-          refreshToken:
-            response.data.loginResponse.AuthenticationResult.refreshToken,
+          accessToken: response.data.loginResponse.AuthenticationResult.AccessToken,
+          idToken: response.data.loginResponse.AuthenticationResult.IdToken,
+          refreshToken: response.data.loginResponse.AuthenticationResult.RefreshToken,
         };
       }
 
