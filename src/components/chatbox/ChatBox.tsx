@@ -81,7 +81,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     btn2Handler: () => void;
   } | null>(null);
 
-
   useEffect(() => {
     elapsedTimeRef.current = elapsedTime;
   }, [elapsedTime]);
@@ -331,359 +330,366 @@ const ChatBox: React.FC<ChatBoxProps> = ({
 
     return () => clearInterval(interval);
   }, [problem]);
+  
+  type Message = {
+  actor: Actor;
+  message: string;
+};
+const gptMessagesRef = useRef<Message[]>([]);
+
 
   let followUp;
   const questionCounterValueRef = useRef<{ number: number } | null>(null);
   const handleFollowUp = useRef(0);
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim()) return;
 
-    const userMsg = { actor: Actor.USER, message: input };
-    const updatedUserMessages = [...messages, userMsg];
-    setMessages(updatedUserMessages);
-    setInput("");
-    setLoading(true);
+ const handleSubmit = async (e: React.FormEvent) => {
+   e.preventDefault();
+  if (!input.trim()) return;
 
-    await updateChatsInSession([userMsg]);
+  setInput("");
+  setLoading(true);
 
-    const currentStage = stageRef.current;
-    const codeSnapshot = codeRef.current?.trim() || "";
+  const currentStage = stageRef.current;
+  const codeSnapshot = codeRef.current?.trim() || "";
 
+  
+  const tempUserMsg = { actor: Actor.USER, message: input };
+  const tempMessages = [...messages, tempUserMsg];
+  setMessages(tempMessages); 
 
-    try {
-      const classification = await classifyUserMessage(
-        input,
-        currentStage,
-        updatedUserMessages
-      );
-
-      switch (classification) {
-        case "#UNDERSTOOD_CONFIRMATION": {
-          if (currentStage === "ASK_UNDERSTAND" || currentStage === "WAIT_FOR_APPROACH") {
-            const followup = await getPromptResponse({
-              actor: Actor.INTERVIEWER,
-              context: `User confirmed understanding. Ask them to explain their approach.
-                            Chat transcript: ${JSON.stringify(
-                messages,
-                null,
-                2
-              )}\n 
-                            Problem: ${problem.title}
-                            Description: ${problem.problemDescription}
-                        `,
-              promptKey: "ask-approach",
-            });
-            await addBotMessage(followup);
-            stageRef.current = "WAIT_FOR_APPROACH";
-            approachAttemptCountRef.current = 0;
-            hasProvidedApproachRef.current = false;
-          } else {
-            const response = await getPromptResponse({
-              actor: Actor.INTERVIEWER,
-              context: `User confirmed understanding during coding phase. Provide encouragement or next steps.
-                            Current stage: ${currentStage}
-                            Chat transcript: ${JSON.stringify(
-                messages,
-                null,
-                2
-              )}
-                            Problem: ${problem.title}
-                            Description: ${problem.problemDescription}`,
-              promptKey: "coding-encouragement",
-            });
-            await addBotMessage(response);
-          }
-          break;
-        }
-
-        case "#CONFUSED": {
-          const clarification = await getPromptResponse({
-            actor: Actor.INTERVIEWER,
-            context: `User seems confused. Provide a short clarification of the problem and re-ask if they understood.
-                        Chat transcript: ${JSON.stringify(messages, null, 2)}\n 
-                        Problem: ${problem.title}
-                        Description: ${problem.problemDescription}`,
-            promptKey: "clarify-problem",
-          });
-          await addBotMessage(clarification);
-          break;
-        }
-
-        case "#RIGHT_ANSWER": {
-          if(handleFollowUp.current === 0) {
-             followUp = await getPromptResponse({
-              actor: Actor.SYSTEM,
-              context: `Chat transcrpt: ${JSON.stringify(messages, null, 2)}\n
-                        Problem: ${problem.title}\n
-                        Description: ${problem.problemDescription}\n
-                        Code: ${codeSnapshot}
-              `,
-              promptKey: "follow-up-question-counter"
-            });
-            handleFollowUp.current += 1;
-            questionCounterValueRef.current = { number: Number(JSON.parse(followUp).number) };
-          }
-
-          if(questionCounterValueRef.current && questionCounterValueRef.current.number !== 0) {
-            const response = await getPromptResponse({
-              actor: Actor.AI,
-              context: `Chat transcrpt: ${JSON.stringify(messages, null, 2)}\n
-                        Problem: ${problem.title}\n
-                        Description: ${problem.problemDescription}\n
-                        Code: ${codeSnapshot}`,
-              promptKey: "repeat-follow-up"
-            });
-            
-            await addBotMessage(response);
-            questionCounterValueRef.current.number -= 1;
-          } else {
-            await addBotMessage("Well done, that is correct");
-            stageRef.current = "SESSION_END";
-          }
-          break;
-        }
-
-        case "#WRONG_ANSWER": {
-          const response = await getPromptResponse({
-            actor: Actor.INTERVIEWER,
-            context: `Chat transcript: ${JSON.stringify(messages, null, 2)}\n 
-                        Problem: ${problem.title}
-                        Description: ${problem.problemDescription}`,
-            promptKey: "ack-followup",
-          });
-          await addBotMessage(response);
-          break;
-        }
-
-        case "#REQUESTED_EXAMPLE": {
-          const exampleResponse = await getPromptResponse({
-            actor: Actor.INTERVIEWER,
-            context: `User asked for an example or to rephrase the question.\n
-                        Chat transcript: ${JSON.stringify(messages, null, 2)}\n 
-                        Problem: ${problem.title}
-                        Description: ${problem.problemDescription}
-                        Current stage: ${currentStage}
-                        `,
-            promptKey: "provide-example",
-          });
-          await addBotMessage(exampleResponse);
-          break;
-        }
-
-        case "#APPROACH_PROVIDED": {
-          if (
-            currentStage === "WAIT_FOR_APPROACH" &&
-            !hasProvidedApproachRef.current
-          ) {
-           
-            const ack = await getPromptResponse({
-              actor: Actor.INTERVIEWER,
-              context: `User has shared an approach. Evaluate it and respond with one of "#CORRECT" or "#WRONG" followed by your message.
-                            Chat transcript: ${JSON.stringify(
-                messages,
-                null,
-                2
-              )}\n 
-                            Problem: ${problem.title}
-                            Description: ${problem.problemDescription}`,
-              promptKey: "ack-approach",
-            });
-
-            if (ack.includes("#CORRECT")) {
-                await addBotMessage(
-                  "Alright, you can start coding now.\nIf you get stuck at any point, feel free to ask for help. Once you've completed your code, click on 'Verify Code' button to check your solution."
-                );
-                approachTextRef.current = input;
-                stageRef.current = "CODING";
-                hasProvidedApproachRef.current = true;
-                if (onApproachCorrectChange) {
-                    onApproachCorrectChange(true); 
-                }
-            } else {
-              await addBotMessage(ack.replace("#WRONG", "").trim());
-              approachAttemptCountRef.current += 1;
-
-              if (approachAttemptCountRef.current >= 2) {
-                await addBotMessage(
-                  "That's okay, you can start coding now and we'll work through it together."
-                );
-                stageRef.current = "CODING";
-                hasProvidedApproachRef.current = true;
-                if (onApproachCorrectChange) {
-                    onApproachCorrectChange(true); 
-                 }
-                 
-              } else {
-                const response = await getPromptResponse({
-                  actor: Actor.INTERVIEWER,
-                  context: `User has given an incorrect approach. Ask them to try again.
-                                    Chat transcript: ${JSON.stringify(
-                    messages,
-                    null,
-                    2
-                  )}`,
-                  promptKey: "repeat-ask",
-                });
-                await addBotMessage(response);
-              }
-            }
-          } else {
-            const response = await getPromptResponse({
-              actor: Actor.INTERVIEWER,
-              context: `User is asking a follow-up question. Provide helpful guidance.
-                            Current stage: ${currentStage}
-                            Chat transcript: ${JSON.stringify(
-                messages,
-                null,
-                2
-              )}
-                            Problem: ${problem.title}
-                            Description: ${problem.problemDescription}`,
-              promptKey: "general-guidance",
-            });
-            await addBotMessage(response);
-          }
-          break;
-        }
-
-        case "#PROBLEM_EXPLANATION": {
-          addBotMessage("Okay, you can explain the approach now!");
-          break;
-        }
-
-        case "#RESPOND": {
-          addBotMessage("Okay, go ahead");
-          break;
-        }
-
-        case "#CODING_QUESTION": {
-          if (
-            currentStage === "WAIT_FOR_APPROACH" &&
-            !hasProvidedApproachRef.current
-          ) {
-            const clarificationPrompt = await getPromptResponse({
-              actor: Actor.INTERVIEWER,
-              context: `
-                            Chat transcript: ${JSON.stringify(
-                messages.slice(-3),
-                null,
-                2
-              )}
-                            Problem: ${problem.title}
-                            Description: ${problem.problemDescription}`,
-              promptKey: "ask-approach-before-coding",
-            });
-            await addBotMessage(clarificationPrompt);
-          } else {
-            const response = await getPromptResponse({
-              actor: Actor.INTERVIEWER,
-              context: `User is asking a coding question. Provide helpful guidance on where to start or how to proceed.
-                            Chat transcript: ${JSON.stringify(
-                messages,
-                null,
-                2
-              )}
-                            Problem: ${problem.title}
-                            Description: ${problem.problemDescription}
-                            Current code: ${codeRef.current}`,
-              promptKey: "coding-start-guidance",
-            });
-            await addBotMessage(response);
-          }
-          break;
-        }
-
-        case "#CODING_HELP": {
-          const response = await getPromptResponse({
-            actor: Actor.INTERVIEWER,
-            context: `User needs help with coding/debugging. Provide specific assistance.
-                        Chat transcript: ${JSON.stringify(messages.slice(-5), null, 2)}
-                        Problem: ${problem.title}
-                        Description: ${problem.problemDescription}
-                        Current code: ${codeRef.current}`,
-            promptKey: "coding-debug-help",
-          });
-          await addBotMessage(response);
-          break;
-        }
-
-        case "#GENERAL_ACKNOWLEDGMENT": {
-          const response = await getPromptResponse({
-            actor: Actor.INTERVIEWER,
-            context: `User acknowledged something. Provide encouragement and next steps.
-                        Current stage: ${currentStage}
-                        Chat transcript: ${JSON.stringify(messages, null, 2)}
-                        Problem: ${problem.title}
-                        Description: ${problem.problemDescription}`,
-            promptKey: "general-encouragement",
-          });
-          await addBotMessage(response);
-          break;
-        }
-
-        case "#OFF_TOPIC": {
-          await addBotMessage(
-            "Let's try to stay focused on the problem for now."
-          );
-          break;
-        }
-
-        case "#INTERVIEW_END": {
-          addBotMessage("The interview is over now, you can head back!");
-          break;
-        }
-
-        default: {
-          if (currentStage === "CODING") {
-            const response = await getPromptResponse({
-              actor: Actor.INTERVIEWER,
-              context: `User is asking a question during coding phase. Provide helpful guidance.
-                            Chat transcript: ${JSON.stringify(
-                messages,
-                null,
-                2
-              )}
-                            Problem: ${problem.title}
-                            Description: ${problem.problemDescription}
-                            Current code: ${codeRef.current}`,
-              promptKey: "coding-guidance",
-            });
-            await addBotMessage(response);
-          } else {
-            await addBotMessage(
-              "I'm not sure how to respond to that. Could you rephrase or ask a more specific question?"
-            );
-          }
-          break;
-        }
-      }
-
-      if (stageRef.current === "CODING") {
-        if (!sessionId) {
-          const sessionId = await createSession({
-            userId,
-            problemId: problem.problemId || "",
-          });
-          localStorage.setItem("mtv-sessionId", sessionId);
-          clearCachedReport();
-          updateChatsInSession([...messages]);
-        }
-      }
-    } catch (err) {
-      console.error("Error during message handling", err);
-      const errorMsg = {
-        actor: Actor.INTERVIEWER,
-        message:
-          "I couldn't comprehend due to network issue, can you state that again?",
-      };
-      const fallbackMessages = [...updatedUserMessages, errorMsg];
-      setMessages(fallbackMessages);
-      await updateChatsInSession(fallbackMessages);
+  try {
+ const filteredMessagesForClassification = tempMessages.filter((msg, index, arr) => {
+    
+    if (msg.actor === Actor.USER && msg.classification === "#OFF_TOPIC") {
+      return false;
     }
 
-    setLoading(false);
-  };
+    
+    const isFocusReminder = (
+      msg.actor === Actor.INTERVIEWER &&
+      msg.message === "Let's try to stay focused on the problem for now."
+    );
+
+    if (isFocusReminder) {
+      
+      return arr.findIndex(
+        (m) =>
+          m.actor === Actor.INTERVIEWER &&
+          m.message === msg.message
+      ) === index;
+    }
+
+    return true; 
+  });
+
+
+const classification = await classifyUserMessage(
+  input,
+  currentStage,
+  filteredMessagesForClassification
+);
+
+   
+    const userMsg = {
+      actor: Actor.USER,
+      message: input,
+      classification, 
+    };
+
+    const updatedUserMessages = [...messages, userMsg];
+
+    
+    setMessages(updatedUserMessages);
+    console.log("Updated messages after user input:", updatedUserMessages);
+    await updateChatsInSession([userMsg]);
+
+   gptMessagesRef.current = updatedUserMessages.filter(
+  (msg) =>
+    (msg.actor !== Actor.USER || msg.classification !== "#OFF_TOPIC") &&
+    !(msg.actor === Actor.INTERVIEWER &&
+      msg.message === "Let's try to stay focused on the problem for now.")
+);
+
+    switch (classification) {
+      case "#UNDERSTOOD_CONFIRMATION": {
+        if (currentStage === "ASK_UNDERSTAND" || currentStage === "WAIT_FOR_APPROACH") {
+          const followup = await getPromptResponse({
+            actor: Actor.INTERVIEWER,
+            context: `User confirmed understanding. Ask them to explain their approach.
+                      Chat transcript: ${JSON.stringify(gptMessagesRef.current, null, 2)}
+                      Problem: ${problem.title}
+                      Description: ${problem.problemDescription}`,
+            promptKey: "ask-approach",
+          });
+          await addBotMessage(followup);
+          stageRef.current = "WAIT_FOR_APPROACH";
+          approachAttemptCountRef.current = 0;
+          hasProvidedApproachRef.current = false;
+        } else {
+          const response = await getPromptResponse({
+            actor: Actor.INTERVIEWER,
+            context: `User confirmed understanding during coding phase. Provide encouragement or next steps.
+                      Current stage: ${currentStage}
+                      Chat transcript: ${JSON.stringify(gptMessagesRef.current, null, 2)}
+                      Problem: ${problem.title}
+                      Description: ${problem.problemDescription}`,
+            promptKey: "coding-encouragement",
+          });
+          await addBotMessage(response);
+        }
+        break;
+      }
+
+      case "#CONFUSED": {
+        const clarification = await getPromptResponse({
+          actor: Actor.INTERVIEWER,
+          context: `User seems confused. Provide a short clarification of the problem and re-ask if they understood.
+                    Chat transcript: ${JSON.stringify(gptMessagesRef.current, null, 2)}
+                    Problem: ${problem.title}
+                    Description: ${problem.problemDescription}`,
+          promptKey: "clarify-problem",
+        });
+        await addBotMessage(clarification);
+        break;
+      }
+
+      case "#RIGHT_ANSWER": {
+        if (handleFollowUp.current === 0) {
+          followUp = await getPromptResponse({
+            actor: Actor.SYSTEM,
+            context: `Chat transcript: ${JSON.stringify(gptMessagesRef.current, null, 2)}
+                      Problem: ${problem.title}
+                      Description: ${problem.problemDescription}
+                      Code: ${codeSnapshot}`,
+            promptKey: "follow-up-question-counter",
+          });
+          handleFollowUp.current += 1;
+          questionCounterValueRef.current = { number: Number(JSON.parse(followUp).number) };
+        }
+
+        if (questionCounterValueRef.current && questionCounterValueRef.current.number !== 0) {
+          const response = await getPromptResponse({
+            actor: Actor.AI,
+            context: `Chat transcript: ${JSON.stringify(gptMessagesRef.current, null, 2)}
+                      Problem: ${problem.title}
+                      Description: ${problem.problemDescription}
+                      Code: ${codeSnapshot}`,
+            promptKey: "repeat-follow-up",
+          });
+
+          await addBotMessage(response);
+          questionCounterValueRef.current.number -= 1;
+        } else {
+          await addBotMessage("Well done, that is correct");
+          stageRef.current = "SESSION_END";
+        }
+        break;
+      }
+
+      case "#WRONG_ANSWER": {
+        const response = await getPromptResponse({
+          actor: Actor.INTERVIEWER,
+          context: `Chat transcript: ${JSON.stringify(gptMessagesRef.current, null, 2)}
+                    Problem: ${problem.title}
+                    Description: ${problem.problemDescription}`,
+          promptKey: "ack-followup",
+        });
+        await addBotMessage(response);
+        break;
+      }
+
+      case "#REQUESTED_EXAMPLE": {
+        const exampleResponse = await getPromptResponse({
+          actor: Actor.INTERVIEWER,
+          context: `User asked for an example or to rephrase the question.
+                    Chat transcript: ${JSON.stringify(gptMessagesRef.current, null, 2)}
+                    Problem: ${problem.title}
+                    Description: ${problem.problemDescription}
+                    Current stage: ${currentStage}`,
+          promptKey: "provide-example",
+        });
+        await addBotMessage(exampleResponse);
+        break;
+      }
+
+      case "#APPROACH_PROVIDED": {
+        if (currentStage === "WAIT_FOR_APPROACH" && !hasProvidedApproachRef.current) {
+          const ack = await getPromptResponse({
+            actor: Actor.INTERVIEWER,
+            context: `User has shared an approach. Evaluate it and respond with one of "#CORRECT" or "#WRONG" followed by your message.
+                      Chat transcript: ${JSON.stringify(gptMessagesRef.current, null, 2)}
+                      Problem: ${problem.title}
+                      Description: ${problem.problemDescription}`,
+            promptKey: "ack-approach",
+          });
+
+          if (ack.includes("#CORRECT")) {
+            await addBotMessage(
+              "Alright, you can start coding now.\nIf you get stuck at any point, feel free to ask for help. Once you've completed your code, click on 'Verify Code' button to check your solution."
+            );
+            approachTextRef.current = input;
+            stageRef.current = "CODING";
+            hasProvidedApproachRef.current = true;
+            if (onApproachCorrectChange) {
+              onApproachCorrectChange(true);
+            }
+          } else {
+            await addBotMessage(ack.replace("#WRONG", "").trim());
+            approachAttemptCountRef.current += 1;
+
+            if (approachAttemptCountRef.current >= 2) {
+              await addBotMessage(
+                "That's okay, you can start coding now and we'll work through it together."
+              );
+              stageRef.current = "CODING";
+              hasProvidedApproachRef.current = true;
+              if (onApproachCorrectChange) {
+                onApproachCorrectChange(true);
+              }
+            } else {
+              const response = await getPromptResponse({
+                actor: Actor.INTERVIEWER,
+                context: `User has given an incorrect approach. Ask them to try again.
+                          Chat transcript: ${JSON.stringify(gptMessagesRef.current, null, 2)}`,
+                promptKey: "repeat-ask",
+              });
+              await addBotMessage(response);
+            }
+          }
+        } else {
+          const response = await getPromptResponse({
+            actor: Actor.INTERVIEWER,
+            context: `User is asking a follow-up question. Provide helpful guidance.
+                      Current stage: ${currentStage}
+                      Chat transcript: ${JSON.stringify(gptMessagesRef.current, null, 2)}
+                      Problem: ${problem.title}
+                      Description: ${problem.problemDescription}`,
+            promptKey: "general-guidance",
+          });
+          await addBotMessage(response);
+        }
+        break;
+      }
+
+      case "#PROBLEM_EXPLANATION": {
+        addBotMessage("Okay, you can explain the approach now!");
+        break;
+      }
+
+      case "#RESPOND": {
+        addBotMessage("Okay, go ahead");
+        break;
+      }
+
+      case "#CODING_QUESTION": {
+        if (currentStage === "WAIT_FOR_APPROACH" && !hasProvidedApproachRef.current) {
+          const clarificationPrompt = await getPromptResponse({
+            actor: Actor.INTERVIEWER,
+            context: `Chat transcript: ${JSON.stringify(gptMessagesRef.current.slice(-3), null, 2)}
+                      Problem: ${problem.title}
+                      Description: ${problem.problemDescription}`,
+            promptKey: "ask-approach-before-coding",
+          });
+          await addBotMessage(clarificationPrompt);
+        } else {
+          const response = await getPromptResponse({
+            actor: Actor.INTERVIEWER,
+            context: `User is asking a coding question. Provide helpful guidance on where to start or how to proceed.
+                      Chat transcript: ${JSON.stringify(gptMessagesRef.current, null, 2)}
+                      Problem: ${problem.title}
+                      Description: ${problem.problemDescription}
+                      Current code: ${codeRef.current}`,
+            promptKey: "coding-start-guidance",
+          });
+          await addBotMessage(response);
+        }
+        break;
+      }
+
+      case "#CODING_HELP": {
+        const response = await getPromptResponse({
+          actor: Actor.INTERVIEWER,
+          context: `User needs help with coding/debugging. Provide specific assistance.
+                    Chat transcript: ${JSON.stringify(gptMessagesRef.current.slice(-5), null, 2)}
+                    Problem: ${problem.title}
+                    Description: ${problem.problemDescription}
+                    Current code: ${codeRef.current}`,
+          promptKey: "coding-debug-help",
+        });
+        await addBotMessage(response);
+        break;
+      }
+
+      case "#GENERAL_ACKNOWLEDGMENT": {
+        const response = await getPromptResponse({
+          actor: Actor.INTERVIEWER,
+          context: `User acknowledged something. Provide encouragement and next steps.
+                    Current stage: ${currentStage}
+                    Chat transcript: ${JSON.stringify(gptMessagesRef.current, null, 2)}
+                    Problem: ${problem.title}
+                    Description: ${problem.problemDescription}`,
+          promptKey: "general-encouragement",
+        });
+        await addBotMessage(response);
+        break;
+      }
+
+      case "#OFF_TOPIC": {
+        await addBotMessage("Let's try to stay focused on the problem for now.");
+        break;
+      }
+
+      case "#INTERVIEW_END": {
+        addBotMessage("The interview is over now, you can head back!");
+        break;
+      }
+
+      default: {
+        if (currentStage === "CODING") {
+          const response = await getPromptResponse({
+            actor: Actor.INTERVIEWER,
+            context: `User is asking a question during coding phase. Provide helpful guidance.
+                      Chat transcript: ${JSON.stringify(gptMessagesRef.current, null, 2)}
+                      Problem: ${problem.title}
+                      Description: ${problem.problemDescription}
+                      Current code: ${codeRef.current}`,
+            promptKey: "coding-guidance",
+          });
+          await addBotMessage(response);
+        } else {
+          await addBotMessage("I'm not sure how to respond to that. Could you rephrase or ask a more specific question?");
+        }
+        break;
+      }
+    }
+    
+    console.log("refmeaasge",gptMessagesRef.current);
+
+    if (stageRef.current === "CODING") {
+      if (!sessionId) {
+        const sessionId = await createSession({
+          userId,
+          problemId: problem.problemId || "",
+        });
+        localStorage.setItem("mtv-sessionId", sessionId);
+        clearCachedReport();
+        updateChatsInSession([...messages]);
+      }
+    }
+  } catch (err) {
+    console.error("Error during message handling", err);
+    const errorMsg = {
+      actor: Actor.INTERVIEWER,
+      message: "I couldn't comprehend due to network issue, can you state that again?",
+    };
+    const fallbackMessages = [...messages, errorMsg];
+    setMessages(fallbackMessages);
+    await updateChatsInSession(fallbackMessages);
+  }
+
+  setLoading(false);
+};
+
 
   useEffect(() => {
     if (onVerifyRef) {
