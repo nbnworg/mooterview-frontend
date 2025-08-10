@@ -346,8 +346,7 @@ const gptMessagesRef = useRef<Message[]>([]);
    e.preventDefault();
   if (!input.trim()) return;
 
-  setInput("");
-  setLoading(true);
+  
 
   const currentStage = stageRef.current;
   const codeSnapshot = codeRef.current?.trim() || "";
@@ -357,30 +356,26 @@ const gptMessagesRef = useRef<Message[]>([]);
   const tempMessages = [...messages, tempUserMsg];
   setMessages(tempMessages); 
 
+  setInput("");
+  setLoading(true);
+
   try {
- const filteredMessagesForClassification = tempMessages.filter((msg, index, arr) => {
+ const filteredMessagesForClassification = tempMessages
+ .filter((msg) => {
     
     if (msg.actor === Actor.USER && msg.classification === "#OFF_TOPIC") {
       return false;
     }
 
     
-    const isFocusReminder = (
+    if(
       msg.actor === Actor.INTERVIEWER &&
       msg.message === "Let's try to stay focused on the problem for now."
-    );
-
-    if (isFocusReminder) {
-      
-      return arr.findIndex(
-        (m) =>
-          m.actor === Actor.INTERVIEWER &&
-          m.message === msg.message
-      ) === index;
+    ){
+      return false;
     }
-
     return true; 
-  });
+  }).map(({ classification, ...rest }) => rest);
 
 
 const classification = await classifyUserMessage(
@@ -403,12 +398,13 @@ const classification = await classifyUserMessage(
     console.log("Updated messages after user input:", updatedUserMessages);
     await updateChatsInSession([userMsg]);
 
-   gptMessagesRef.current = updatedUserMessages.filter(
+   gptMessagesRef.current = updatedUserMessages
+   .filter(
   (msg) =>
     (msg.actor !== Actor.USER || msg.classification !== "#OFF_TOPIC") &&
     !(msg.actor === Actor.INTERVIEWER &&
-      msg.message === "Let's try to stay focused on the problem for now.")
-);
+      msg.message === "Let's try to stay focused on the problem for now.")).map(({ classification, ...rest }) => rest);
+ 
 
     switch (classification) {
       case "#UNDERSTOOD_CONFIRMATION": {
