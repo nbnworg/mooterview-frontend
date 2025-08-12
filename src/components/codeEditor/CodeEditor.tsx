@@ -26,7 +26,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
     const intervalId = setInterval(() => {
       setTimeLeft((prevTime) => prevTime - 1);
     }, 1000);
-
+    localStorage.setItem("mtv-timeLeft", JSON.stringify(timeLeft));
     return () => clearInterval(intervalId);
   }, [timeLeft, setTimeLeft]);
 
@@ -49,16 +49,16 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
       </div>
 
       <div
-  ref={editorRef}
-  className={`codeEditor ${disabled ? "disabled-editor" : ""}`}
->        <Editor
+        ref={editorRef}
+        className={`codeEditor ${disabled ? "disabled-editor" : ""}`}
+      >        <Editor
           height="60vh"
           value={code}
           language="python"
           theme="vs-dark"
           onChange={(value) => setCode(value || "")}
           options={{
-             placeholder: "Start writing your code here ...",
+            placeholder: "Start writing your code here ...",
             fontSize: 16,
             minimap: { enabled: false },
             readOnly: disabled
