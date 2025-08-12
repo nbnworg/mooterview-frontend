@@ -194,7 +194,8 @@ const ChatBox: React.FC<ChatBoxProps> = ({
       }
       return;
     } else if (!skipAutoAlert) {
-      alert("Your time is finished. Please move to the Evaluation page...");
+      alert("Your time is up!");
+      navigate("\home", {replace: true});
     }
 
     const sessionId = localStorage.getItem("mtv-sessionId");
