@@ -34,6 +34,8 @@ const ProblemPage = () => {
       endSessionRef.current?.();
     }
   }, [timeLeft]);
+  console.log("has appraoch value is ", isEditorEnabled);
+  console.log("it's type is ", typeof isEditorEnabled);
 
   useEffect(() => {
     if (!problemId) return;
