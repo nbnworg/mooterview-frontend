@@ -371,6 +371,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
               )}\n 
                             Problem: ${problem.title}
                             Description: ${problem.problemDescription}
+                            User's last message: ${input}
                         `,
               promptKey: "ask-approach",
             });
@@ -387,7 +388,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                 messages,
                 null,
                 2
-              )}
+              )}\n User's last message: ${input}
                             Problem: ${problem.title}
                             Description: ${problem.problemDescription}`,
               promptKey: "coding-encouragement",
@@ -403,7 +404,8 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             context: `User seems confused. Provide a short clarification of the problem and re-ask if they understood.
                         Chat transcript: ${JSON.stringify(messages, null, 2)}\n 
                         Problem: ${problem.title}
-                        Description: ${problem.problemDescription}`,
+                        Description: ${problem.problemDescription}\n
+                        User's last message: ${input}`,
             promptKey: "clarify-problem",
           });
           await addBotMessage(clarification);
@@ -417,7 +419,8 @@ const ChatBox: React.FC<ChatBoxProps> = ({
               context: `Chat transcrpt: ${JSON.stringify(messages, null, 2)}\n
                         Problem: ${problem.title}\n
                         Description: ${problem.problemDescription}\n
-                        Code: ${codeSnapshot}
+                        Code: ${codeSnapshot}\n
+                        User's last message: ${input}
               `,
               promptKey: "follow-up-question-counter"
             });
@@ -431,7 +434,8 @@ const ChatBox: React.FC<ChatBoxProps> = ({
               context: `Chat transcrpt: ${JSON.stringify(messages, null, 2)}\n
                         Problem: ${problem.title}\n
                         Description: ${problem.problemDescription}\n
-                        Code: ${codeSnapshot}`,
+                        Code: ${codeSnapshot}\n
+                        User's last message: ${input}`,
               promptKey: "repeat-follow-up"
             });
             
@@ -447,9 +451,10 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         case "#WRONG_ANSWER": {
           const response = await getPromptResponse({
             actor: Actor.INTERVIEWER,
-            context: `Chat transcript: ${JSON.stringify(messages, null, 2)}\n 
+            context: `Chat transcript: ${JSON.stringify(messages, null, 2)}\n
                         Problem: ${problem.title}
-                        Description: ${problem.problemDescription}`,
+                        Description: ${problem.problemDescription}\n
+                        User's last message: ${input}`,
             promptKey: "ack-followup",
           });
           await addBotMessage(response);
@@ -464,6 +469,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                         Problem: ${problem.title}
                         Description: ${problem.problemDescription}
                         Current stage: ${currentStage}
+                        User's last message: ${input}
                         `,
             promptKey: "provide-example",
           });
@@ -485,6 +491,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                 null,
                 2
               )}\n 
+              User approach: ${input}
                             Problem: ${problem.title}
                             Description: ${problem.problemDescription}`,
               promptKey: "ack-approach",
@@ -501,7 +508,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                     onApproachCorrectChange(true); 
                 }
             } else {
-              await addBotMessage(ack.replace("#WRONG", "").trim());
+              // await addBotMessage(ack.replace("#WRONG", "").trim());
               approachAttemptCountRef.current += 1;
 
               if (approachAttemptCountRef.current >= 2) {
@@ -522,7 +529,8 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                     messages,
                     null,
                     2
-                  )}`,
+                  )}\n
+                  User's last message: ${input}`,
                   promptKey: "repeat-ask",
                 });
                 await addBotMessage(response);
@@ -539,7 +547,8 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                 2
               )}
                             Problem: ${problem.title}
-                            Description: ${problem.problemDescription}`,
+                            Description: ${problem.problemDescription}\n
+                            User's last message: ${input}`,
               promptKey: "general-guidance",
             });
             await addBotMessage(response);
@@ -571,7 +580,8 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                 2
               )}
                             Problem: ${problem.title}
-                            Description: ${problem.problemDescription}`,
+                            Description: ${problem.problemDescription}
+                            User's last message: ${input}`,
               promptKey: "ask-approach-before-coding",
             });
             await addBotMessage(clarificationPrompt);
@@ -586,7 +596,8 @@ const ChatBox: React.FC<ChatBoxProps> = ({
               )}
                             Problem: ${problem.title}
                             Description: ${problem.problemDescription}
-                            Current code: ${codeRef.current}`,
+                            Current code: ${codeRef.current}\n
+                            User's last message: ${input}`,
               promptKey: "coding-start-guidance",
             });
             await addBotMessage(response);
@@ -601,7 +612,8 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                         Chat transcript: ${JSON.stringify(messages.slice(-5), null, 2)}
                         Problem: ${problem.title}
                         Description: ${problem.problemDescription}
-                        Current code: ${codeRef.current}`,
+                        Current code: ${codeRef.current}\n
+                        User's last message: ${input}`,
             promptKey: "coding-debug-help",
           });
           await addBotMessage(response);
@@ -615,7 +627,8 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                         Current stage: ${currentStage}
                         Chat transcript: ${JSON.stringify(messages, null, 2)}
                         Problem: ${problem.title}
-                        Description: ${problem.problemDescription}`,
+                        Description: ${problem.problemDescription}\n
+                        User's last message: ${input}`,
             promptKey: "general-encouragement",
           });
           await addBotMessage(response);
@@ -646,7 +659,8 @@ const ChatBox: React.FC<ChatBoxProps> = ({
               )}
                             Problem: ${problem.title}
                             Description: ${problem.problemDescription}
-                            Current code: ${codeRef.current}`,
+                            Current code: ${codeRef.current}\n
+                            User's last message: ${input}`,
               promptKey: "coding-guidance",
             });
             await addBotMessage(response);
