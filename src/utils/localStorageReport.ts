@@ -47,7 +47,7 @@ export const persistChatSession = ({
   stage: any;
   phase: any;
   approach: any;
-  hasApproach: any;
+  hasApproach: boolean;
   hasExplainedRef: any;
 
 

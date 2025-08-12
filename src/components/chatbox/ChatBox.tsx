@@ -174,12 +174,12 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     if (stage) stageRef.current = stage as any;
     if (phase) phaseRef.current = phase as any;
     if (approach) approachTextRef.current = approach;
-    if (hasApproach !== undefined) {
-      hasProvidedApproachRef.current = hasApproach;
-      if (onApproachCorrectChange) {
-        onApproachCorrectChange(hasApproach);
-      }
+
+    const isApproachBool = hasApproach === "true" ? true : false;
+    if (onApproachCorrectChange) {
+      onApproachCorrectChange(isApproachBool);
     }
+
     if (hasproblemExplain) {
       hasExplainedRef.current = hasproblemExplain;
     }
@@ -189,6 +189,8 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     }
 
   }, []);
+
+  console.log("is appraoch explained", typeof (localStorage.getItem("mtv-hasApproach")))
 
 
   const updateChatsInSession = async (newChats: any[]) => {

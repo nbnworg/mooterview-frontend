@@ -20,8 +20,11 @@ const ProblemPage = () => {
   });
   const [timeLeft, setTimeLeft] = useState(15 * 60);
   const [verifyLoading, setVerifyLoading] = useState(false);
-  const [isEditorEnabled, setIsEditorEnabled] = useState(false);
 
+  const [isEditorEnabled, setIsEditorEnabled] = useState(() => {
+    const savedApproach = localStorage.getItem("mtv-hasApproach");
+    return savedApproach === "true";
+  });
 
   const verifySolutionRef = useRef<() => void | null>(null);
   const endSessionRef = useRef<() => void | null>(null);
@@ -45,11 +48,15 @@ const ProblemPage = () => {
         if (savedProblemId === problemId) {
           const timeRemain = localStorage.getItem("mtv-timeLeft");
           setTimeLeft(timeRemain ? JSON.parse(timeRemain) : fullTime);
+          const hasApproach = localStorage.getItem("mtv-hasApproach");
+          setIsEditorEnabled(hasApproach === "true");
+
         } else {
           localStorage.setItem("mtv-problemId", problemId);
           clearChatSession();
           localStorage.removeItem("mtv-timeLeft");
           setTimeLeft(fullTime);
+          setIsEditorEnabled(false);
         }
       } catch (err: any) {
         setError(err.message || "Failed to load problem.");
