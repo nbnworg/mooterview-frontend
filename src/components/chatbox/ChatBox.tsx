@@ -47,6 +47,8 @@ const ChatBox: React.FC<ChatBoxProps> = ({
   onApproachCorrectChange,
 }) => {
   const [messages, setMessages] = useState<any[]>([]);
+  const [gptMessages, setGptMessages] = useState<any[]>([]);
+
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const lastAutoTimeRef = useRef(0);
@@ -104,7 +106,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     }
   }, [code, problem]);
 
-  const addBotMessage = async (text: string) => {
+  const addBotMessage = async (text: string, isOffTopic: boolean = false) => {
     const newMessage = { actor: Actor.INTERVIEWER, message: text };
     await updateChatsInSession([newMessage]);
 
@@ -112,6 +114,11 @@ const ChatBox: React.FC<ChatBoxProps> = ({
       const updated = [...prevMessages, newMessage];
       return updated;
     });
+   
+    if (!isOffTopic) { // ✅ This line already allows filtering
+    setGptMessages((prev) => [...prev, newMessage]);
+  }
+  
   };
 
   const updateChatsInSession = async (newChats: any[]) => {
@@ -355,8 +362,12 @@ const ChatBox: React.FC<ChatBoxProps> = ({
       const classification = await classifyUserMessage(
         input,
         currentStage,
-        updatedUserMessages
+        [...gptMessages, userMsg] 
       );
+
+      if (classification !== "#OFF_TOPIC") {
+    setGptMessages((prev) => [...prev, userMsg]);
+  }
 
       switch (classification) {
         case "#UNDERSTOOD_CONFIRMATION": {
@@ -365,7 +376,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
               actor: Actor.INTERVIEWER,
               context: `User confirmed understanding. Ask them to explain their approach.
                             Chat transcript: ${JSON.stringify(
-                messages,
+                gptMessages,
                 null,
                 2
               )}\n 
@@ -384,7 +395,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
               context: `User confirmed understanding during coding phase. Provide encouragement or next steps.
                             Current stage: ${currentStage}
                             Chat transcript: ${JSON.stringify(
-                messages,
+                gptMessages,
                 null,
                 2
               )}
@@ -401,7 +412,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           const clarification = await getPromptResponse({
             actor: Actor.INTERVIEWER,
             context: `User seems confused. Provide a short clarification of the user question and re-ask if they understood.
-                        Chat transcript: ${JSON.stringify(messages, null, 2)}\n 
+                        Chat transcript: ${JSON.stringify(gptMessages, null, 2)}\n 
                         Problem: ${problem.title}
                         Description: ${problem.problemDescription}`,
             promptKey: "clarify-problem",
@@ -414,7 +425,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           if(handleFollowUp.current === 0) {
              followUp = await getPromptResponse({
               actor: Actor.SYSTEM,
-              context: `Chat transcrpt: ${JSON.stringify(messages, null, 2)}\n
+              context: `Chat transcrpt: ${JSON.stringify(gptMessages, null, 2)}\n
                         Problem: ${problem.title}\n
                         Description: ${problem.problemDescription}\n
                         Code: ${codeSnapshot}
@@ -428,7 +439,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           if(questionCounterValueRef.current && questionCounterValueRef.current.number !== 0) {
             const response = await getPromptResponse({
               actor: Actor.AI,
-              context: `Chat transcrpt: ${JSON.stringify(messages, null, 2)}\n
+              context: `Chat transcrpt: ${JSON.stringify(gptMessages, null, 2)}\n
                         Problem: ${problem.title}\n
                         Description: ${problem.problemDescription}\n
                         Code: ${codeSnapshot}`,
@@ -447,7 +458,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         case "#WRONG_ANSWER": {
           const response = await getPromptResponse({
             actor: Actor.INTERVIEWER,
-            context: `Chat transcript: ${JSON.stringify(messages, null, 2)}\n 
+            context: `Chat transcript: ${JSON.stringify(gptMessages, null, 2)}\n 
                         Problem: ${problem.title}
                         Description: ${problem.problemDescription}`,
             promptKey: "ack-followup",
@@ -460,7 +471,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           const exampleResponse = await getPromptResponse({
             actor: Actor.INTERVIEWER,
             context: `User asked for an example or to rephrase the question.\n
-                        Chat transcript: ${JSON.stringify(messages, null, 2)}\n 
+                        Chat transcript: ${JSON.stringify(gptMessages, null, 2)}\n 
                         Problem: ${problem.title}
                         Description: ${problem.problemDescription}
                         Current stage: ${currentStage}
@@ -481,7 +492,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
               actor: Actor.INTERVIEWER,
               context: `User has shared an approach. Evaluate it and respond with one of "#CORRECT" or "#WRONG" followed by your message.
                             Chat transcript: ${JSON.stringify(
-                messages,
+                gptMessages,
                 null,
                 2
               )}\n 
@@ -519,7 +530,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                   actor: Actor.INTERVIEWER,
                   context: `User has given an incorrect approach. Ask them to try again.
                                     Chat transcript: ${JSON.stringify(
-                    messages,
+                    gptMessages,
                     null,
                     2
                   )}`,
@@ -534,7 +545,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
               context: `User is asking a follow-up question. Provide helpful guidance.
                             Current stage: ${currentStage}
                             Chat transcript: ${JSON.stringify(
-                messages,
+                gptMessages,
                 null,
                 2
               )}
@@ -566,7 +577,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
               actor: Actor.INTERVIEWER,
               context: `
                             Chat transcript: ${JSON.stringify(
-                messages.slice(-3),
+               gptMessages.slice(-3),
                 null,
                 2
               )}
@@ -580,7 +591,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
               actor: Actor.INTERVIEWER,
               context: `User is asking a coding question. Provide helpful guidance on where to start or how to proceed.
                             Chat transcript: ${JSON.stringify(
-                messages,
+                gptMessages,
                 null,
                 2
               )}
@@ -598,7 +609,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           const response = await getPromptResponse({
             actor: Actor.INTERVIEWER,
             context: `User needs help with coding/debugging. Provide specific assistance.
-                        Chat transcript: ${JSON.stringify(messages.slice(-5), null, 2)}
+                        Chat transcript: ${JSON.stringify(gptMessages.slice(-5), null, 2)}
                         Problem: ${problem.title}
                         Description: ${problem.problemDescription}
                         Current code: ${codeRef.current}`,
@@ -613,7 +624,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             actor: Actor.INTERVIEWER,
             context: `User acknowledged something. Provide encouragement and next steps.
                         Current stage: ${currentStage}
-                        Chat transcript: ${JSON.stringify(messages, null, 2)}
+                        Chat transcript: ${JSON.stringify(gptMessages, null, 2)}
                         Problem: ${problem.title}
                         Description: ${problem.problemDescription}`,
             promptKey: "general-encouragement",
@@ -628,7 +639,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     context: `The user went off-topic, but you must keep the interview on track.
               Maintain the current stage and context.
               Here is the full chat so far:
-              ${JSON.stringify(messages.slice(-3), null, 2)}
+              ${JSON.stringify(gptMessages.slice(-3), null, 2)}
               Problem: ${problem.title}
               Description: ${problem.problemDescription}
               Current stage: ${currentStage}
@@ -636,7 +647,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
               promptKey:"off-topic",
   });
 
-  await addBotMessage(followup);
+  await addBotMessage(followup, true);
   break;
         }
 
@@ -651,7 +662,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
               actor: Actor.INTERVIEWER,
               context: `User is asking a question during coding phase. Provide helpful guidance.
                             Chat transcript: ${JSON.stringify(
-                messages,
+                gptMessages,
                 null,
                 2
               )}
@@ -669,7 +680,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
       User's message does not match predefined classifications
       in this ${currentStage} phase.
        Stay in this stage and respond in a way that moves this stage forward.
-                ${JSON.stringify(messages.slice(-3), null, 2)}
+                ${JSON.stringify(gptMessages.slice(-3), null, 2)}
                 Problem: ${problem.title}
                 Description: ${problem.problemDescription}
                 Current code: ${codeRef.current || "N/A"}`,
@@ -680,7 +691,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
   break;
         }
       }
-      console.log("ref",messages);
+      console.log("ref",gptMessages);
 
       if (stageRef.current === "CODING") {
         if (!sessionId) {
