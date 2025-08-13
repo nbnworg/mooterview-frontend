@@ -175,6 +175,12 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     skipAutoAlert?: boolean
   ) => {
 
+    const sessionId = localStorage.getItem("mtv-sessionId");
+    if (!sessionId) {
+      navigate("/home", { replace: true });
+      return;
+    }
+
 
     let wantsSolution = true;
 
@@ -194,15 +200,47 @@ const ChatBox: React.FC<ChatBoxProps> = ({
       }
       return;
     } else if (!skipAutoAlert) {
-      alert("Your time is up!");
-      navigate("\home", {replace: true});
-    }
+      if (setConfirmationModal) {
+    setConfirmationModal({
+      text1: "Your time is up!",
+      text2: "This will end your session and take you to the evaluation.",
+      btn1Text: "OK, Proceed",
+      btn2Text: "Cancel",
+      btn1Handler: async () => {
+        setConfirmationModal(null);
 
-    const sessionId = localStorage.getItem("mtv-sessionId");
-    if (!sessionId) {
-      navigate("/home", { replace: true });
-      return;
-    }
+        if (stageRef.current === "CODING" || stageRef.current === "FOLLOW_UP" || stageRef.current === "SESSION_END") {
+          await updateSessionById({
+            sessionId,
+            endTime: new Date().toISOString(),
+          });
+
+          localStorage.removeItem("mtv-sessionId");
+
+          const evaluation = await generateEvaluationSummary();
+
+          await updateSessionById({
+            sessionId,
+            notes: [
+              { content: evaluation.summary },
+              { content: codeRef.current.trim() || "No code provided" },
+            ],
+          });
+
+          navigate(`/solution/${encodeURIComponent(problem.title ?? "")}`, {
+            state: { evaluation, sessionId, rubricResult },
+            replace: true,
+          });
+        } else {
+          navigate("/home", { replace: true });
+        }
+      },
+      btn2Handler: () => setConfirmationModal(null),
+    });
+  }
+}
+
+    
 
     try {
       await updateSessionById({
