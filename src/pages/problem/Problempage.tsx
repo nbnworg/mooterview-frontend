@@ -16,15 +16,17 @@ const ProblemPage = () => {
   const [problem, setProblem] = useState<Problem>();
   const [error, setError] = useState<string | null>(null);
   const [code, setCode] = useState<string>(() => {
-    return localStorage.getItem("mtv-codeSnippet") ?? "";
+    return sessionStorage.getItem("mtv-codeSnippet") ?? "";
   });
   const [timeLeft, setTimeLeft] = useState(15 * 60);
   const [verifyLoading, setVerifyLoading] = useState(false);
 
   const [isEditorEnabled, setIsEditorEnabled] = useState(() => {
-    const savedApproach = localStorage.getItem("mtv-hasApproach");
+    const savedApproach = sessionStorage.getItem("mtv-hasApproach");
     return savedApproach === "true";
   });
+
+
 
   const verifySolutionRef = useRef<() => void | null>(null);
   const endSessionRef = useRef<() => void | null>(null);
@@ -34,8 +36,7 @@ const ProblemPage = () => {
       endSessionRef.current?.();
     }
   }, [timeLeft]);
-  console.log("has appraoch value is ", isEditorEnabled);
-  console.log("it's type is ", typeof isEditorEnabled);
+ 
 
   useEffect(() => {
     if (!problemId) return;
@@ -45,18 +46,17 @@ const ProblemPage = () => {
         const fetchedProblem = await getProblemById(problemId);
         setProblem(fetchedProblem);
         const fullTime = Number(fetchedProblem.averageSolveTime ?? 15) * 60;
-        const savedProblemId = localStorage.getItem("mtv-problemId");
+        const savedProblemId = sessionStorage.getItem("mtv-problemId");
 
         if (savedProblemId === problemId) {
-          const timeRemain = localStorage.getItem("mtv-timeLeft");
+          const timeRemain = sessionStorage.getItem("mtv-timeLeft");
           setTimeLeft(timeRemain ? JSON.parse(timeRemain) : fullTime);
-          const hasApproach = localStorage.getItem("mtv-hasApproach");
+          const hasApproach = sessionStorage.getItem("mtv-hasApproach");
           setIsEditorEnabled(hasApproach === "true");
-
         } else {
-          localStorage.setItem("mtv-problemId", problemId);
+          sessionStorage.setItem("mtv-problemId", problemId);
           clearChatSession();
-          localStorage.removeItem("mtv-timeLeft");
+          sessionStorage.removeItem("mtv-timeLeft");
           setTimeLeft(fullTime);
           setIsEditorEnabled(false);
         }

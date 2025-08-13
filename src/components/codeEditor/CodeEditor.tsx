@@ -26,7 +26,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
     const intervalId = setInterval(() => {
       setTimeLeft((prevTime) => prevTime - 1);
     }, 1000);
-    localStorage.setItem("mtv-timeLeft", JSON.stringify(timeLeft));
+    sessionStorage.setItem("mtv-timeLeft", JSON.stringify(timeLeft));
     return () => clearInterval(intervalId);
   }, [timeLeft, setTimeLeft]);
 
