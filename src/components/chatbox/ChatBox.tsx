@@ -322,8 +322,8 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         console.log("!5");
 
         sessionStorage.removeItem("mtv-sessionId");
-        console.log("Rubrik data at evalution page is ",rubricResultRef.current);
-        
+        console.log("Rubrik data at evalution page is ", rubricResultRef.current);
+
         clearChatSession();
         navigate(`/solution/${encodeURIComponent(problem.title ?? "")}`, {
           state: {
@@ -344,7 +344,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     } catch (err) {
       console.error("Failed to end session", err);
     } finally {
-     
+
       setLoadingSessionEnd(false);
       console.log("!8");
     }
@@ -548,7 +548,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         case "#CONFUSED": {
           const clarification = await getPromptResponse({
             actor: Actor.INTERVIEWER,
-            context: `User seems confused. Provide a short clarification of the problem and re-ask if they understood.
+            context: `User seems confused. Provide a short clarification of the user question and re-ask if they understood.
                         Chat transcript: ${JSON.stringify(messages, null, 2)}\n 
                         Problem: ${problem.title}
                         Description: ${problem.problemDescription}`,
@@ -792,9 +792,21 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         }
 
         case "#OFF_TOPIC": {
-          await addBotMessage(
-            "Let's try to stay focused on the problem for now."
-          );
+
+          const followup = await getPromptResponse({
+            actor: Actor.INTERVIEWER,
+            context: `The user went off-topic, but you must keep the interview on track.
+              Maintain the current stage and context.
+              Here is the full chat so far:
+              ${JSON.stringify(messages.slice(-3), null, 2)}
+              Problem: ${problem.title}
+              Description: ${problem.problemDescription}
+              Current stage: ${currentStage}
+             `,
+            promptKey: "off-topic",
+          });
+
+          await addBotMessage(followup);
           persistState();
           break;
         }
@@ -822,15 +834,28 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             });
             await addBotMessage(response);
             persistState();
-          } else {
-            await addBotMessage(
-              "I'm not sure how to respond to that. Could you rephrase or ask a more specific question?"
-            );
+
+          }
+          else {
+            const response = await getPromptResponse({
+              actor: Actor.INTERVIEWER,
+              context: `
+                User's message does not match predefined classifications
+                in this ${currentStage} phase.
+                Stay in this stage and respond in a way that moves this stage forward.
+                ${JSON.stringify(messages.slice(-3), null, 2)}
+                Problem: ${problem.title}
+                Description: ${problem.problemDescription}
+                Current code: ${codeRef.current || "N/A"}`,
+              promptKey: "general-fallback",
+            });
+            await addBotMessage(response);
             persistState();
           }
           break;
         }
       }
+      console.log("ref", messages);
 
       if (stageRef.current === "CODING") {
         if (!sessionId) {
@@ -954,11 +979,11 @@ const ChatBox: React.FC<ChatBoxProps> = ({
       ${currentCode || "[No code provided]"}
 
       Rubric Evaluation:
-      - Correctness: ${ rubricResultRef.current.rubricScores.correctness}
-      - Edge Cases: ${ rubricResultRef.current.rubricScores.edgeCases}
-      - Performance: ${ rubricResultRef.current.rubricScores.performance}
-      - Structure: ${ rubricResultRef.current.rubricScores.structureChoice}
-      - Readability: ${ rubricResultRef.current.rubricScores.readability}
+      - Correctness: ${rubricResultRef.current.rubricScores.correctness}
+      - Edge Cases: ${rubricResultRef.current.rubricScores.edgeCases}
+      - Performance: ${rubricResultRef.current.rubricScores.performance}
+      - Structure: ${rubricResultRef.current.rubricScores.structureChoice}
+      - Readability: ${rubricResultRef.current.rubricScores.readability}
 
       AI-Generated Test Cases:
       ${testCaseText}
