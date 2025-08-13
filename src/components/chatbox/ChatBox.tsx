@@ -270,7 +270,8 @@ const ChatBox: React.FC<ChatBoxProps> = ({
 
         const commonContext = `Problem: ${problem.title}\n\n${problem.problemDescription
           }
-                    Elapsed time: ${Math.floor(elapsed / 60)} minutes`;
+                    Elapsed time: ${Math.floor(elapsed / 60)} minutes\nUser's last message: ${input}
+                    Current stage: ${stageRef.current}`;
         const prevAnalysisCode = intitalCodeContextRef.current;
 
         if (phaseRef.current === "CODING_NOT_STARTED") {
@@ -295,6 +296,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
 
                         Chat history:
                         ${JSON.stringify(messages.slice(-8), null, 2)}
+                        \nUser's last message: ${input}
 
                         Evaluate the situation and respond with:
                         - One of: #STUCK, #WRONG_PATH, or #NORMAL
@@ -380,25 +382,27 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             stageRef.current = "WAIT_FOR_APPROACH";
             approachAttemptCountRef.current = 0;
             hasProvidedApproachRef.current = false;
-          } else {
-            const response = await getPromptResponse({
-              actor: Actor.INTERVIEWER,
-              context: `User confirmed understanding during coding phase. Provide encouragement or next steps.
-                            Current stage: ${currentStage}
-                            Chat transcript: ${JSON.stringify(
-                messages,
-                null,
-                2
-              )}\n User's last message: ${input}
-                            Problem: ${problem.title}
-                            Description: ${problem.problemDescription}`,
-              promptKey: "coding-encouragement",
-            });
-            await addBotMessage(response);
           }
+          // { 
+        //   else {
+        //     const response = await getPromptResponse({
+        //       actor: Actor.INTERVIEWER,
+        //       context: `User confirmed understanding during coding phase. Provide encouragement or next steps.
+        //                     Current stage: ${currentStage}
+        //                     Chat transcript: ${JSON.stringify(
+        //         messages,
+        //         null,
+        //         2
+        //       )}\n User's last message: ${input}
+        //                     Problem: ${problem.title}
+        //                     Description: ${problem.problemDescription}`,
+        //       promptKey: "coding-encouragement",
+        //     });
+        //     await addBotMessage(response);
+        //   }
           break;
-        }
-
+        // }
+}
         case "#CONFUSED": {
           const clarification = await getPromptResponse({
             actor: Actor.INTERVIEWER,
@@ -509,7 +513,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                     onApproachCorrectChange(true); 
                 }
             } else {
-              // await addBotMessage(ack.replace("#WRONG", "").trim());
               approachAttemptCountRef.current += 1;
 
               if (approachAttemptCountRef.current >= 2) {
