@@ -180,6 +180,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     if (approach) approachTextRef.current = approach;
 
     const isApproachBool = hasApproach === "true" ? true : false;
+    
     if (onApproachCorrectChange) {
       onApproachCorrectChange(isApproachBool);
     }

@@ -28,6 +28,8 @@ const ProblemPage = () => {
   });
 
 
+  const [isSessionLoaded, setIsSessionLoaded] = useState(false); // Add loading state
+
 
   const verifySolutionRef = useRef<() => void | null>(null);
   const endSessionRef = useRef<() => void | null>(null);
@@ -51,9 +53,13 @@ const ProblemPage = () => {
 
         if (savedProblemId === problemId) {
           const timeRemain = sessionStorage.getItem("mtv-timeLeft");
+          const savedCode = sessionStorage.getItem("mtv-codeSnippet") ?? "";
+          const hasApproach = sessionStorage.getItem("mtv-hasApproach") === "true";
+
           setTimeLeft(timeRemain ? JSON.parse(timeRemain) : fullTime);
-          const hasApproach = sessionStorage.getItem("mtv-hasApproach");
-          setIsEditorEnabled(hasApproach === "true");
+          setCode(savedCode);
+          setIsEditorEnabled(hasApproach);
+
         } else {
           sessionStorage.setItem("mtv-problemId", problemId);
           clearChatSession();
@@ -61,6 +67,8 @@ const ProblemPage = () => {
           setTimeLeft(fullTime);
           setIsEditorEnabled(false);
         }
+        setIsSessionLoaded(true); // Mark session as loaded
+
       } catch (err: any) {
         setError(err.message || "Failed to load problem.");
       }
@@ -69,6 +77,15 @@ const ProblemPage = () => {
     fetchProblem();
   }, [problemId]);
 
+  if (!isSessionLoaded) {
+    return (
+      <div className="loading-overlay">
+        <p>Loading session...</p>
+      </div>
+    );
+  }
+
+  
   if (!problemId) {
     return <Navigate to="/home" replace />;
   }
@@ -104,7 +121,6 @@ const ProblemPage = () => {
             onEndRef={endSessionRef}
             onApproachCorrectChange={(isCorrect) => setIsEditorEnabled(isCorrect)}
             setCode={setCode}
-
           />
         </div>
 

@@ -20,6 +20,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
 }) => {
   const editorRef = useRef<HTMLDivElement>(null);
 
+  console.log("disabled value is --------", disabled);
   useEffect(() => {
     if (timeLeft <= 0) return;
 
@@ -64,6 +65,12 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
             readOnly: disabled
           }}
         />
+
+        {disabled && (
+          <div className="editor-disabled-overlay">
+            <p>Enable by describing your approach in chat</p>
+          </div>
+        )}
       </div>
     </div>
   );
