@@ -12,6 +12,7 @@ export const getPromptResponse = async ({
   promptKey: string;
 }) => {
   const makeRequest = async (accessToken: string) => {
+    console.log(context,promptKey);
     const response = await fetch(`${BASE_URL}/prompt/response`, {
       method: "POST",
       headers: {

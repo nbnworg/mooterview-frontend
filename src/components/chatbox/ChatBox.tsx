@@ -402,7 +402,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         case "#CONFUSED": {
           const clarification = await getPromptResponse({
             actor: Actor.INTERVIEWER,
-            context: `User seems confused. Provide a short clarification of the problem and re-ask if they understood.
+            context: `User seems confused. Provide a short clarification of the user question and re-ask if they understood.
                         Chat transcript: ${JSON.stringify(messages, null, 2)}\n 
                         Problem: ${problem.title}
                         Description: ${problem.problemDescription}\n
@@ -637,10 +637,21 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         }
 
         case "#OFF_TOPIC": {
-          await addBotMessage(
-            "Let's try to stay focused on the problem for now."
-          );
-          break;
+          const followup = await getPromptResponse({
+    actor: Actor.INTERVIEWER,
+    context: `The user went off-topic, but you must keep the interview on track.
+              Maintain the current stage and context.
+              Here is the full chat so far:
+              ${JSON.stringify(messages.slice(-3), null, 2)}
+              Problem: ${problem.title}
+              Description: ${problem.problemDescription}
+              Current stage: ${currentStage}
+             `,
+              promptKey:"off-topic",
+  });
+
+  await addBotMessage(followup);
+  break;
         }
 
         case "#INTERVIEW_END": {
@@ -665,14 +676,26 @@ const ChatBox: React.FC<ChatBoxProps> = ({
               promptKey: "coding-guidance",
             });
             await addBotMessage(response);
-          } else {
-            await addBotMessage(
-              "I'm not sure how to respond to that. Could you rephrase or ask a more specific question?"
-            );
-          }
-          break;
+          } 
+          else {
+            const response = await getPromptResponse({
+      actor: Actor.INTERVIEWER,
+      context: `
+      User's message does not match predefined classifications
+      in this ${currentStage} phase.
+       Stay in this stage and respond in a way that moves this stage forward.
+                ${JSON.stringify(messages.slice(-3), null, 2)}
+                Problem: ${problem.title}
+                Description: ${problem.problemDescription}
+                Current code: ${codeRef.current || "N/A"}`,
+      promptKey: "general-fallback",
+    });
+    await addBotMessage(response);
+  }
+  break;
         }
       }
+      console.log("ref",messages);
 
       if (stageRef.current === "CODING") {
         if (!sessionId) {
