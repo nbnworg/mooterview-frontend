@@ -287,7 +287,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     } else if (!skipAutoAlert) {
       alert("Your time is finished. Please move to the Evaluation page...");
     }
-    console.log("!1");
 
     const sessionId = sessionStorage.getItem("mtv-sessionId");
     if (!sessionId) {
@@ -297,18 +296,15 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     }
     try {
       setLoadingSessionEnd(true);
-      console.log("!2");
 
       await updateSessionById({
         sessionId,
         endTime: new Date().toISOString(),
       });
-      console.log("!3");
 
 
       if (wantsSolution) {
         const evaluation = await generateEvaluationSummary();
-        console.log("!4");
 
         await updateSessionById({
           sessionId,
@@ -319,10 +315,8 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             },
           ],
         });
-        console.log("!5");
 
         sessionStorage.removeItem("mtv-sessionId");
-        console.log("Rubrik data at evalution page is ", rubricResultRef.current);
 
         clearChatSession();
         navigate(`/solution/${encodeURIComponent(problem.title ?? "")}`, {
@@ -334,7 +328,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           replace: true,
         });
       } else {
-        console.log("!7");
 
         clearChatSession();
         sessionStorage.removeItem("mtv-sessionId");
@@ -346,14 +339,12 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     } finally {
 
       setLoadingSessionEnd(false);
-      console.log("!8");
     }
   };
 
   useEffect(() => {
     const explainProblem = async () => {
       if (hasExplainedRef.current) {
-        console.log("Skipping explanation - already explained");
         return;
       }
       hasExplainedRef.current = true;
@@ -855,7 +846,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           break;
         }
       }
-      console.log("ref", messages);
 
       if (stageRef.current === "CODING") {
         if (!sessionId) {

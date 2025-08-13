@@ -9,9 +9,10 @@ import type { Problem } from "mooterview-client";
 import ChatBox from "../../components/chatbox/ChatBox";
 import { clearChatSession } from "../../utils/localStorageReport";
 const ProblemPage = () => {
+  const userData = JSON.parse(localStorage.getItem("userData") || "{}");
   const location = useLocation();
-  const problemId = location.state?.problemId;
-  const userId = location.state?.userId;
+  const problemId = location.state?.problemId || sessionStorage.getItem("mtv-problemId");
+  const userId = location.state?.userId || userData.id;
 
   const [problem, setProblem] = useState<Problem>();
   const [error, setError] = useState<string | null>(null);
@@ -36,7 +37,7 @@ const ProblemPage = () => {
       endSessionRef.current?.();
     }
   }, [timeLeft]);
- 
+
 
   useEffect(() => {
     if (!problemId) return;
