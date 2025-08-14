@@ -129,9 +129,11 @@ export const useChatAuth = ({
       } else {
         resUserId = response.data.userId;
         tokens = {
-          accessToken: response.data.loginResponse.AuthenticationResult.AccessToken,
+          accessToken:
+            response.data.loginResponse.AuthenticationResult.AccessToken,
           idToken: response.data.loginResponse.AuthenticationResult.IdToken,
-          refreshToken: response.data.loginResponse.AuthenticationResult.RefreshToken,
+          refreshToken:
+            response.data.loginResponse.AuthenticationResult.RefreshToken,
         };
       }
 

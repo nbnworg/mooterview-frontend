@@ -1,6 +1,7 @@
 footer {
   background-color: var(--primary);
   padding: 3vw 5vw;
+  margin-top: 1vw;
 }
 
 .footerContent {
