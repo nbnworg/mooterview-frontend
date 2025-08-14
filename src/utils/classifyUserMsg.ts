@@ -29,7 +29,7 @@ export const classifyUserMessage = async (input: string, currentStage: string, r
            - User asks for example → #REQUESTED_EXAMPLE
            - User talks about unrelated topics → #OFF_TOPIC
            - User was not able to answer, so he was explained the question again and has said yes and it is clear to him now → #UNDERSTOOD_CONFIRMATION
-           - User says yes to interviewer's last question → #PROBLEM_EXPLANATION
+           - User says yes to interviewer's last question → #PROBLEM_EXPLANATIONS
         
         3. If currentStage is "CODING":
            - User explains an approach → #APPROACH_PROVIDED (only if they haven't started coding yet)
