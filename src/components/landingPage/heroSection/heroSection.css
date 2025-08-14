@@ -50,12 +50,14 @@
   font-weight: 700;
   border: 0.2vw solid var(--background);
   cursor: pointer;
+  transition: word-spacing 0.2s ease;
 }
 
 .signupForFreeButton:hover {
   background-color: var(--background);
   border: 0.2vw solid var(--primary);
   color: var(--primary);
+  word-spacing: 0.2vw;
 }
 
 .heroImageContainer img {

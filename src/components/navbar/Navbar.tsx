@@ -20,62 +20,62 @@ interface ConfirmationModalData {
 const Navbar = () => {
   const navigate = useNavigate();
   const { isLoggedIn, logout } = useAuth();
-  const [confirmationModal, setConfirmationModal] = useState<ConfirmationModalData | null>(null);
+  const [confirmationModal, setConfirmationModal] =
+    useState<ConfirmationModalData | null>(null);
 
   const handleLogout = () => {
     logout();
     setConfirmationModal(null);
     navigate("/log-in");
-
   };
 
   return (
-    <nav>
+    <nav className="navbar">
       <Link to="/" className="brandName">
         <img src={mooLogo} alt="Moo Logo" className="brandLogo" />
-        <span className="brandText">Moo</span>
+        <span className="brandText">Mooterview</span>
       </Link>
-
 
       {isLoggedIn ? (
         <div className="navMenu">
-          <button className="profileAvatar"
-            onClick={() => { navigate("/dashboard") }}
+          <button
+            className="profileAvatar"
+            onClick={() => navigate("/dashboard")}
           >
             <img
               className="profileAvatarImage"
               src={avatar}
               alt="User avatar"
             />
-
           </button>
-          <button onClick={() =>
-            setConfirmationModal({
-              text1: "Are you Sure?",
-              text2: "You will be logged out of your Account",
-              btn1Text: "Logout",
-              btn2Text: "Cancel",
-              btn1Handler: handleLogout,
-              btn2Handler: () => setConfirmationModal(null),
-            })
-          } className="navMenuLinksButton">
-            Logout
-            <FiLogOut />
+          <button
+            onClick={() =>
+              setConfirmationModal({
+                text1: "Are you Sure?",
+                text2: "You will be logged out of your Account",
+                btn1Text: "Logout",
+                btn2Text: "Cancel",
+                btn1Handler: handleLogout,
+                btn2Handler: () => setConfirmationModal(null),
+              })
+            }
+            className="logoutButton"
+          >
+            <FiLogOut size={18} />
+            <span>Logout</span>
           </button>
-
         </div>
       ) : (
         <div className="navMenu">
           <Link to={"/log-in"} className="navMenuLinks">
             Login
           </Link>
-          <Link to={"/sign-up"} className="navMenuLinks">
+          <Link to={"/sign-up"} className="navMenuLinks signupBtn">
             Signup
           </Link>
         </div>
       )}
       {confirmationModal && <ConfirmationModal modalData={confirmationModal} />}
-
     </nav>
   );
 };

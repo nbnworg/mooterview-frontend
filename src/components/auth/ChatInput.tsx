@@ -13,7 +13,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   value,
   onChange,
   onSubmit,
-  placeholder = "Type your response...",
+  placeholder = "Your Message...",
   isPasswordType = false,
 }) => {
   const handleKeyDown = (e: React.KeyboardEvent) => {

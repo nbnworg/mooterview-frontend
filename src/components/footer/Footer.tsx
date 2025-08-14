@@ -16,11 +16,6 @@ const Footer = () => {
             <p>Terms of Service </p>
             <p>FAQs </p>
           </div>
-          <div className="footerLink footerSocials">
-            <p>LinkedIn</p>
-            <p>X </p>
-            <p>Discord </p>
-          </div>
         </div>
       </div>
       <div className="copyrightText">

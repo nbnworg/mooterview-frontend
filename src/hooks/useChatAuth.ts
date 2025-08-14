@@ -36,6 +36,7 @@ export const useChatAuth = ({
   const [formData, setFormData] = useState<AuthFormData>(initialFormData);
   const [introComplete, setIntroComplete] = useState(false);
   const [finalSubmissionComplete, setFinalSubmissionComplete] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { login } = useAuth();
 
@@ -103,6 +104,8 @@ export const useChatAuth = ({
   };
 
   const handleFinalSubmit = async (data: AuthFormData = formData) => {
+    if (isSubmitting) return; // prevent duplicate submits
+    setIsSubmitting(true);
     try {
       let resUserId = "";
       let tokens: {
@@ -126,9 +129,11 @@ export const useChatAuth = ({
       } else {
         resUserId = response.data.userId;
         tokens = {
-          accessToken: response.data.loginResponse.AuthenticationResult.AccessToken,
+          accessToken:
+            response.data.loginResponse.AuthenticationResult.AccessToken,
           idToken: response.data.loginResponse.AuthenticationResult.IdToken,
-          refreshToken: response.data.loginResponse.AuthenticationResult.RefreshToken,
+          refreshToken:
+            response.data.loginResponse.AuthenticationResult.RefreshToken,
         };
       }
 
@@ -172,6 +177,8 @@ export const useChatAuth = ({
           }));
         }
       }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 

@@ -16,7 +16,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
   setCode,
   timeLeft,
   setTimeLeft,
-  disabled
+  disabled,
 }) => {
   const editorRef = useRef<HTMLDivElement>(null);
 
@@ -49,19 +49,21 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
       </div>
 
       <div
-  ref={editorRef}
-  className={`codeEditor ${disabled ? "disabled-editor" : ""}`}
->        <Editor
+        ref={editorRef}
+        className={`codeEditor ${disabled ? "disabled-editor" : ""}`}
+      >
+        {" "}
+        <Editor
           height="60vh"
           value={code}
           language="python"
           theme="vs-dark"
           onChange={(value) => setCode(value || "")}
           options={{
-             placeholder: "Start writing your code here ...",
+            placeholder: "Write your python code here ...",
             fontSize: 16,
             minimap: { enabled: false },
-            readOnly: disabled
+            readOnly: disabled,
           }}
         />
       </div>

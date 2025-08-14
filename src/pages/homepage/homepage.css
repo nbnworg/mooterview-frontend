@@ -1,36 +1,132 @@
+.interviewDashboard {
+  background-color: #fff;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 2vw;
+}
+
+.seperationLineContainer {
+  background-color: #fff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2vw;
+}
+
+.seperationLine {
+  width: 30%;
+}
+
+.graphContainer {
+  padding-left: 5vw;
+  padding-right: 5vw;
+  padding-bottom: 2vw;
+  display: flex;
+  justify-content: center;
+  text-align: center;
+  flex-direction: column;
+}
+
+.pieGraphsContainer {
+  gap: 2vw;
+  display: flex;
+}
+
+.pieGraph {
+  text-align: center;
+  width: 120px;
+}
+
+.homepageContainer {
+  display: flex;
+  background-color: #fff;
+}
+
 .homepage {
-  display: grid;
-  gap: 1.5rem;
-  padding: 2vw 5vw;
-  grid-template-columns: repeat(1, 1fr);
+  width: 80vw;
+  padding: 0 5vw;
+  height: calc(100vh - 12vh);
+  display: flex;
+  flex-direction: column;
 }
 
 .filterContainer {
-  margin: 1vw 5vw;
+  padding: 0vw 2vw;
+  width: calc(100% - 80vw);
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
+  align-items: start;
   flex-wrap: wrap;
+  border-left: 2px solid #bebebe;
+  gap: 1vw;
 }
 
-.filterLeft {
+.horizontalLines {
+  width: 100%;
+}
+
+.searchBar {
+  width: 100%;
+  padding: 0.5vw 1vw;
+  border-radius: 0.2vw;
+  font-size: 0.8vw;
+  border: 1px solid var(--border);
+  outline: none;
+  background-color: transparent;
+}
+
+.filterOptionContainer {
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  flex-direction: column;
 }
 
-.filterContainer select {
-  padding: 0.4rem 0.8rem;
-  margin-left: 0.5rem;
-  border-radius: 6px;
-  border: 1px solid #ccc;
+.filterHeading {
+  margin-bottom: 0.5vw;
+  font-size: 1vw;
+  font-style: bold;
 }
 
-.filterContainer input[type="text"] {
-  padding: 0.4rem 0.8rem;
-  margin-left: 0.5rem;
-  border-radius: 6px;
-  border: 1px solid #ccc;
+.radioButton {
+  font-size: 0.9;
+  line-height: 1.1;
+  display: grid;
+  grid-template-columns: 0.5vw auto;
+  gap: 1vw;
+}
+
+input[type="radio"] {
+  -webkit-appearance: none;
+  appearance: none;
+  background-color: #fff;
+  margin: 0;
+  font: inherit;
+  color: var(--primary);
+  width: 1.15em;
+  height: 1.15em;
+  border: 0.15em solid currentColor;
+  border-radius: 50%;
+  display: grid;
+  place-content: center;
+}
+
+input[type="radio"]::before {
+  content: "";
+  width: 0.65em;
+  height: 0.65em;
+  border-radius: 50%;
+  transform: scale(0);
+  transition: 120ms transform ease-in-out;
+  box-shadow: inset 1em 1em var(--primary);
+}
+
+input[type="radio"]:checked::before {
+  transform: scale(1);
+}
+
+.radioButton + .radioButton {
+  margin-top: 0.5vw;
 }
 
 .createProblemButton {
@@ -41,56 +137,31 @@
   color: var(--background);
   cursor: pointer;
   font-weight: 500;
-  transition: background-color 0.3s ease;
+  transition: All 0.3s ease;
 }
 
 .createProblemButton:hover {
-  background-color: var(--primary);
-}
-
-.problemCard {
-  height: 100%;
-  padding: 0.5vw 1vw;
-  border: 0.2vw solid var(--border);
-  border-radius: 0.5vw;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.problemSummaryContainer {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  align-self: start;
-  gap: 1vw;
-}
-
-.problemTitle {
-  font-size: 1.2vw;
-}
-
-.problemLevel {
-  font-size: 1vw;
-  padding: 0.5vw;
-  width: fit-content;
-  border-radius: 0.3vw;
-  color: var(--background);
+  background-color: transparent;
+  border: 0.1vw solid var(--secondary);
+  color: var(--secondary);
+  letter-spacing: 2px;
 }
 
 .startInterviewButton {
-  min-width: 3vw;
-  height: 3vw;
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 0.5vw;
-  border-radius: 50%;
+  padding: 0.5vw 1vw;
+  border-radius: 0.5vw;
   border: none;
   background-color: var(--secondary);
   color: var(--background);
   cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.startInterviewButton:hover {
+  background-color: #116146;
 }
 
 .loaderContainer {
@@ -124,14 +195,55 @@
   }
 }
 
-@media (min-width: 600px) {
-  .homepage {
-    grid-template-columns: repeat(2, 1fr);
-  }
+.problemTableWrapper {
+  max-height: 100%;
+  overflow-y: auto;
+  scrollbar-width: none;
 }
 
-@media (min-width: 1024px) {
-  .homepage {
-    grid-template-columns: repeat(3, 1fr);
-  }
+.problemTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9;
+}
+
+.problemTable thead {
+  color: var(--secondary);
+  font-size: 1vw;
+  font-weight: 500;
+  background-color: #fff;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.problemTable tbody {
+  overflow-y: auto;
+  max-height: 60vh;
+}
+
+.problemTable tbody::-webkit-scrollbar {
+  display: none;
+}
+
+.problemTable th,
+.problemTable td {
+  padding: 1vw;
+  border-bottom: 1px solid #bebebe;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.tableProblemTitle {
+  font-weight: 500;
+}
+
+.tableProblemLevel {
+  font-weight: 500;
+  font-size: 0.9vw;
+  display: inline-block;
+}
+
+.tableRow:hover {
+  background-color: #e2e2e2;
 }
