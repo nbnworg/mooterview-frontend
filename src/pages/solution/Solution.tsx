@@ -42,7 +42,7 @@ const Solution = () => {
   };
 
   const [notes, setNotes] = useState<{ content: any }[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
