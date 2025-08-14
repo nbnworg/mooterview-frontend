@@ -597,8 +597,28 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           break;
         }
 
-        case "#PROBLEM_EXPLANATION": {
+       case "#PROBLEM_EXPLANATIONS": {
           addBotMessage("Okay, you can explain the approach now!");
+          break;
+        }
+
+
+        case "#PROBLEM_EXPLANATION": {
+          const responses = await getPromptResponse({
+            actor: Actor.INTERVIEWER,
+            context: `User has ask explanation about the problem.Explain the problem.
+                        Current stage: ${currentStage}
+                         Chat transcript: ${JSON.stringify(
+                              messages.slice(-3),
+                              null,
+                              2
+                            )}
+                        Problem: ${problem.title}
+                        Description: ${problem.problemDescription}\n
+                        User's last message: ${input}`,
+            promptKey: "general-problem",
+          });
+          await addBotMessage(responses);
           break;
         }
 
