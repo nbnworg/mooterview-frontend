@@ -18,7 +18,6 @@ import {
 import { Radar } from "react-chartjs-2";
 import { IoMdArrowRoundBack } from "react-icons/io";
 
-// Register Chart.js components
 ChartJS.register(
   RadialLinearScale,
   PointElement,
@@ -67,7 +66,6 @@ const Solution = () => {
     fetchSession();
   }, [sessionId, navigate]);
 
-  if (loading) return <p>Loading...</p>;
   if (error) return <p>{error}</p>;
 
   const userSolution = notes[1]?.content || "No solution provided.";

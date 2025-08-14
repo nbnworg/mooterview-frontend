@@ -48,8 +48,6 @@ export const Solvedproblems = async (userId: string): Promise<string[]> => {
       }
     );
 
-    console.log(`Bearer ${tokenData.idToken}`);
-
     return response.data.uniqueProblemIds;
   } catch (error: any) {
     if (error?.response?.data?.error === "Invalid or expired token") {

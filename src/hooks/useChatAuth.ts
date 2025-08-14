@@ -77,7 +77,7 @@ export const useChatAuth = ({
 
   const handleSubmit = async () => {
     if (!input.trim()) return;
-
+    if (isSubmitting) return;
     const currentStep = steps[stepIndex];
 
     const displayText =
@@ -104,7 +104,7 @@ export const useChatAuth = ({
   };
 
   const handleFinalSubmit = async (data: AuthFormData = formData) => {
-    if (isSubmitting) return; // prevent duplicate submits
+    if (isSubmitting) return;
     setIsSubmitting(true);
     try {
       let resUserId = "";
@@ -197,5 +197,6 @@ export const useChatAuth = ({
     handleSubmit,
     handleFinalSubmit,
     handleRouteToHome,
+    isSubmitting,
   };
 };

@@ -70,6 +70,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
   const [rubricResult, setrubricResult] = useState<any>();
 
   const navigate = useNavigate();
+  const [loadingSessionEnd, setLoadingSessionEnd] = useState(false);
 
   const approachTextRef = useRef<string>("");
 
@@ -175,6 +176,8 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     skipAutoAlert?: boolean
   ) => {
     const sessionId = localStorage.getItem("mtv-sessionId");
+    sessionStorage.removeItem("mtv-problemId");
+
     if (!sessionId) {
       navigate("/home", { replace: true });
       return;
@@ -243,6 +246,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     }
 
     try {
+      setLoadingSessionEnd(true);
       await updateSessionById({
         sessionId,
         endTime: new Date().toISOString(),
@@ -268,10 +272,13 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           replace: true,
         });
       } else {
+        sessionStorage.removeItem("mtv-problemId");
         navigate("/home", { replace: true });
       }
     } catch (err) {
       console.error("Failed to end session", err);
+    } finally {
+      setLoadingSessionEnd(false);
     }
   };
 
@@ -426,25 +433,8 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             approachAttemptCountRef.current = 0;
             hasProvidedApproachRef.current = false;
           }
-          // {
-          //   else {
-          //     const response = await getPromptResponse({
-          //       actor: Actor.INTERVIEWER,
-          //       context: `User confirmed understanding during coding phase. Provide encouragement or next steps.
-          //                     Current stage: ${currentStage}
-          //                     Chat transcript: ${JSON.stringify(
-          //         messages,
-          //         null,
-          //         2
-          //       )}\n User's last message: ${input}
-          //                     Problem: ${problem.title}
-          //                     Description: ${problem.problemDescription}`,
-          //       promptKey: "coding-encouragement",
-          //     });
-          //     await addBotMessage(response);
-          //   }
+          
           break;
-          // }
         }
         case "#CONFUSED": {
           const clarification = await getPromptResponse({
