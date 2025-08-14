@@ -744,7 +744,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           break;
         }
       }
-      console.log("ref", messages);
+      
 
       if (stageRef.current === "CODING") {
         if (!sessionId) {
