@@ -38,6 +38,7 @@ export const ChatAuthForm: React.FC<ChatAuthFormProps> = ({
     handleSubmit,
     handleFinalSubmit,
     handleRouteToHome,
+    isSubmitting
   } = useChatAuth({
     steps,
     initialMessages,
@@ -59,14 +60,18 @@ export const ChatAuthForm: React.FC<ChatAuthFormProps> = ({
           onChange={setInput}
           onSubmit={handleSubmit}
           isPasswordType={isPasswordStep}
+          disabled={isSubmitting}
         />
       ) : (
         <AuthButton
           onClick={
             finalSubmissionComplete ? handleRouteToHome : handleFinalSubmit
           }
+          disabled={isSubmitting}
         >
-          {finalSubmissionComplete ? completedButtonText : finalButtonText}
+          {isSubmitting ? "Processing..." :
+              finalSubmissionComplete ? completedButtonText : finalButtonText}
+            
         </AuthButton>
       )}
     </>

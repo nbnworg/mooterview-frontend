@@ -68,6 +68,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
   const [rubricResult, setrubricResult] = useState<any>();
 
   const navigate = useNavigate();
+  const [loadingSessionEnd, setLoadingSessionEnd] = useState(false);
 
   const approachTextRef = useRef<string>("");
 
@@ -196,7 +197,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     } else if (!skipAutoAlert) {
       alert("Your time is finished. Please move to the Evaluation page...");
     }
-
+    sessionStorage.removeItem("mtv-problemId");
     const sessionId = localStorage.getItem("mtv-sessionId");
     if (!sessionId) {
       navigate("/home", { replace: true });
@@ -204,6 +205,8 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     }
 
     try {
+      setLoadingSessionEnd(true);
+
       await updateSessionById({
         sessionId,
         endTime: new Date().toISOString(),
@@ -233,6 +236,9 @@ const ChatBox: React.FC<ChatBoxProps> = ({
       }
     } catch (err) {
       console.error("Failed to end session", err);
+    } finally {
+
+      setLoadingSessionEnd(false);
     }
   };
 
@@ -256,7 +262,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
   useEffect(() => {
     const interval = setInterval(async () => {
       const elapsed = elapsedTimeRef.current;
-      
+
       if (
         !isSolutionVerifiedCorrectRef.current &&
         elapsed - lastAutoTimeRef.current >= 300
@@ -411,8 +417,8 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         }
 
         case "#RIGHT_ANSWER": {
-          if(handleFollowUp.current === 0) {
-             followUp = await getPromptResponse({
+          if (handleFollowUp.current === 0) {
+            followUp = await getPromptResponse({
               actor: Actor.SYSTEM,
               context: `Chat transcrpt: ${JSON.stringify(messages, null, 2)}\n
                         Problem: ${problem.title}\n
@@ -425,7 +431,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             questionCounterValueRef.current = { number: Number(JSON.parse(followUp).number) };
           }
 
-          if(questionCounterValueRef.current && questionCounterValueRef.current.number !== 0) {
+          if (questionCounterValueRef.current && questionCounterValueRef.current.number !== 0) {
             const response = await getPromptResponse({
               actor: Actor.AI,
               context: `Chat transcrpt: ${JSON.stringify(messages, null, 2)}\n
@@ -434,7 +440,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                         Code: ${codeSnapshot}`,
               promptKey: "repeat-follow-up"
             });
-            
+
             await addBotMessage(response);
             questionCounterValueRef.current.number -= 1;
           } else {
@@ -476,7 +482,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             currentStage === "WAIT_FOR_APPROACH" &&
             !hasProvidedApproachRef.current
           ) {
-           
+
             const ack = await getPromptResponse({
               actor: Actor.INTERVIEWER,
               context: `User has shared an approach. Evaluate it and respond with one of "#CORRECT" or "#WRONG" followed by your message.
@@ -491,15 +497,15 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             });
 
             if (ack.includes("#CORRECT")) {
-                await addBotMessage(
-                  "Alright, you can start coding now.\nIf you get stuck at any point, feel free to ask for help. Once you've completed your code, click on 'Verify Code' button to check your solution."
-                );
-                approachTextRef.current = input;
-                stageRef.current = "CODING";
-                hasProvidedApproachRef.current = true;
-                if (onApproachCorrectChange) {
-                    onApproachCorrectChange(true); 
-                }
+              await addBotMessage(
+                "Alright, you can start coding now.\nIf you get stuck at any point, feel free to ask for help. Once you've completed your code, click on 'Verify Code' button to check your solution."
+              );
+              approachTextRef.current = input;
+              stageRef.current = "CODING";
+              hasProvidedApproachRef.current = true;
+              if (onApproachCorrectChange) {
+                onApproachCorrectChange(true);
+              }
             } else {
               await addBotMessage(ack.replace("#WRONG", "").trim());
               approachAttemptCountRef.current += 1;
@@ -511,9 +517,9 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                 stageRef.current = "CODING";
                 hasProvidedApproachRef.current = true;
                 if (onApproachCorrectChange) {
-                    onApproachCorrectChange(true); 
-                 }
-                 
+                  onApproachCorrectChange(true);
+                }
+
               } else {
                 const response = await getPromptResponse({
                   actor: Actor.INTERVIEWER,
@@ -624,8 +630,8 @@ const ChatBox: React.FC<ChatBoxProps> = ({
 
         case "#OFF_TOPIC": {
           const followup = await getPromptResponse({
-    actor: Actor.INTERVIEWER,
-    context: `The user went off-topic, but you must keep the interview on track.
+            actor: Actor.INTERVIEWER,
+            context: `The user went off-topic, but you must keep the interview on track.
               Maintain the current stage and context.
               Here is the full chat so far:
               ${JSON.stringify(messages.slice(-3), null, 2)}
@@ -633,11 +639,11 @@ const ChatBox: React.FC<ChatBoxProps> = ({
               Description: ${problem.problemDescription}
               Current stage: ${currentStage}
              `,
-              promptKey:"off-topic",
-  });
+            promptKey: "off-topic",
+          });
 
-  await addBotMessage(followup);
-  break;
+          await addBotMessage(followup);
+          break;
         }
 
         case "#INTERVIEW_END": {
@@ -661,11 +667,11 @@ const ChatBox: React.FC<ChatBoxProps> = ({
               promptKey: "coding-guidance",
             });
             await addBotMessage(response);
-          } 
+          }
           else {
             const response = await getPromptResponse({
-      actor: Actor.INTERVIEWER,
-      context: `
+              actor: Actor.INTERVIEWER,
+              context: `
       User's message does not match predefined classifications
       in this ${currentStage} phase.
        Stay in this stage and respond in a way that moves this stage forward.
@@ -673,14 +679,14 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                 Problem: ${problem.title}
                 Description: ${problem.problemDescription}
                 Current code: ${codeRef.current || "N/A"}`,
-      promptKey: "general-fallback",
-    });
-    await addBotMessage(response);
-  }
-  break;
+              promptKey: "general-fallback",
+            });
+            await addBotMessage(response);
+          }
+          break;
         }
       }
-      console.log("ref",messages);
+      console.log("ref", messages);
 
       if (stageRef.current === "CODING") {
         if (!sessionId) {
@@ -724,28 +730,28 @@ const ChatBox: React.FC<ChatBoxProps> = ({
       return;
     }
 
-  if (approachTextRef.current.trim()) {
-    const approachCheckResponse = await getPromptResponse({
-      actor: Actor.INTERVIEWER,
-      context: `
+    if (approachTextRef.current.trim()) {
+      const approachCheckResponse = await getPromptResponse({
+        actor: Actor.INTERVIEWER,
+        context: `
         The candidate initially described the following approach:
         ${approachTextRef.current}
 
         Their final submitted code is:
         ${currentCode}
       `,
-      promptKey: "check-approach-alignment",
-    });
-    if (approachCheckResponse.includes("#MISMATCH")) {
-       await addBotMessage(
-         approachCheckResponse.replace(
-           "#MISMATCH:",
-           "Your code does not seem to follow the approach you described: "
-         )
-       )
-       return;
-     }
-  }
+        promptKey: "check-approach-alignment",
+      });
+      if (approachCheckResponse.includes("#MISMATCH")) {
+        await addBotMessage(
+          approachCheckResponse.replace(
+            "#MISMATCH:",
+            "Your code does not seem to follow the approach you described: "
+          )
+        )
+        return;
+      }
+    }
 
     const testCases = await generateTestCasesWithAI(problem);
     if (!testCases || testCases.length === 0) {
@@ -839,7 +845,12 @@ const ChatBox: React.FC<ChatBoxProps> = ({
       </button>
 
       {confirmationModal && <ConfirmationModal modalData={confirmationModal} />}
-
+      {loadingSessionEnd && (
+        <div className="session-loading-overlay">
+          <div className="spinner"></div>
+          <p className="loading-message">Ending session and generating evaluation...</p>
+        </div>
+      )}
     </div>
   );
 };

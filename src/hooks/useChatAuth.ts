@@ -36,6 +36,7 @@ export const useChatAuth = ({
   const [formData, setFormData] = useState<AuthFormData>(initialFormData);
   const [introComplete, setIntroComplete] = useState(false);
   const [finalSubmissionComplete, setFinalSubmissionComplete] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { login } = useAuth();
 
@@ -76,7 +77,7 @@ export const useChatAuth = ({
 
   const handleSubmit = async () => {
     if (!input.trim()) return;
-
+    if (isSubmitting) return;
     const currentStep = steps[stepIndex];
 
     const displayText =
@@ -103,6 +104,8 @@ export const useChatAuth = ({
   };
 
   const handleFinalSubmit = async (data: AuthFormData = formData) => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
     try {
       let resUserId = "";
       let tokens: {
@@ -172,6 +175,8 @@ export const useChatAuth = ({
           }));
         }
       }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -190,5 +195,6 @@ export const useChatAuth = ({
     handleSubmit,
     handleFinalSubmit,
     handleRouteToHome,
+    isSubmitting,
   };
 };
