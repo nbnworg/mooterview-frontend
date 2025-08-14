@@ -10,8 +10,9 @@ import ChatBox from "../../components/chatbox/ChatBox";
 
 const ProblemPage = () => {
   const location = useLocation();
-  const problemId = location.state?.problemId;
-  const userId = location.state?.userId;
+  const userData = JSON.parse(localStorage.getItem("userData") || "{}");
+  const problemId = location.state?.problemId || sessionStorage.getItem("mtv-problemId");
+  const userId = location.state?.userId || userData.id;
 
   const [problem, setProblem] = useState<Problem>();
   const [error, setError] = useState<string | null>(null);
@@ -20,9 +21,21 @@ const ProblemPage = () => {
   const [verifyLoading, setVerifyLoading] = useState(false);
   const [isEditorEnabled, setIsEditorEnabled] = useState(false);
 
-
   const verifySolutionRef = useRef<() => void | null>(null);
   const endSessionRef = useRef<() => void | null>(null);
+
+  useEffect(() => {
+    const handleUnload = (e: BeforeUnloadEvent) => {
+      if (problem || timeLeft > 0 || code.trim() !== "") {
+        e.preventDefault();
+        (e as any).returnValue = "You have unsaved changes. Are you sure you want to leave?";
+        return "You have unsaved changes. Are you sure you want to leave?";
+      }
+    };
+
+    window.addEventListener("beforeunload", handleUnload);
+    return () => window.removeEventListener("beforeunload", handleUnload);
+  }, [problem, timeLeft, code]);
 
   useEffect(() => {
     if (timeLeft === 0) {
@@ -37,6 +50,7 @@ const ProblemPage = () => {
       try {
         const fetchedProblem = await getProblemById(problemId);
         setProblem(fetchedProblem);
+        sessionStorage.setItem("mtv-problemId", problemId);
         const fullTime = Number(fetchedProblem.averageSolveTime ?? 15) * 60;
         setTimeLeft(fullTime);
       } catch (err: any) {
@@ -87,14 +101,14 @@ const ProblemPage = () => {
         <div className="verticalLine"></div>
 
         <div className="codeEditorAndOptionsContainer">
-           <CodeEditor
+          <CodeEditor
             code={code}
             setCode={setCode}
             timeLeft={timeLeft}
             setTimeLeft={setTimeLeft}
-           disabled={!isEditorEnabled}
+            disabled={!isEditorEnabled}
           />
-          
+
           <button
             className="verifyCodeButton"
             onClick={async () => {

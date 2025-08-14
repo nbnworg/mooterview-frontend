@@ -79,10 +79,8 @@ const DashBoard = () => {
           getAllSessionByUserId(getTokenData().id),
         ]);
 
-        // User data
         setUserData(userResponse);
 
-        // Session data
         let fetchedSessions: Session[] = sessionResponse.sessions || [];
 
         fetchedSessions = fetchedSessions.sort((a, b) => {

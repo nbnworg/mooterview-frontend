@@ -44,11 +44,9 @@ export const Solvedproblems = async (userId: string): Promise<string[]> => {
     const response = await axios.get(
       `${BASE_URL}/users/${userId}/solved_problems`,
       {
-        headers: { Authorization: `Bearer ${tokenData.idToken}` },
+        headers: { Authorization: `Bearer ${tokenData.accessToken}` },
       }
     );
-
-    console.log(`Bearer ${tokenData.idToken}`);
 
     return response.data.uniqueProblemIds;
   } catch (error: any) {

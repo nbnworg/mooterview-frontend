@@ -70,6 +70,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
   const [rubricResult, setrubricResult] = useState<any>();
 
   const navigate = useNavigate();
+  const [, setLoadingSessionEnd] = useState(false);
 
   const approachTextRef = useRef<string>("");
 
@@ -175,6 +176,8 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     skipAutoAlert?: boolean
   ) => {
     const sessionId = localStorage.getItem("mtv-sessionId");
+    sessionStorage.removeItem("mtv-problemId");
+
     if (!sessionId) {
       navigate("/home", { replace: true });
       return;
@@ -243,6 +246,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     }
 
     try {
+      setLoadingSessionEnd(true);
       await updateSessionById({
         sessionId,
         endTime: new Date().toISOString(),
@@ -268,10 +272,13 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           replace: true,
         });
       } else {
+        sessionStorage.removeItem("mtv-problemId");
         navigate("/home", { replace: true });
       }
     } catch (err) {
       console.error("Failed to end session", err);
+    } finally {
+      setLoadingSessionEnd(false);
     }
   };
 
@@ -425,9 +432,24 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             stageRef.current = "WAIT_FOR_APPROACH";
             approachAttemptCountRef.current = 0;
             hasProvidedApproachRef.current = false;
-          } else {
-            await addBotMessage("Great. Let's proceed with the current step.");
           }
+          // {
+          //   else {
+          //     const response = await getPromptResponse({
+          //       actor: Actor.INTERVIEWER,
+          //       context: `User confirmed understanding during coding phase. Provide encouragement or next steps.
+          //                     Current stage: ${currentStage}
+          //                     Chat transcript: ${JSON.stringify(
+          //         messages,
+          //         null,
+          //         2
+          //       )}\n User's last message: ${input}
+          //                     Problem: ${problem.title}
+          //                     Description: ${problem.problemDescription}`,
+          //       promptKey: "coding-encouragement",
+          //     });
+          //     await addBotMessage(response);
+          //   }
           break;
         }
         case "#CONFUSED": {
@@ -521,17 +543,21 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           ) {
             const ack = await getPromptResponse({
               actor: Actor.INTERVIEWER,
-              context: `User has shared an approach. Evaluate it and respond with one of "#CORRECT", "#PARTIAL" or "#WRONG" followed by your message.
-              Chat transcript: ${JSON.stringify(messages, null, 2)}\n 
-              User latest approach: ${input}
-              Problem: ${problem.title}
-              Description: ${problem.problemDescription}`,
+              context: `User has shared an approach. Evaluate it and respond with one of "#CORRECT" or "#WRONG" followed by your message.
+                            Chat transcript: ${JSON.stringify(
+                              messages,
+                              null,
+                              2
+                            )}\n 
+              User approach: ${input}
+                            Problem: ${problem.title}
+                            Description: ${problem.problemDescription}`,
               promptKey: "ack-approach",
             });
 
             if (ack.includes("#CORRECT")) {
               await addBotMessage(
-                "Great! You may begin coding.\nIf you get stuck at any point, feel free to ask for help. Once you've completed your code, click on 'Verify Code' button to check your solution."
+                "Alright, you can start coding now.\nIf you get stuck at any point, feel free to ask for help. Once you've completed your code, click on 'Verify Code' button to check your solution."
               );
               approachTextRef.current = input;
               stageRef.current = "CODING";
@@ -539,20 +565,32 @@ const ChatBox: React.FC<ChatBoxProps> = ({
               if (onApproachCorrectChange) {
                 onApproachCorrectChange(true);
               }
-            } else if (ack.includes("#PARTIAL")) {
-              const feedback = ack.replace("#PARTIAL:", "").trim();
-              await addBotMessage(`${feedback} Please refine your approach.`);
             } else {
-              const response = await getPromptResponse({
-                actor: Actor.INTERVIEWER,
-                context: `User has given an incorrect approach. Ask them to try again.
-                Chat transcript: ${JSON.stringify(messages, null, 2)},
-                User's last message: ${input},
-                Problem: ${problem.title},
-                Description: ${problem.problemDescription}`,
-                promptKey: "repeat-ask",
-              });
-              await addBotMessage(response);
+              approachAttemptCountRef.current += 1;
+
+              if (approachAttemptCountRef.current >= 2) {
+                await addBotMessage(
+                  "That's okay, you can start coding now and we'll work through it together."
+                );
+                stageRef.current = "CODING";
+                hasProvidedApproachRef.current = true;
+                if (onApproachCorrectChange) {
+                  onApproachCorrectChange(true);
+                }
+              } else {
+                const response = await getPromptResponse({
+                  actor: Actor.INTERVIEWER,
+                  context: `User has given an incorrect approach. Ask them to try again.
+                                    Chat transcript: ${JSON.stringify(
+                                      messages,
+                                      null,
+                                      2
+                                    )}\n
+                  User's last message: ${input}`,
+                  promptKey: "repeat-ask",
+                });
+                await addBotMessage(response);
+              }
             }
           } else {
             const response = await getPromptResponse({
