@@ -4,6 +4,7 @@ interface AuthButtonProps {
   onClick: () => void;
   children: React.ReactNode;
   className?: string;
+  disabled?: boolean;
 }
 
 export const AuthButton: React.FC<AuthButtonProps> = ({

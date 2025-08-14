@@ -7,6 +7,7 @@ interface ChatInputProps {
   onSubmit: () => void;
   placeholder?: string;
   isPasswordType?: boolean;
+  disabled?: boolean;
 }
 
 export const ChatInput: React.FC<ChatInputProps> = ({

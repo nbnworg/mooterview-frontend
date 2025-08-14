@@ -42,7 +42,7 @@ const Solution = () => {
     fetchSession();
   }, [sessionId, navigate]);
 
-  if (loading) return <p>Loading...</p>;
+  // if (loading) return <p>Loading...</p>;
   if (error) return <p>{error}</p>;
 
   const userSolution = notes[1]?.content || "No solution provided.";
@@ -54,6 +54,7 @@ const Solution = () => {
         <p className="solution-no-data-text">
           Please navigate here from a valid evaluation source.
         </p>
+
       </div>
     );
   }
@@ -168,6 +169,13 @@ const Solution = () => {
       <button className="return-home-button" onClick={handleNavigateHome}>
         Return to home page
       </button>
+
+      {loading && (
+        <div className="session-loading-overlay">
+          <div className="spinner"></div>
+          <p className="loading-message">generating evaluation...</p>
+        </div>
+      )}
     </div>
   );
 };
