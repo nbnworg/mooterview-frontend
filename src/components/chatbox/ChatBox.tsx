@@ -70,7 +70,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
   const [rubricResult, setrubricResult] = useState<any>();
 
   const navigate = useNavigate();
-  const [loadingSessionEnd, setLoadingSessionEnd] = useState(false);
+  const [, setLoadingSessionEnd] = useState(false);
 
   const approachTextRef = useRef<string>("");
 
@@ -433,7 +433,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             approachAttemptCountRef.current = 0;
             hasProvidedApproachRef.current = false;
           }
-          
+
           break;
         }
         case "#CONFUSED": {
