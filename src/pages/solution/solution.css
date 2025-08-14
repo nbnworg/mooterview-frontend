@@ -1,20 +1,7 @@
-body {
-  font-family: "Segoe UI", "Roboto", "Helvetica Neue", Arial, sans-serif;
-  line-height: 1.6;
-  color: #333;
-  background-color: #f4f7f6;
-  margin: 0;
-  padding: 0;
-}
-
 .solution-container {
-  max-width: 46.875vw;
-  margin: 2.083vw auto;
   padding: 1.563vw;
   background-color: #ffffff;
   border-radius: 0.625vw;
-  box-shadow: 0 0.417vw 0.833vw rgba(0, 0, 0, 0.1);
-  border: 1px solid #e0e0e0;
 }
 
 .solution-container.solution-no-data {
@@ -174,40 +161,7 @@ body {
   margin-top: 3vh;
 }
 
-.solution-rubric-list {
-  list-style-type: disc;
-  padding-left: 3vw;
-  margin-top: 1vh;
-  margin-bottom: 2vh;
-  font-size: 0.93vw;
-  line-height: 1.6;
-}
-
-.solution-rubric-list li {
-  margin-bottom: 1.5vh;
-}
-
-.strong {
-  font-weight: bold;
-  color: #16a34a;
-}
-
-.mixed {
-  font-weight: 600;
-  color: #d97706;
-}
-
-.weak {
-  font-weight: 600;
-  color: #dc2626;
-}
-
-.strong-result {
-  font-weight: bold;
-  color: #16a34a;
-}
-
-.weak-result {
-  font-weight: bold;
-  color: #dc2626;
+.radarGraphContainer {
+  flex: 1;
+  height: 20vw;
 }
