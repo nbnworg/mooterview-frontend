@@ -68,6 +68,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
 
   const sessionId = localStorage.getItem("mtv-sessionId");
   const [rubricResult, setrubricResult] = useState<any>();
+  const [isInputDisabled, setIsInputDisabled] = useState(false);
 
   const navigate = useNavigate();
   const [, setLoadingSessionEnd] = useState(false);
@@ -698,7 +699,12 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         }
 
         case "#INTERVIEW_END": {
-          addBotMessage("The interview is over now, you can head back!");
+          addBotMessage("The interview is over, Now you will be redirected to evaluation page!");
+            stageRef.current = "SESSION_END";
+          setIsInputDisabled(true);
+          setTimeout(() => {
+            endSession(true, undefined, true);
+          }, 1500);
           break;
         }
 
@@ -885,6 +891,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           placeholder="Ask for guidance..."
           value={input}
           onChange={(e) => setInput(e.target.value)}
+          disabled={isInputDisabled}
         />
         <div className="buttonsContainer">
           <button type="submit" className="chatSendButton" disabled={loading}>
