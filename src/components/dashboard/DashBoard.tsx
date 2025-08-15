@@ -107,7 +107,13 @@ const DashBoard = () => {
 
         const counts: { [key: string]: number } = { ...baseProblemTypes };
 
+        const seenProblems = new Set<string>();
+
         fetchedSessions.forEach(session => {
+          if (!session.problemId || seenProblems.has(session.problemId)) return;
+        
+          seenProblems.add(session.problemId);
+        
           let type: string;
           if ("problemPattern" in session) {
             type = session.problemPattern || "Unknown";
@@ -121,7 +127,6 @@ const DashBoard = () => {
             counts[type] = 1;
           }
         });
-        
 
         setProblemType(counts);
 
@@ -234,11 +239,12 @@ const isSessionArray = (
 
         <div className="sessions-section">
             {isSessionArray(sessions) && <Preparation sessions={sessions} />}      
-      </div>
+        </div>
 
-      <div className="sessions-section">
+        <div className="parent-sessions-section">
         <PreparetionChart chartData={problemType}/>
         </div>
+
 
         <br />
         <div className="sessions-section">

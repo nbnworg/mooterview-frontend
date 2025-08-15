@@ -43,7 +43,7 @@ const PreparationChart: React.FC<chartProps> = ({ chartData }) => {
     const options = {
         indexAxis: 'y' as const,
         responsive: true,
-        barThickness: 30,
+        barThickness: 10,
         plugins: {
             legend: {
                 position: "top" as const,
