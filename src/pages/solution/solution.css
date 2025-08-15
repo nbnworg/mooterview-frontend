@@ -1,199 +1,207 @@
-body {
-    font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
-    line-height: 1.6;
-    color: #333;
-    background-color: #f4f7f6;
-    margin: 0;
-    padding: 0;
-}
-
 .solution-container {
-    max-width: 46.875vw;
-    margin: 2.083vw auto;
-    padding: 1.563vw;
-    background-color: #ffffff;
-    border-radius: 0.625vw;
-    box-shadow: 0 0.417vw 0.833vw rgba(0, 0, 0, 0.1);
-    border: 1px solid #e0e0e0;
+  padding: 1.563vw;
+  background-color: #ffffff;
+  border-radius: 0.625vw;
 }
 
 .solution-container.solution-no-data {
-    text-align: center;
-    padding: 3.125vw;
-    color: #666;
+  text-align: center;
+  padding: 3.125vw;
+  color: #666;
 }
 
 .solution-no-data-title {
-    font-size: 1.5vw;
-    color: #cc0000;
-    margin-bottom: 0.781vw;
+  font-size: 1.5vw;
+  color: #cc0000;
+  margin-bottom: 0.781vw;
 }
 
 .solution-no-data-text {
-    font-size: 0.917vw;
-    color: #888;
+  font-size: 0.917vw;
+  color: #888;
 }
 
 .solution-main-title {
-    font-size: 2.083vw;
-    color: #2c3e50;
-    text-align: center;
-    margin-bottom: 2.083vw;
-    padding-bottom: 0.781vw;
-    border-bottom: 3px solid #007bff;
-    letter-spacing: 0.026vw;
+  font-size: 2.083vw;
+  color: #2c3e50;
+  text-align: center;
+  margin-bottom: 2.083vw;
+  padding-bottom: 0.781vw;
+  border-bottom: 3px solid #007bff;
+  letter-spacing: 0.026vw;
 }
 
 .solution-section {
-    margin-bottom: 1.563vw;
-    padding: 1.042vw;
-    background-color: #f9fbfb;
-    border-radius: 0.417vw;
-    border: 1px solid #e9ecef;
+  margin-bottom: 1.563vw;
+  padding: 1.042vw;
+  background-color: #f9fbfb;
+  border-radius: 0.417vw;
+  border: 1px solid #e9ecef;
 }
 
 .solution-section-title {
-    font-size: 1.5vw;
-    color: #34495e;
-    margin-top: 0;
-    margin-bottom: 0.781vw;
-    border-left: 0.26vw solid #007bff;
-    padding-left: 0.521vw;
+  display: flex;
+  align-items: center;
+  gap: 0.2vw;
+  font-size: 1.5vw;
+  color: #34495e;
+  padding-left: 0.521vw;
+}
+
+.titleIcon {
+  color: #007bff;
 }
 
 .solution-summary-section {
-    background-color: #eaf6fd;
-    border-color: #cce7ff;
+  background-color: #eaf6fd;
+  border-color: #cce7ff;
 }
 
 .solution-summary-text {
-    font-size: 0.917vw;
-    line-height: 1.8;
-    color: #4a4a4a;
-    text-align: justify;
+  font-size: 0.917vw;
+  line-height: 1.8;
+  color: #4a4a4a;
+  text-align: justify;
 }
 
 .solution-list {
-    list-style: disc;
-    padding-left: 1.302vw;
-    margin-top: 0.521vw;
+  list-style: disc;
+  padding-left: 1.302vw;
+  margin-top: 0.521vw;
 }
 
 .solution-list-item {
-    margin-bottom: 0.417vw;
-    color: #555;
+  margin-bottom: 0.417vw;
+  color: #555;
 }
 
 .solution-code-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
+  list-style: none;
+  padding: 0;
+  margin: 0;
 }
 
 .solution-code-list-item {
-    margin-bottom: 1.042vw;
-    background-color: #282c34;
-    border-radius: 0.417vw;
-    overflow: hidden;
-    position: relative;
+  margin-bottom: 1.042vw;
+  background-color: #282c34;
+  border-radius: 0.417vw;
+  overflow: hidden;
+  position: relative;
 }
 
-.solution-code-block {
-    padding: 0.781vw 1.042vw;
-    margin: 0;
-    font-family: 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
-    font-size: 0.792vw;
-    color: #abb2bf;
-    overflow-x: auto;
-    white-space: pre-wrap;
-    word-wrap: break-word;
+.solution-code-block,
+.myCode {
+  padding: 0.781vw 1.042vw;
+  margin: 0;
+  font-family: "Fira Code", "Cascadia Code", "Consolas", monospace;
+  font-size: 0.792vw;
+  color: #abb2bf;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.myCode {
+  background-color: #282c34;
+  border-radius: 1.2vw;
 }
 
 .return-home-button {
-    padding: 1vw;
-    background-color: rgb(78, 186, 78);
-    color: white;
-    cursor: pointer;
-    border-radius: 1vw;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0.2vw;
+  border-radius: 50%;
+  border: 1px solid var(--primary);
+  background-color: transparent;
+  color: var(--primary);
+  font-size: 1.2vw;
+  cursor: pointer;
 }
 
 @media (max-width: 40vw) {
-    .solution-container {
-        margin: 1.042vw auto;
-        padding: 1.042vw;
-    }
+  .solution-container {
+    margin: 1.042vw auto;
+    padding: 1.042vw;
+  }
 
-    .solution-main-title {
-        font-size: 1.667vw;
-    }
+  .solution-main-title {
+    font-size: 1.667vw;
+  }
 
-    .solution-section-title {
-        font-size: 1.25vw;
-    }
+  .solution-section-title {
+    font-size: 1.25vw;
+  }
 }
 
 @media (max-width: 25vw) {
-    .solution-container {
-        margin: 0.521vw auto;
-        padding: 0.781vw;
-    }
+  .solution-container {
+    margin: 0.521vw auto;
+    padding: 0.781vw;
+  }
 
-    .solution-main-title {
-        font-size: 1.5vw;
-    }
+  .solution-main-title {
+    font-size: 1.5vw;
+  }
 
-    .solution-section-title {
-        font-size: 1vw;
-    }
+  .solution-section-title {
+    font-size: 1vw;
+  }
 
-    .solution-code-block {
-        font-size: 0.708vw;
-    }
+  .solution-code-block {
+    font-size: 0.708vw;
+  }
 }
 
 .solution-rubric-section {
-    background-color: #f3f4f6;
-    border-left: 0.5vw solid #3b82f6;
-    padding: 2vh 2vw;
-    border-radius: 1vw;
-    margin-top: 3vh;
+  padding: 2vh 2vw;
+  margin-top: 3vh;
+  display: flex;
+  align-items: start;
 }
 
-.solution-rubric-list {
-    list-style-type: disc;
-    padding-left: 3vw;
-    margin-top: 1vh;
-    margin-bottom: 2vh;
-    font-size: .93vw;
-    line-height: 1.6;
+.radarGraphContainer {
+  flex: 1;
+  height: 25vw;
 }
 
-.solution-rubric-list li {
-    margin-bottom: 1.5vh;
+.session-loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(30, 30, 30, 0.8);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  color: white;
 }
 
-.strong {
-    font-weight: bold;
-    color: #16a34a;
+.spinner {
+  border: 0.5vw solid #f3f3f3;
+  border-top: 0.5vw solid #3498db;
+  border-radius: 50%;
+  width: 4vw;
+  height: 4vw;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1.5vh;
 }
 
-.mixed {
-    font-weight: 600;
-    color: #d97706;
-    
+.loading-message {
+  font-size: 1.3vw;
+  font-weight: 500;
+  text-align: center;
 }
 
-.weak {
-    font-weight: 600;
-    color: #dc2626;
-}
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
 
-.strong-result {
-    font-weight: bold;
-    color: #16a34a;
-}
-
-.weak-result {
-    font-weight: bold;
-    color: #dc2626;
+  100% {
+    transform: rotate(360deg);
+  }
 }

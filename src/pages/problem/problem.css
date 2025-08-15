@@ -34,4 +34,13 @@
 .verifyCodeButton {
   width: fit-content;
   padding: 0.5vw 1.5vw;
+  border-radius: 0.8vw;
+  font-size: 0.8vw;
+  background-color: var(--secondary);
+  color: #fff;
+  cursor: pointer;
+}
+
+.verifyCodeButton:hover {
+  background-color: #0b6e4d;
 }

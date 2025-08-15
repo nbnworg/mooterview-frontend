@@ -12,6 +12,8 @@ import { evaluateSolutionWithRubric } from "../../utils/evaluateSolutionWithRubr
 import { generateTestCasesWithAI } from "../../utils/generateTestCasesWithAI";
 import ConfirmationModal from "../Confirmationmodal/Confirmationmodal";
 import { clearCachedReport } from "../../utils/localStorageReport";
+import { IoSend } from "react-icons/io5";
+import { GoMoveToEnd } from "react-icons/go";
 
 interface ChatBoxProps {
   problem: Problem;
@@ -66,11 +68,12 @@ const ChatBox: React.FC<ChatBoxProps> = ({
 
   const sessionId = localStorage.getItem("mtv-sessionId");
   const [rubricResult, setrubricResult] = useState<any>();
+  const [isInputDisabled, setIsInputDisabled] = useState(false);
 
   const navigate = useNavigate();
+  const [, setLoadingSessionEnd] = useState(false);
 
   const approachTextRef = useRef<string>("");
-
 
   const [confirmationModal, setConfirmationModal] = useState<{
     text1: string;
@@ -80,7 +83,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     btn1Handler: () => void;
     btn2Handler: () => void;
   } | null>(null);
-
 
   useEffect(() => {
     elapsedTimeRef.current = elapsedTime;
@@ -174,9 +176,15 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     >,
     skipAutoAlert?: boolean
   ) => {
+    const sessionId = localStorage.getItem("mtv-sessionId");
+    sessionStorage.removeItem("mtv-problemId");
 
+    if (!sessionId) {
+      navigate("/home", { replace: true });
+      return;
+    }
 
-    let wantsSolution = true;
+    const wantsSolution = true;
 
     if (!calledAutomatically) {
       if (setConfirmationModal) {
@@ -194,16 +202,52 @@ const ChatBox: React.FC<ChatBoxProps> = ({
       }
       return;
     } else if (!skipAutoAlert) {
-      alert("Your time is finished. Please move to the Evaluation page...");
-    }
+      if (setConfirmationModal) {
+        setConfirmationModal({
+          text1: "Your time is up!",
+          text2: "This will end your session and take you to the evaluation.",
+          btn1Text: "OK, Proceed",
+          btn2Text: "Cancel",
+          btn1Handler: async () => {
+            setConfirmationModal(null);
 
-    const sessionId = localStorage.getItem("mtv-sessionId");
-    if (!sessionId) {
-      navigate("/home", { replace: true });
-      return;
+            if (
+              stageRef.current === "CODING" ||
+              stageRef.current === "FOLLOW_UP" ||
+              stageRef.current === "SESSION_END"
+            ) {
+              await updateSessionById({
+                sessionId,
+                endTime: new Date().toISOString(),
+              });
+
+              localStorage.removeItem("mtv-sessionId");
+
+              const evaluation = await generateEvaluationSummary();
+
+              await updateSessionById({
+                sessionId,
+                notes: [
+                  { content: evaluation.summary },
+                  { content: codeRef.current.trim() || "No code provided" },
+                ],
+              });
+
+              navigate(`/solution/${encodeURIComponent(problem.title ?? "")}`, {
+                state: { evaluation, sessionId, rubricResult },
+                replace: true,
+              });
+            } else {
+              navigate("/home", { replace: true });
+            }
+          },
+          btn2Handler: () => setConfirmationModal(null),
+        });
+      }
     }
 
     try {
+      setLoadingSessionEnd(true);
       await updateSessionById({
         sessionId,
         endTime: new Date().toISOString(),
@@ -229,10 +273,13 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           replace: true,
         });
       } else {
+        sessionStorage.removeItem("mtv-problemId");
         navigate("/home", { replace: true });
       }
     } catch (err) {
       console.error("Failed to end session", err);
+    } finally {
+      setLoadingSessionEnd(false);
     }
   };
 
@@ -256,7 +303,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
   useEffect(() => {
     const interval = setInterval(async () => {
       const elapsed = elapsedTimeRef.current;
-      
+
       if (
         !isSolutionVerifiedCorrectRef.current &&
         elapsed - lastAutoTimeRef.current >= 300
@@ -267,9 +314,13 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           phaseRef.current = "CODING";
         }
 
-        const commonContext = `Problem: ${problem.title}\n\n${problem.problemDescription
-          }
-                    Elapsed time: ${Math.floor(elapsed / 60)} minutes`;
+        const commonContext = `Problem: ${problem.title}\n\n${
+          problem.problemDescription
+        }
+                    Elapsed time: ${Math.floor(
+                      elapsed / 60
+                    )} minutes\nUser's last message: ${input}
+                    Current stage: ${stageRef.current}`;
         const prevAnalysisCode = intitalCodeContextRef.current;
 
         if (phaseRef.current === "CODING_NOT_STARTED") {
@@ -294,6 +345,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
 
                         Chat history:
                         ${JSON.stringify(messages.slice(-8), null, 2)}
+                        \nUser's last message: ${input}
 
                         Evaluate the situation and respond with:
                         - One of: #STUCK, #WRONG_PATH, or #NORMAL
@@ -350,7 +402,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     const currentStage = stageRef.current;
     const codeSnapshot = codeRef.current?.trim() || "";
 
-
     try {
       const classification = await classifyUserMessage(
         input,
@@ -360,17 +411,21 @@ const ChatBox: React.FC<ChatBoxProps> = ({
 
       switch (classification) {
         case "#UNDERSTOOD_CONFIRMATION": {
-          if (currentStage === "ASK_UNDERSTAND" || currentStage === "WAIT_FOR_APPROACH") {
+          if (
+            currentStage === "ASK_UNDERSTAND" ||
+            currentStage === "WAIT_FOR_APPROACH"
+          ) {
             const followup = await getPromptResponse({
               actor: Actor.INTERVIEWER,
               context: `User confirmed understanding. Ask them to explain their approach.
                             Chat transcript: ${JSON.stringify(
-                messages,
-                null,
-                2
-              )}\n 
+                              messages,
+                              null,
+                              2
+                            )}\n 
                             Problem: ${problem.title}
                             Description: ${problem.problemDescription}
+                            User's last message: ${input}
                         `,
               promptKey: "ask-approach",
             });
@@ -378,32 +433,18 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             stageRef.current = "WAIT_FOR_APPROACH";
             approachAttemptCountRef.current = 0;
             hasProvidedApproachRef.current = false;
-          } else {
-            const response = await getPromptResponse({
-              actor: Actor.INTERVIEWER,
-              context: `User confirmed understanding during coding phase. Provide encouragement or next steps.
-                            Current stage: ${currentStage}
-                            Chat transcript: ${JSON.stringify(
-                messages,
-                null,
-                2
-              )}
-                            Problem: ${problem.title}
-                            Description: ${problem.problemDescription}`,
-              promptKey: "coding-encouragement",
-            });
-            await addBotMessage(response);
           }
+
           break;
         }
-
         case "#CONFUSED": {
           const clarification = await getPromptResponse({
             actor: Actor.INTERVIEWER,
-            context: `User seems confused. Provide a short clarification of the problem and re-ask if they understood.
+            context: `User seems confused. Provide a short clarification of the user question and re-ask if they understood.
                         Chat transcript: ${JSON.stringify(messages, null, 2)}\n 
                         Problem: ${problem.title}
-                        Description: ${problem.problemDescription}`,
+                        Description: ${problem.problemDescription}\n
+                        User's last message: ${input}`,
             promptKey: "clarify-problem",
           });
           await addBotMessage(clarification);
@@ -411,30 +452,37 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         }
 
         case "#RIGHT_ANSWER": {
-          if(handleFollowUp.current === 0) {
-             followUp = await getPromptResponse({
+          if (handleFollowUp.current === 0) {
+            followUp = await getPromptResponse({
               actor: Actor.SYSTEM,
               context: `Chat transcrpt: ${JSON.stringify(messages, null, 2)}\n
                         Problem: ${problem.title}\n
                         Description: ${problem.problemDescription}\n
-                        Code: ${codeSnapshot}
+                        Code: ${codeSnapshot}\n
+                        User's last message: ${input}
               `,
-              promptKey: "follow-up-question-counter"
+              promptKey: "follow-up-question-counter",
             });
             handleFollowUp.current += 1;
-            questionCounterValueRef.current = { number: Number(JSON.parse(followUp).number) };
+            questionCounterValueRef.current = {
+              number: Number(JSON.parse(followUp).number),
+            };
           }
 
-          if(questionCounterValueRef.current && questionCounterValueRef.current.number !== 0) {
+          if (
+            questionCounterValueRef.current &&
+            questionCounterValueRef.current.number !== 0
+          ) {
             const response = await getPromptResponse({
               actor: Actor.AI,
               context: `Chat transcrpt: ${JSON.stringify(messages, null, 2)}\n
                         Problem: ${problem.title}\n
                         Description: ${problem.problemDescription}\n
-                        Code: ${codeSnapshot}`,
-              promptKey: "repeat-follow-up"
+                        Code: ${codeSnapshot}\n
+                        User's last message: ${input}`,
+              promptKey: "repeat-follow-up",
             });
-            
+
             await addBotMessage(response);
             questionCounterValueRef.current.number -= 1;
           } else {
@@ -447,9 +495,10 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         case "#WRONG_ANSWER": {
           const response = await getPromptResponse({
             actor: Actor.INTERVIEWER,
-            context: `Chat transcript: ${JSON.stringify(messages, null, 2)}\n 
+            context: `Chat transcript: ${JSON.stringify(messages, null, 2)}\n
                         Problem: ${problem.title}
-                        Description: ${problem.problemDescription}`,
+                        Description: ${problem.problemDescription}\n
+                        User's last message: ${input}`,
             promptKey: "ack-followup",
           });
           await addBotMessage(response);
@@ -464,6 +513,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                         Problem: ${problem.title}
                         Description: ${problem.problemDescription}
                         Current stage: ${currentStage}
+                        User's last message: ${input}
                         `,
             promptKey: "provide-example",
           });
@@ -476,32 +526,31 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             currentStage === "WAIT_FOR_APPROACH" &&
             !hasProvidedApproachRef.current
           ) {
-           
             const ack = await getPromptResponse({
               actor: Actor.INTERVIEWER,
               context: `User has shared an approach. Evaluate it and respond with one of "#CORRECT" or "#WRONG" followed by your message.
                             Chat transcript: ${JSON.stringify(
-                messages,
-                null,
-                2
-              )}\n 
+                              messages,
+                              null,
+                              2
+                            )}\n 
+              User approach: ${input}
                             Problem: ${problem.title}
                             Description: ${problem.problemDescription}`,
               promptKey: "ack-approach",
             });
 
             if (ack.includes("#CORRECT")) {
-                await addBotMessage(
-                  "Alright, you can start coding now.\nIf you get stuck at any point, feel free to ask for help. Once you've completed your code, click on 'Verify Code' button to check your solution."
-                );
-                approachTextRef.current = input;
-                stageRef.current = "CODING";
-                hasProvidedApproachRef.current = true;
-                if (onApproachCorrectChange) {
-                    onApproachCorrectChange(true); 
-                }
+              await addBotMessage(
+                "Alright, you can start coding now.\nIf you get stuck at any point, feel free to ask for help. Once you've completed your code, click on 'Verify Code' button to check your solution."
+              );
+              approachTextRef.current = input;
+              stageRef.current = "CODING";
+              hasProvidedApproachRef.current = true;
+              if (onApproachCorrectChange) {
+                onApproachCorrectChange(true);
+              }
             } else {
-              await addBotMessage(ack.replace("#WRONG", "").trim());
               approachAttemptCountRef.current += 1;
 
               if (approachAttemptCountRef.current >= 2) {
@@ -511,18 +560,18 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                 stageRef.current = "CODING";
                 hasProvidedApproachRef.current = true;
                 if (onApproachCorrectChange) {
-                    onApproachCorrectChange(true); 
-                 }
-                 
+                  onApproachCorrectChange(true);
+                }
               } else {
                 const response = await getPromptResponse({
                   actor: Actor.INTERVIEWER,
                   context: `User has given an incorrect approach. Ask them to try again.
                                     Chat transcript: ${JSON.stringify(
-                    messages,
-                    null,
-                    2
-                  )}`,
+                                      messages,
+                                      null,
+                                      2
+                                    )}\n
+                  User's last message: ${input}`,
                   promptKey: "repeat-ask",
                 });
                 await addBotMessage(response);
@@ -534,12 +583,13 @@ const ChatBox: React.FC<ChatBoxProps> = ({
               context: `User is asking a follow-up question. Provide helpful guidance.
                             Current stage: ${currentStage}
                             Chat transcript: ${JSON.stringify(
-                messages,
-                null,
-                2
-              )}
+                              messages,
+                              null,
+                              2
+                            )}
                             Problem: ${problem.title}
-                            Description: ${problem.problemDescription}`,
+                            Description: ${problem.problemDescription}\n
+                            User's last message: ${input}`,
               promptKey: "general-guidance",
             });
             await addBotMessage(response);
@@ -547,8 +597,28 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           break;
         }
 
-        case "#PROBLEM_EXPLANATION": {
+       case "#PROBLEM_EXPLANATIONS": {
           addBotMessage("Okay, you can explain the approach now!");
+          break;
+        }
+
+
+        case "#PROBLEM_EXPLANATION": {
+          const responses = await getPromptResponse({
+            actor: Actor.INTERVIEWER,
+            context: `User has ask explanation about the problem.Explain the problem.
+                        Current stage: ${currentStage}
+                         Chat transcript: ${JSON.stringify(
+                              messages.slice(-3),
+                              null,
+                              2
+                            )}
+                        Problem: ${problem.title}
+                        Description: ${problem.problemDescription}\n
+                        User's last message: ${input}`,
+            promptKey: "general-problem",
+          });
+          await addBotMessage(responses);
           break;
         }
 
@@ -566,12 +636,13 @@ const ChatBox: React.FC<ChatBoxProps> = ({
               actor: Actor.INTERVIEWER,
               context: `
                             Chat transcript: ${JSON.stringify(
-                messages.slice(-3),
-                null,
-                2
-              )}
+                              messages.slice(-3),
+                              null,
+                              2
+                            )}
                             Problem: ${problem.title}
-                            Description: ${problem.problemDescription}`,
+                            Description: ${problem.problemDescription}
+                            User's last message: ${input}`,
               promptKey: "ask-approach-before-coding",
             });
             await addBotMessage(clarificationPrompt);
@@ -580,13 +651,14 @@ const ChatBox: React.FC<ChatBoxProps> = ({
               actor: Actor.INTERVIEWER,
               context: `User is asking a coding question. Provide helpful guidance on where to start or how to proceed.
                             Chat transcript: ${JSON.stringify(
-                messages,
-                null,
-                2
-              )}
+                              messages,
+                              null,
+                              2
+                            )}
                             Problem: ${problem.title}
                             Description: ${problem.problemDescription}
-                            Current code: ${codeRef.current}`,
+                            Current code: ${codeRef.current}\n
+                            User's last message: ${input}`,
               promptKey: "coding-start-guidance",
             });
             await addBotMessage(response);
@@ -598,10 +670,15 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           const response = await getPromptResponse({
             actor: Actor.INTERVIEWER,
             context: `User needs help with coding/debugging. Provide specific assistance.
-                        Chat transcript: ${JSON.stringify(messages.slice(-5), null, 2)}
+                        Chat transcript: ${JSON.stringify(
+                          messages.slice(-5),
+                          null,
+                          2
+                        )}
                         Problem: ${problem.title}
                         Description: ${problem.problemDescription}
-                        Current code: ${codeRef.current}`,
+                        Current code: ${codeRef.current}\n
+                        User's last message: ${input}`,
             promptKey: "coding-debug-help",
           });
           await addBotMessage(response);
@@ -615,7 +692,8 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                         Current stage: ${currentStage}
                         Chat transcript: ${JSON.stringify(messages, null, 2)}
                         Problem: ${problem.title}
-                        Description: ${problem.problemDescription}`,
+                        Description: ${problem.problemDescription}\n
+                        User's last message: ${input}`,
             promptKey: "general-encouragement",
           });
           await addBotMessage(response);
@@ -623,14 +701,30 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         }
 
         case "#OFF_TOPIC": {
-          await addBotMessage(
-            "Let's try to stay focused on the problem for now."
-          );
+          const followup = await getPromptResponse({
+            actor: Actor.INTERVIEWER,
+            context: `The user went off-topic, but you must keep the interview on track.
+              Maintain the current stage and context.
+              Here is the full chat so far:
+              ${JSON.stringify(messages.slice(-3), null, 2)}
+              Problem: ${problem.title}
+              Description: ${problem.problemDescription}
+              Current stage: ${currentStage}
+             `,
+            promptKey: "off-topic",
+          });
+
+          await addBotMessage(followup);
           break;
         }
 
         case "#INTERVIEW_END": {
-          addBotMessage("The interview is over now, you can head back!");
+          addBotMessage("The interview is over, Now you will be redirected to evaluation page!");
+            stageRef.current = "SESSION_END";
+          setIsInputDisabled(true);
+          setTimeout(() => {
+            endSession(true, undefined, true);
+          }, 1500);
           break;
         }
 
@@ -640,32 +734,45 @@ const ChatBox: React.FC<ChatBoxProps> = ({
               actor: Actor.INTERVIEWER,
               context: `User is asking a question during coding phase. Provide helpful guidance.
                             Chat transcript: ${JSON.stringify(
-                messages,
-                null,
-                2
-              )}
+                              messages,
+                              null,
+                              2
+                            )}
                             Problem: ${problem.title}
                             Description: ${problem.problemDescription}
-                            Current code: ${codeRef.current}`,
+                            Current code: ${codeRef.current}\n
+                            User's last message: ${input}`,
               promptKey: "coding-guidance",
             });
             await addBotMessage(response);
           } else {
-            await addBotMessage(
-              "I'm not sure how to respond to that. Could you rephrase or ask a more specific question?"
-            );
+            const response = await getPromptResponse({
+              actor: Actor.INTERVIEWER,
+              context: `
+      User's message does not match predefined classifications
+      in this ${currentStage} phase.
+       Stay in this stage and respond in a way that moves this stage forward.
+                ${JSON.stringify(messages.slice(-3), null, 2)}
+                Problem: ${problem.title}
+                Description: ${problem.problemDescription}
+                Current code: ${codeRef.current || "N/A"}`,
+              promptKey: "general-fallback",
+            });
+            await addBotMessage(response);
           }
           break;
         }
       }
+      console.log("ref", messages);
 
       if (stageRef.current === "CODING") {
         if (!sessionId) {
           const sessionId = await createSession({
             userId,
             problemId: problem.problemId || "",
-            problemType: problem.problemPattern || ""
+            problemPattern: problem.problemPattern || ""
           });
+          console.log('problemPattern', problem.problemPattern)
           localStorage.setItem("mtv-sessionId", sessionId);
           clearCachedReport();
           updateChatsInSession([...messages]);
@@ -702,28 +809,28 @@ const ChatBox: React.FC<ChatBoxProps> = ({
       return;
     }
 
-  if (approachTextRef.current.trim()) {
-    const approachCheckResponse = await getPromptResponse({
-      actor: Actor.INTERVIEWER,
-      context: `
+    if (approachTextRef.current.trim()) {
+      const approachCheckResponse = await getPromptResponse({
+        actor: Actor.INTERVIEWER,
+        context: `
         The candidate initially described the following approach:
         ${approachTextRef.current}
 
         Their final submitted code is:
         ${currentCode}
       `,
-      promptKey: "check-approach-alignment",
-    });
-    if (approachCheckResponse.includes("#MISMATCH")) {
-       await addBotMessage(
-         approachCheckResponse.replace(
-           "#MISMATCH:",
-           "Your code does not seem to follow the approach you described: "
-         )
-       )
-       return;
-     }
-  }
+        promptKey: "check-approach-alignment",
+      });
+      if (approachCheckResponse.includes("#MISMATCH")) {
+        await addBotMessage(
+          approachCheckResponse.replace(
+            "#MISMATCH:",
+            "Your code does not seem to follow the approach you described: "
+          )
+        );
+        return;
+      }
+    }
 
     const testCases = await generateTestCasesWithAI(problem);
     if (!testCases || testCases.length === 0) {
@@ -806,18 +913,28 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           placeholder="Ask for guidance..."
           value={input}
           onChange={(e) => setInput(e.target.value)}
+          disabled={isInputDisabled}
         />
-        <button type="submit" className="chatSendButton" disabled={loading}>
-          Send
-        </button>
+        <div className="buttonsContainer">
+          <button type="submit" className="chatSendButton" disabled={loading}>
+            <div className="buttonIcon">
+              <IoSend />
+            </div>
+            Send
+          </button>
+          <button
+            className="endSessionButton"
+            onClick={() => endSession(false, setConfirmationModal)}
+          >
+            <div className="buttonIcon">
+              <GoMoveToEnd />
+            </div>
+            End Session
+          </button>
+        </div>
       </form>
 
-      <button className="endSessionButton" onClick={() => endSession(false, setConfirmationModal)}>
-        End Session
-      </button>
-
       {confirmationModal && <ConfirmationModal modalData={confirmationModal} />}
-
     </div>
   );
 };

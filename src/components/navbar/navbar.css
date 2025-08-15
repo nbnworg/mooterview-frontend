@@ -1,75 +1,89 @@
-nav {
+.navbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1vw 5vw;
+  padding: 0.8rem 5vw;
+  background: linear-gradient(90deg, #ffffff, #f8faff);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+  border-radius: 0 0 12px 12px;
 }
-
-.navMenu {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 3vw;
-}
-
-.logoContainer {
-  display: flex;
-  align-items: center;
-}
-
 
 .brandName {
   display: flex;
   align-items: center;
-  color: var(--primary);
-  font-size: 1.5vw;
-  font-weight: 700;
-  font-family: "Cascadia Code";
+  gap: 0.4rem;
   text-decoration: none;
 }
 
 .brandLogo {
-  height: 2.1vw; 
-  object-fit: contain;
-  margin-right: 0.2vw; 
-  background: transparent;
+  height: 40px;
 }
-
 
 .brandText {
-  font-size: 1.5rem;
-  font-weight: bold;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #2b2d42;
+  letter-spacing: 0.5px;
 }
 
+.navMenu {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
 
-
-.navMenuLinks,
-.navMenuLinksButton {
+.navMenuLinks {
   text-decoration: none;
-  color: var(--text);
-  font-size: 1vw;
+  font-size: 1rem;
+  color: #444;
+  transition: all 0.2s ease;
+}
+
+.navMenuLinks:hover {
+  color: #0077ff;
+}
+
+.signupBtn {
+  color: #0077ff;
+  padding: 0.4rem 0.9rem;
+  border-radius: 8px;
+  transition: all 0.2s ease;
 }
 
 .profileAvatar {
-  width: 3vw;
-  height: 3vw;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
-  background-color: transparent;
-  cursor: pointer;
-  border: none;
+  border: 2px solid transparent;
+  overflow: hidden;
+  transition: border-color 0.2s ease;
+}
+
+.profileAvatar:hover {
+  border-color: #0077ff;
 }
 
 .profileAvatarImage {
   width: 100%;
   height: 100%;
+  object-fit: cover;
 }
 
-.navMenuLinksButton {
-  background-color: transparent;
+.logoutButton {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: #f6f6f6;
+  padding: 0.4rem 0.9rem;
+  border-radius: 8px;
   border: none;
   cursor: pointer;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 1vw;
+  color: #444;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+}
+
+.logoutButton:hover {
+  background: #ffe5e5;
+  color: #d32f2f;
 }

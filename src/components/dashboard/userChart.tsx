@@ -24,9 +24,9 @@ interface chartProps {
 
 const PreparationChart: React.FC<chartProps> = ({ chartData }) => {
     const labels = Object.keys(chartData);
-    // const labels = ["array", "hashing"]
     const dataCount = Object.values(chartData);
-    // const dataCount = [3, 4]
+    console.log('labels', labels);
+    console.log('dataCount', dataCount)
 
     const data = {
         labels: labels,

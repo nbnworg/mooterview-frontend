@@ -20,7 +20,6 @@
   white-space: pre-line;
 }
 
-
 .chatMessage {
   padding: 0.5rem 0.75rem;
   border-radius: 12px;
@@ -64,22 +63,44 @@
   outline: none;
 }
 
-.chatSendButton {
-  padding: 0.75rem 1rem;
-  background-color: #0066ff;
-  color: white;
-  border: none;
-  font-weight: bold;
-  cursor: pointer;
+.buttonsContainer {
+  padding: 1vw;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 2rem;
 }
 
-.chatSendButton:hover {
-  background-color: #0053cc;
+.chatSendButton,
+.endSessionButton {
+  display: flex;
+  gap: 1vw;
+  justify-content: center;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  border-radius: 0.8rem;
+  width: 80%;
+  font-weight: bold;
+  border: none;
+  cursor: pointer;
+  background: transparent;
+}
+
+.chatSendButton {
+  border: 2px solid #0066ff;
+  color: #0066ff;
 }
 
 .endSessionButton {
-  margin-top: 10px;
-  padding: 8px 16px;
+  border: 2px solid #e74c3c;
+  color: #e74c3c;
+}
+
+.chatSendButton:hover {
+  background-color: #0066ff;
+  color: #fff;
+}
+.endSessionButton:hover {
   background-color: #e74c3c;
   color: white;
   border: none;

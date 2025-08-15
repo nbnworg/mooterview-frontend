@@ -1,7 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from "react";
 import type { Session } from "mooterview-client";
 import { getPromptResponse } from "../../utils/handlers/getPromptResponse";
-import './dashboard.css';
+import "./dashboard.css";
 import {
   getCachedReport,
   saveReportToCache,
@@ -11,10 +12,7 @@ interface PreparationProps {
   sessions: Session[];
 }
 
-
-
 const Preparation: React.FC<PreparationProps> = ({ sessions }) => {
-
   const [gptSummary, setGptSummary] = useState({
     headline: "",
     summary: "",
@@ -37,12 +35,12 @@ const Preparation: React.FC<PreparationProps> = ({ sessions }) => {
               new Date(b.startTime ?? 0).getTime() -
               new Date(a.startTime ?? 0).getTime()
           );
-        const latestSessionId = sorted[sorted.length-1].sessionId;
+        const latestSessionId = sorted[sorted.length - 1].sessionId;
 
         const cached = getCachedReport();
         if (cached && cached.latestSessionId === latestSessionId) {
           setGptSummary(cached.report);
-          
+
           return;
         }
         setLoading(true);
@@ -57,9 +55,11 @@ const Preparation: React.FC<PreparationProps> = ({ sessions }) => {
 
         const sessionContext = extracted
           .map((session, i) => {
-            const chatMessages = session.chatsQueue || []
-              .map((chat: any) => `• ${chat.role}: ${chat.content}`)
-              .join("\n");
+            const chatMessages =
+              session.chatsQueue ||
+              []
+                .map((chat: any) => `• ${chat.role}: ${chat.content}`)
+                .join("\n");
 
             return `Session ${i + 1}:
  Problem ID: ${session.problemId}
@@ -105,18 +105,18 @@ ${chatMessages}`;
   }, [sessions]);
 
   return (
-    <div >
-      <h3 className="section-title"> Preparation Report</h3>
+    <div>
+      <h3 className="section-title">
+        <strong>Interview score: {gptSummary.overallReadiness}</strong>
+      </h3>
 
       {loading && <p> Loading...</p>}
       {error && <p style={{ color: "red" }}>{error}</p>}
 
       {gptSummary.summary && (
-        <div>
-          <p><strong>🏁Overall Readiness score: {gptSummary.overallReadiness}</strong></p>
+        <div className="preparedness">
           <h4> {gptSummary.headline}.</h4>
           <p style={{ whiteSpace: "pre-wrap" }}>{gptSummary.summary}</p>
-
         </div>
       )}
     </div>

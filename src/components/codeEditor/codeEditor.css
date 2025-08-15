@@ -13,14 +13,6 @@
   justify-content: space-between;
 }
 
-.languageSelect {
-  width: fit-content;
-  padding: 0.4rem 0.8rem;
-  margin-left: 0.5rem;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-}
-
 .timerContainer {
   font-size: 1.2vw;
   font-family: "montserrat";
@@ -40,11 +32,9 @@
   background-color: var(--background);
   padding: 0.5vw;
   resize: none;
-  min-height: 300px;
 }
 
 .editor {
-  min-height: 100%;
   border: 0.1vw solid var(--border);
   border-radius: 0.5vw;
   outline: none;
@@ -52,6 +42,6 @@
 
 .disabled-editor {
   position: relative;
-  opacity:0.9;
-  pointer-events: none; 
+  opacity: 0.9;
+  pointer-events: none;
 }

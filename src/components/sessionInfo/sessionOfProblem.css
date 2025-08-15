@@ -38,10 +38,18 @@
 }
 
 .info-item {
+  display: flex;
+  gap: 2vw;
+  align-items: center;
   background: white;
   padding: 1.5vw;
   border-radius: 0.52vw;
   border: 0.052vw solid #ddd;
+}
+.info-icon {
+  font-size: 1.5vw;
+  padding: 0.5vw;
+  height: fit-content;
 }
 
 .info-label {
@@ -98,6 +106,8 @@
 }
 
 .chat-container {
+  font-size: 1vw;
+  line-height: 2rem;
   max-height: 20.83vw;
   overflow-y: auto;
   border: 0.052vw solid #eee;
@@ -114,12 +124,14 @@
 
 .chat-interviewer {
   background-color: #e3f2fd;
-  border-left: 0.156vw solid #2196f3;
+  border-left: 0.156vw solid #75a4ca;
+  border-radius: 15px 15px 15px 0px;
 }
 
-.chat-candidate {
+.chat-user {
   background-color: #e8f5e8;
-  border-left: 0.156vw solid #4caf50;
+  border-right: 0.156vw solid #4caf50;
+  border-radius: 15px 15px 0px 15px;
 }
 
 .chat-header {
@@ -207,31 +219,6 @@
   }
 }
 
-.back-button {
-  margin: 0.83vw 0;
-  padding: 0.52vw 1.04vw;
-  margin-left: 0.16vw;
-  background: linear-gradient(135deg, #835cad 0%, #4b80db 100%);
-  color: white;
-  border: none;
-  border-radius: 0.42vw;
-  font-size: 0.83vw;
-  font-weight: 500;
-  cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  box-shadow: 0 0.21vw 0.63vw rgba(0, 0, 0, 0.15);
-}
-
-.back-button:hover {
-  transform: translateY(-0.1vw);
-  box-shadow: 0 0.31vw 0.83vw rgba(0, 0, 0, 0.2);
-}
-
-.back-button:active {
-  transform: translateY(0.05vw);
-  box-shadow: 0 0.16vw 0.42vw rgba(0, 0, 0, 0.1);
-}
-
 .toggle-title {
   cursor: pointer;
   user-select: none;
@@ -247,7 +234,6 @@
   padding: 0.3vw;
 }
 
-
 .toggle-content {
   max-height: 0;
   overflow: hidden;
@@ -256,15 +242,14 @@
 }
 
 .toggle-content--open {
-  max-height: 1000px; 
+  max-height: 1000px;
   opacity: 1;
 }
-
 
 .code-block {
   background-color: #242222;
   color: #dcdcdc;
-  font-family: 'Courier New', Courier, monospace;
+  font-family: "Courier New", Courier, monospace;
   font-size: 0.95vw;
   line-height: 1.5;
   white-space: pre-wrap;
@@ -274,5 +259,3 @@
   border-radius: 0.4vw;
   overflow-x: auto;
 }
-
-

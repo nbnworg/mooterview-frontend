@@ -36,28 +36,32 @@ export const getAllProblems = async (): Promise<ProblemSummary[]> => {
   }
 };
 
-
-
 export const Solvedproblems = async (userId: string): Promise<string[]> => {
   try {
     const tokenData = getTokenData();
     if (!tokenData) throw new Error("No token found");
 
-    const response = await axios.get(`${BASE_URL}/users/${userId}/solved_problems`, {
-      headers: { Authorization: `Bearer ${tokenData.accessToken}` },
-    });
+    const response = await axios.get(
+      `${BASE_URL}/users/${userId}/solved_problems`,
+      {
+        headers: { Authorization: `Bearer ${tokenData.idToken}` },
+      }
+    );
 
-    return response.data.uniqueProblemIds; 
+    return response.data.uniqueProblemIds;
   } catch (error: any) {
     if (error?.response?.data?.error === "Invalid or expired token") {
       try {
         const newAccessToken = await refreshAccessToken();
 
-        const response = await axios.get(`${BASE_URL}/users/${userId}/solved_problems`, {
-          headers: {
-            Authorization: `Bearer ${newAccessToken}`,
-          },
-        });
+        const response = await axios.get(
+          `${BASE_URL}/users/${userId}/solved_problems`,
+          {
+            headers: {
+              Authorization: `Bearer ${newAccessToken}`,
+            },
+          }
+        );
 
         return response.data.uniqueProblemIds;
       } catch (refreshError) {
@@ -72,5 +76,3 @@ export const Solvedproblems = async (userId: string): Promise<string[]> => {
     );
   }
 };
-
-
