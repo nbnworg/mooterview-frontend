@@ -7,12 +7,14 @@ import { useEffect, useRef, useState } from "react";
 import { getProblemById } from "../../utils/handlers/getProblemById";
 import type { Problem } from "mooterview-client";
 import ChatBox from "../../components/chatbox/ChatBox";
+import Loading from "../../components/Loader/Loading";
 
 const ProblemPage = () => {
   const location = useLocation();
   const userData = JSON.parse(localStorage.getItem("userData") || "{}");
   const problemId = location.state?.problemId || sessionStorage.getItem("mtv-problemId");
   const userId = location.state?.userId || userData.id;
+  const [loading, setloading] = useState(true);
 
   const [problem, setProblem] = useState<Problem>();
   const [error, setError] = useState<string | null>(null);
@@ -55,6 +57,8 @@ const ProblemPage = () => {
         setTimeLeft(fullTime);
       } catch (err: any) {
         setError(err.message || "Failed to load problem.");
+      } finally {
+        setloading(false);
       }
     };
 
@@ -72,10 +76,7 @@ const ProblemPage = () => {
   if (!problem) {
     return (
       <>
-        <Navbar />
-        <section className="problemSection" id="problemSection">
-          <p>Loading...</p>
-        </section>
+        <Loading message="Loading Interview..." size="large" />
       </>
     );
   }
@@ -124,6 +125,9 @@ const ProblemPage = () => {
           </button>
         </div>
       </section>
+      {loading && (
+        <Loading message="Loading Evaluation..." size="large" />
+      )}
     </>
   );
 };

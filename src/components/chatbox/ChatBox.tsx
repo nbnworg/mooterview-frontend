@@ -14,6 +14,8 @@ import ConfirmationModal from "../Confirmationmodal/Confirmationmodal";
 import { clearCachedReport } from "../../utils/localStorageReport";
 import { IoSend } from "react-icons/io5";
 import { GoMoveToEnd } from "react-icons/go";
+import Loading from "../Loader/Loading";
+import { handleUnderstoodConfirmation, handleConfusedCase, handleRightAnswerCase, handleWrongCase, handleRequestExampleCase, handleApproachProvided, handleProblemExplanationCase, handleCodingQuestion, handleCodingHelp, handleGenralAcknowledgement, handleOffTopic, handleDefaultCase } from "./caseHandler"
 
 interface ChatBoxProps {
   problem: Problem;
@@ -71,7 +73,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
   const [isInputDisabled, setIsInputDisabled] = useState(false);
 
   const navigate = useNavigate();
-  const [, setLoadingSessionEnd] = useState(false);
+  const [loadingSessionEnd, setLoadingSessionEnd] = useState(false);
 
   const approachTextRef = useRef<string>("");
 
@@ -178,7 +180,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     skipAutoAlert?: boolean
   ) => {
     const sessionId = localStorage.getItem("mtv-sessionId");
-    sessionStorage.removeItem("mtv-problemId");
 
     if (!sessionId) {
       navigate("/home", { replace: true });
@@ -222,7 +223,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                 endTime: new Date().toISOString(),
               });
 
-              localStorage.removeItem("mtv-sessionId");
 
               const evaluation = await generateEvaluationSummary();
 
@@ -254,7 +254,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         endTime: new Date().toISOString(),
       });
 
-      localStorage.removeItem("mtv-sessionId");
 
       if (wantsSolution) {
         const evaluation = await generateEvaluationSummary();
@@ -274,7 +273,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           replace: true,
         });
       } else {
-        sessionStorage.removeItem("mtv-problemId");
         navigate("/home", { replace: true });
       }
     } catch (err) {
@@ -316,12 +314,11 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           phaseRef.current = "CODING";
         }
 
-        const commonContext = `Problem: ${problem.title}\n\n${
-          problem.problemDescription
-        }
+        const commonContext = `Problem: ${problem.title}\n\n${problem.problemDescription
+          }
                     Elapsed time: ${Math.floor(
-                      elapsed / 60
-                    )} minutes\nUser's last message: ${input}
+            elapsed / 60
+          )} minutes\nUser's last message: ${input}
                     Current stage: ${stageRef.current}`;
         const prevAnalysisCode = intitalCodeContextRef.current;
 
@@ -390,7 +387,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     return () => clearInterval(interval);
   }, [problem]);
 
-  let followUp;
+  // let followUp;
   const questionCounterValueRef = useRef<{ number: number } | null>(null);
   const handleFollowUp = useRef(0);
   const handleSubmit = async (e: React.FormEvent) => {
@@ -417,224 +414,77 @@ const ChatBox: React.FC<ChatBoxProps> = ({
 
       switch (classification) {
         case "#UNDERSTOOD_CONFIRMATION": {
-          if (
-            currentStage === "ASK_UNDERSTAND" ||
-            currentStage === "WAIT_FOR_APPROACH"
-          ) {
-            const followup = await getPromptResponse({
-              actor: Actor.INTERVIEWER,
-              context: `User confirmed understanding. Ask them to explain their approach.
-                            Chat transcript: ${JSON.stringify(
-                              messages,
-                              null,
-                              2
-                            )}\n 
-                            Problem: ${problem.title}
-                            Description: ${problem.problemDescription}
-                            User's last message: ${input}
-                        `,
-              promptKey: "ask-approach",
-              modelName: "gpt-3.5-turbo"
-            });
-            await addBotMessage(followup);
-            stageRef.current = "WAIT_FOR_APPROACH";
-            approachAttemptCountRef.current = 0;
-            hasProvidedApproachRef.current = false;
-          }
 
+          await handleUnderstoodConfirmation(
+            stageRef.current,
+            messages,
+            problem,
+            input,
+            stageRef,
+            approachAttemptCountRef,
+            hasProvidedApproachRef,
+            addBotMessage
+          );
           break;
         }
         case "#CONFUSED": {
-          const clarification = await getPromptResponse({
-            actor: Actor.INTERVIEWER,
-            context: `User seems confused. Provide a short clarification of the user question and re-ask if they understood.
-                        Chat transcript: ${JSON.stringify(messages, null, 2)}\n 
-                        Problem: ${problem.title}
-                        Description: ${problem.problemDescription}\n
-                        User's last message: ${input}`,
-            promptKey: "clarify-problem",
-            modelName: "gpt-4o"
-          });
+          const clarification = await handleConfusedCase(
+            messages,
+            problem,
+            input
+          );
           await addBotMessage(clarification);
           break;
         }
 
         case "#RIGHT_ANSWER": {
-          if (handleFollowUp.current === 0) {
-            followUp = await getPromptResponse({
-              actor: Actor.SYSTEM,
-              context: `Chat transcrpt: ${JSON.stringify(messages, null, 2)}\n
-                        Problem: ${problem.title}\n
-                        Description: ${problem.problemDescription}\n
-                        Code: ${codeSnapshot}\n
-                        User's last message: ${input}
-              `,
-              promptKey: "follow-up-question-counter",
-              modelName: "gpt-3.5-turbo"
-            });
-            handleFollowUp.current += 1;
-            questionCounterValueRef.current = {
-              number: Number(JSON.parse(followUp).number),
-            };
-          }
-
-          if (
-            questionCounterValueRef.current &&
-            questionCounterValueRef.current.number !== 0
-          ) {
-            const response = await getPromptResponse({
-              actor: Actor.AI,
-              context: `Chat transcrpt: ${JSON.stringify(messages, null, 2)}\n
-                        Problem: ${problem.title}\n
-                        Description: ${problem.problemDescription}\n
-                        Code: ${codeSnapshot}\n
-                        User's last message: ${input}`,
-              promptKey: "repeat-follow-up",
-              modelName: "gpt-4o"
-            });
-
-            await addBotMessage(response);
-            questionCounterValueRef.current.number -= 1;
-          } else {
-            await addBotMessage("Well done, that is correct");
-            stageRef.current = "SESSION_END";
-          }
-          break;
+          await handleRightAnswerCase(
+            messages,
+            problem,
+            codeSnapshot,
+            input,
+            handleFollowUp,
+            questionCounterValueRef,
+            stageRef,
+            addBotMessage
+          );
+          break
         }
 
         case "#WRONG_ANSWER": {
-          const response = await getPromptResponse({
-            actor: Actor.INTERVIEWER,
-            context: `Chat transcript: ${JSON.stringify(messages, null, 2)}\n
-                        Problem: ${problem.title}
-                        Description: ${problem.problemDescription}\n
-                        User's last message: ${input}`,
-            promptKey: "ack-followup",
-            modelName: "gpt-4o"
-          });
-          await addBotMessage(response);
+          await handleWrongCase(messages, problem, input, addBotMessage);
           break;
         }
 
         case "#REQUESTED_EXAMPLE": {
-          const exampleResponse = await getPromptResponse({
-            actor: Actor.INTERVIEWER,
-            context: `User asked for an example or to rephrase the question.\n
-                        Chat transcript: ${JSON.stringify(messages, null, 2)}\n 
-                        Problem: ${problem.title}
-                        Description: ${problem.problemDescription}
-                        Current stage: ${currentStage}
-                        User's last message: ${input}
-                        `,
-            promptKey: "provide-example",
-            modelName: "gpt-3.5-turbo"
-          });
-          await addBotMessage(exampleResponse);
+          await handleRequestExampleCase(messages, problem, input, currentStage, addBotMessage);
           break;
         }
 
         case "#APPROACH_PROVIDED": {
-          if (
-            currentStage === "WAIT_FOR_APPROACH" &&
-            !hasProvidedApproachRef.current
-          ) {
-            const ack = await getPromptResponse({
-              actor: Actor.INTERVIEWER,
-              context: `User has shared an approach. Evaluate it and respond with one of "#CORRECT" or "#WRONG" followed by your message.
-                            Chat transcript: ${JSON.stringify(
-                              messages,
-                              null,
-                              2
-                            )}\n 
-              User approach: ${input}
-                            Problem: ${problem.title}
-                            Description: ${problem.problemDescription}`,
-              promptKey: "ack-approach",
-              modelName: "gpt-4o"
-            });
-
-            if (ack.includes("#CORRECT")) {
-              await addBotMessage(
-                "Alright, you can start coding now.\nIf you get stuck at any point, feel free to ask for help. Once you've completed your code, click on 'Verify Code' button to check your solution."
-              );
-              approachTextRef.current = input;
-              stageRef.current = "CODING";
-              hasProvidedApproachRef.current = true;
-              if (onApproachCorrectChange) {
-                onApproachCorrectChange(true);
-              }
-            } else {
-              approachAttemptCountRef.current += 1;
-
-              if (approachAttemptCountRef.current >= 2) {
-                await addBotMessage(
-                  "That's okay, you can start coding now and we'll work through it together."
-                );
-                stageRef.current = "CODING";
-                hasProvidedApproachRef.current = true;
-                if (onApproachCorrectChange) {
-                  onApproachCorrectChange(true);
-                }
-              } else {
-                const response = await getPromptResponse({
-                  actor: Actor.INTERVIEWER,
-                  context: `User has given an incorrect approach. Ask them to try again.
-                                    Chat transcript: ${JSON.stringify(
-                                      messages,
-                                      null,
-                                      2
-                                    )}\n
-                  User's last message: ${input}`,
-                  promptKey: "repeat-ask",
-                  modelName: "gpt-3.5-turbo"
-                });
-                await addBotMessage(response);
-              }
-            }
-          } else {
-            const response = await getPromptResponse({
-              actor: Actor.INTERVIEWER,
-              context: `User is asking a follow-up question. Provide helpful guidance.
-                            Current stage: ${currentStage}
-                            Chat transcript: ${JSON.stringify(
-                              messages,
-                              null,
-                              2
-                            )}
-                            Problem: ${problem.title}
-                            Description: ${problem.problemDescription}\n
-                            User's last message: ${input}`,
-              promptKey: "general-guidance",
-              modelName: "gpt-3.5-turbo"
-            });
-            await addBotMessage(response);
-          }
+          await handleApproachProvided(
+            stageRef.current,
+            messages,
+            problem,
+            input,
+            approachAttemptCountRef,
+            hasProvidedApproachRef,
+            stageRef,
+            approachTextRef,
+            onApproachCorrectChange,
+            addBotMessage
+          );
           break;
         }
 
-       case "#PROBLEM_EXPLANATIONS": {
+        case "#PROBLEM_EXPLANATIONS": {
           addBotMessage("Okay, you can explain the approach now!");
           break;
         }
 
 
         case "#PROBLEM_EXPLANATION": {
-          const responses = await getPromptResponse({
-            actor: Actor.INTERVIEWER,
-            context: `User has ask explanation about the problem.Explain the problem.
-                        Current stage: ${currentStage}
-                         Chat transcript: ${JSON.stringify(
-                              messages.slice(-3),
-                              null,
-                              2
-                            )}
-                        Problem: ${problem.title}
-                        Description: ${problem.problemDescription}\n
-                        User's last message: ${input}`,
-            promptKey: "general-problem",
-            modelName: "gpt-3.5-turbo"
-          });
-          await addBotMessage(responses);
+          await handleProblemExplanationCase(stageRef.current, messages, problem, addBotMessage, input);
           break;
         }
 
@@ -644,104 +494,42 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         }
 
         case "#CODING_QUESTION": {
-          if (
-            currentStage === "WAIT_FOR_APPROACH" &&
-            !hasProvidedApproachRef.current
-          ) {
-            const clarificationPrompt = await getPromptResponse({
-              actor: Actor.INTERVIEWER,
-              context: `
-                            Chat transcript: ${JSON.stringify(
-                              messages.slice(-3),
-                              null,
-                              2
-                            )}
-                            Problem: ${problem.title}
-                            Description: ${problem.problemDescription}
-                            User's last message: ${input}`,
-              promptKey: "ask-approach-before-coding",
-              modelName: "gpt-3.5-turbo"
-            });
-            await addBotMessage(clarificationPrompt);
-          } else {
-            const response = await getPromptResponse({
-              actor: Actor.INTERVIEWER,
-              context: `User is asking a coding question. Provide helpful guidance on where to start or how to proceed.
-                            Chat transcript: ${JSON.stringify(
-                              messages,
-                              null,
-                              2
-                            )}
-                            Problem: ${problem.title}
-                            Description: ${problem.problemDescription}
-                            Current code: ${codeRef.current}\n
-                            User's last message: ${input}`,
-              promptKey: "coding-start-guidance",
-              modelName: "gpt-3.5-turbo"
-            });
-            await addBotMessage(response);
-          }
+          await handleCodingQuestion({
+            currentStage: stageRef.current,
+            messages,
+            problem,
+            input,
+            currentCode: codeRef.current,
+            hasProvidedApproachRef,
+            addBotMessage
+          });
           break;
         }
 
         case "#CODING_HELP": {
-          const response = await getPromptResponse({
-            actor: Actor.INTERVIEWER,
-            context: `User needs help with coding/debugging. Provide specific assistance.
-                        Chat transcript: ${JSON.stringify(
-                          messages.slice(-5),
-                          null,
-                          2
-                        )}
-                        Problem: ${problem.title}
-                        Description: ${problem.problemDescription}
-                        Current code: ${codeRef.current}\n
-                        User's last message: ${input}`,
-            promptKey: "coding-debug-help",
-            modelName: "gpt-3.5-turbo"
-          });
-          await addBotMessage(response);
+          await handleCodingHelp(
+            messages,
+            problem,
+            codeRef.current,
+            input,
+            addBotMessage
+          );
           break;
         }
 
         case "#GENERAL_ACKNOWLEDGMENT": {
-          const response = await getPromptResponse({
-            actor: Actor.INTERVIEWER,
-            context: `User acknowledged something. Provide encouragement and next steps.
-                        Current stage: ${currentStage}
-                        Chat transcript: ${JSON.stringify(messages, null, 2)}
-                        Problem: ${problem.title}
-                        Description: ${problem.problemDescription}\n
-                        User's last message: ${input}`,
-            promptKey: "general-encouragement",
-            modelName: "gpt-3.5-turbo"
-          });
-          await addBotMessage(response);
+          await handleGenralAcknowledgement(stageRef.current, messages, problem, addBotMessage, input);
           break;
         }
 
         case "#OFF_TOPIC": {
-          const followup = await getPromptResponse({
-            actor: Actor.INTERVIEWER,
-            context: `The user went off-topic, but you must keep the interview on track.
-              Maintain the current stage and context.
-              Here is the full chat so far:
-              ${JSON.stringify(messages.slice(-3), null, 2)}
-              Problem: ${problem.title}
-              Description: ${problem.problemDescription}
-              Current stage: ${currentStage}
-             `,
-            promptKey: "off-topic",
-            modelName: "gpt-3.5-turbo"
-          });
-
-          await addBotMessage(followup);
+          await handleOffTopic(stageRef.current, messages, problem, addBotMessage);
           break;
         }
 
         case "#INTERVIEW_END": {
           addBotMessage("The interview is over, Now you will be redirected to evaluation page!");
-            stageRef.current = "SESSION_END";
+          stageRef.current = "SESSION_END";
           setIsInputDisabled(true);
           setTimeout(() => {
             endSession(true, undefined, true);
@@ -750,39 +538,14 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         }
 
         default: {
-          if (currentStage === "CODING") {
-            const response = await getPromptResponse({
-              actor: Actor.INTERVIEWER,
-              context: `User is asking a question during coding phase. Provide helpful guidance.
-                            Chat transcript: ${JSON.stringify(
-                              messages,
-                              null,
-                              2
-                            )}
-                            Problem: ${problem.title}
-                            Description: ${problem.problemDescription}
-                            Current code: ${codeRef.current}\n
-                            User's last message: ${input}`,
-              promptKey: "coding-guidance",
-              modelName: "gpt-3.5-turbo"
-            });
-            await addBotMessage(response);
-          } else {
-            const response = await getPromptResponse({
-              actor: Actor.INTERVIEWER,
-              context: `
-      User's message does not match predefined classifications
-      in this ${currentStage} phase.
-       Stay in this stage and respond in a way that moves this stage forward.
-                ${JSON.stringify(messages.slice(-3), null, 2)}
-                Problem: ${problem.title}
-                Description: ${problem.problemDescription}
-                Current code: ${codeRef.current || "N/A"}`,
-              promptKey: "general-fallback",
-              modelName: "gpt-3.5-turbo"
-            });
-            await addBotMessage(response);
-          }
+          await handleDefaultCase(
+            stageRef.current,
+            messages,
+            problem,
+            codeRef.current,
+            input,
+            addBotMessage
+          );
           break;
         }
       }
@@ -792,7 +555,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           const sessionId = await createSession({
             userId,
             problemId: problem.problemId || "",
-            problemPattern: problem.problemPattern || ""
+            problemPattern: (problem as any).problemPattern || ""
           });
           localStorage.setItem("mtv-sessionId", sessionId);
           clearCachedReport();
@@ -957,7 +720,9 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           </button>
         </div>
       </form>
-
+      {loadingSessionEnd && (
+        <Loading message="Ending session and generating evaluation..." size="large" />
+      )}
       {confirmationModal && <ConfirmationModal modalData={confirmationModal} />}
     </div>
   );
