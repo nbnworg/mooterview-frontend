@@ -24,7 +24,9 @@ interface chartProps {
 
 const PreparationChart: React.FC<chartProps> = ({ chartData }) => {
     const labels = Object.keys(chartData);
+    // const labels = ["array", "hashing"]
     const dataCount = Object.values(chartData);
+    // const dataCount = [3, 4]
 
     const data = {
         labels: labels,
@@ -39,7 +41,9 @@ const PreparationChart: React.FC<chartProps> = ({ chartData }) => {
         ],
     };
     const options = {
+        indexAxis: 'y' as const,
         responsive: true,
+        barThickness: 30,
         plugins: {
             legend: {
                 position: "top" as const,
@@ -48,7 +52,7 @@ const PreparationChart: React.FC<chartProps> = ({ chartData }) => {
                 display: true,
                 text: "Problems Solved by Type",
                 font: {
-                    size: 18,
+                    size: 23,
                 },
             },
             tooltip: {

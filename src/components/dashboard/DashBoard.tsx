@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import type { Session } from "mooterview-client";
+import type { Session, SessionSummary } from "mooterview-client";
 import { getAllSessionByUserId } from "../../utils/handlers/getAllSessionById";
 import { getTokenData } from "../../utils/constants";
 import { Link } from "react-router-dom";
@@ -14,7 +14,7 @@ import Preparation from "./preparation";
 import PreparetionChart from "./userChart";
 
 const DashBoard = () => {
-  const [sessions, setSessions] = useState<Session[]>([]);
+  const [sessions, setSessions] = useState<Session[] | SessionSummary[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [userData, setuserData] = useState<GetUserByIdOutput>();
@@ -30,7 +30,7 @@ const DashBoard = () => {
         setses(true);
 
         const response: any = await getAllSessionByUserId(getTokenData().id);
-        let fetchedSessions: Session[] = response.sessions;
+        let fetchedSessions: Session[] | SessionSummary[] = response.sessions;
 
         // Sort sessions by most recent start time
         fetchedSessions = fetchedSessions.sort((a, b) => {
@@ -40,12 +40,38 @@ const DashBoard = () => {
         });
         setSessions(fetchedSessions);
 
-        const counts: { [key: string]: number } = {};
-          fetchedSessions.forEach(session => {
-          const type = session.problemType || "Unknown";
-          counts[type] = (counts[type] || 0) + 1;
+        const baseProblemTypes: { [key: string]: number } = {
+          "Arrays & Hashing": 0,
+          "Two Pointers": 0,
+          "Stack": 0,
+          "Sliding Window": 0,
+          "Linked List": 0,
+          "Binary Search": 0,
+          "Trees": 0,
+          "Tries": 0,
+          "Heap / Priority Queue": 0,
+          "Backtracking": 0
+        };
+
+        const counts: { [key: string]: number } = { ...baseProblemTypes };
+
+        fetchedSessions.forEach(session => {
+          let type: string;
+          if ("problemPattern" in session) {
+            type = session.problemPattern || "Unknown";
+          } else {
+            type = "Unknown";
+          }
+        
+          if (counts.hasOwnProperty(type)) {
+            counts[type] += 1;
+          } else {
+            counts[type] = 1;
+          }
         });
+
         setProblemType(counts);
+
 
         const uniqueProblemIds = [
           ...new Set(fetchedSessions.map((s) => s.problemId).filter(Boolean)),
@@ -100,6 +126,24 @@ const DashBoard = () => {
     );
   };
 
+const isSessionArray = (
+  sessions: (Session | SessionSummary)[]
+): sessions is Session[] => {
+  if (sessions.length === 0) {
+    return true;
+  }
+  return "userId" in sessions[0];
+};
+
+// const obj = {
+//   "Array": 3,
+//   "Hashmap": 4,
+//   "Two pointers": 0,
+//   "Trees": 0,
+//   "Graph": 3,
+//   "Stack": 0
+// }
+
   return (
     <div className="dashboard-container">
       <Navbar />
@@ -118,7 +162,7 @@ const DashBoard = () => {
       </div>
 
       <div className="sessions-section">
-        <Preparation sessions={sessions} />
+          {isSessionArray(sessions) && <Preparation sessions={sessions} />}      
       </div>
 
       <div className="sessions-section">

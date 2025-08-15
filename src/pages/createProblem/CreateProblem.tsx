@@ -109,12 +109,33 @@ const CreateProblem = () => {
 
           <textarea
             name="problemDescription"
-            placeholder="Enter Full Problem problemDescription"
+            placeholder="Enter Full Problem"
             value={formData.problemDescription}
             onChange={handleInputChange}
             rows={4}
             required
           />
+
+          <select
+            name="Type"
+            value={formData.problemPattern}
+            onChange={handleInputChange}
+            required
+          >
+            <option value="" disabled>
+              Select Type:
+            </option>
+            <option value="Arrays">Arrays & Hashing</option>
+            <option value="Two Pointers">Two Pointers</option>
+            <option value="Stack">Stack</option>
+            <option value="Sliding Window">Sliding Window</option>
+            <option value="Linked List">Linked List</option>
+            <option value="Binary Search">Binary Search</option>
+            <option value="Trees">Trees</option>
+            <option value="Tries">Tries</option>
+            <option value="Heap / Priority Queue">Heap / Priority Queue</option>
+            <option value="Backtracking">Backtracking</option>
+          </select>
 
           <select
             name="level"
