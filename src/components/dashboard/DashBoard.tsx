@@ -93,7 +93,7 @@ const DashBoard = () => {
         setSessions(fetchedSessions);
 
         const baseProblemTypes: { [key: string]: number } = {
-          "Arrays & Hashing": 1,
+          "Arrays & Hashing": 0,
           "Two Pointers": 0,
           "Stack": 0,
           "Sliding Window": 0,
