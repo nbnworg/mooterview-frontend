@@ -486,7 +486,14 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             questionCounterValueRef.current.number -= 1;
           } else {
             await addBotMessage("Well done, that is correct");
+            await addBotMessage(
+              "The interview is over now,  Now you will be redirected to evaluation page!"
+            );
             stageRef.current = "SESSION_END";
+            setIsInputDisabled(true);
+            setTimeout(() => {
+              endSession(true, undefined, true);
+            }, 1500);
           }
           break;
         }
