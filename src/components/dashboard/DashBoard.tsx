@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import type { Session } from "mooterview-client";
+import type { Session, SessionSummary } from "mooterview-client";
 import { getAllSessionByUserId } from "../../utils/handlers/getAllSessionById";
 import { getTokenData } from "../../utils/constants";
 import { Link } from "react-router-dom";
@@ -10,6 +10,7 @@ import { getProblemById } from "../../utils/handlers/getProblemById";
 import type { Problem } from "mooterview-client";
 import Navbar from "../navbar/Navbar";
 import Preparation from "./preparation";
+import PreparetionChart from "./userChart";
 import { IoMdArrowRoundBack } from "react-icons/io";
 import Footer from "../footer/Footer";
 
@@ -56,7 +57,7 @@ const Pagination = ({
 };
 
 const DashBoard = () => {
-  const [sessions, setSessions] = useState<Session[]>([]);
+  const [sessions, setSessions] = useState<Session[] | SessionSummary[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [userData, setUserData] = useState<GetUserByIdOutput>();
   const [problems, setProblems] = useState<{ [key: string]: string }>({});
@@ -67,6 +68,7 @@ const DashBoard = () => {
   );
   const [currentPage, setCurrentPage] = useState(1);
   const sessionsPerPage = 10;
+  const [problemType, setProblemType] = useState<{[key: string]: number}>({});
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -81,15 +83,53 @@ const DashBoard = () => {
 
         setUserData(userResponse);
 
-        let fetchedSessions: Session[] = sessionResponse.sessions || [];
+        let fetchedSessions: Session[] | SessionSummary[] = sessionResponse.sessions || [];
 
         fetchedSessions = fetchedSessions.sort((a, b) => {
           const timeA = new Date(a.startTime ?? 0).getTime();
           const timeB = new Date(b.startTime ?? 0).getTime();
           return timeB - timeA;
         });
-
         setSessions(fetchedSessions);
+
+        const baseProblemTypes: { [key: string]: number } = {
+          "Arrays & Hashing": 0,
+          "Two Pointers": 0,
+          "Stack": 0,
+          "Sliding Window": 0,
+          "Linked List": 0,
+          "Binary Search": 0,
+          "Trees": 0,
+          "Tries": 0,
+          "Heap / Priority Queue": 0,
+          "Backtracking": 0
+        };
+
+        const counts: { [key: string]: number } = { ...baseProblemTypes };
+
+        const seenProblems = new Set<string>();
+
+        fetchedSessions.forEach(session => {
+          if (!session.problemId || seenProblems.has(session.problemId)) return;
+        
+          seenProblems.add(session.problemId);
+        
+          let type: string;
+          if ("problemPattern" in session) {
+            type = session.problemPattern || "Unknown";
+          } else {
+            type = "Unknown";
+          }
+        
+          if (counts.hasOwnProperty(type)) {
+            counts[type] += 1;
+          } else {
+            counts[type] = 1;
+          }
+        });
+
+        setProblemType(counts);
+
 
         const uniqueProblemIds = [
           ...new Set(fetchedSessions.map((s) => s.problemId).filter(Boolean)),
@@ -156,6 +196,15 @@ const DashBoard = () => {
     );
   };
 
+const isSessionArray = (
+  sessions: (Session | SessionSummary)[]
+): sessions is Session[] => {
+  if (sessions.length === 0) {
+    return true;
+  }
+  return "userId" in sessions[0];
+};
+
   const handleProblemSelect = (problemId: string) => {
     setSelectedProblemId(problemId);
     setCurrentPage(1);
@@ -189,8 +238,13 @@ const DashBoard = () => {
         </div>
 
         <div className="sessions-section">
-          <Preparation sessions={sessions} />
+            {isSessionArray(sessions) && <Preparation sessions={sessions} />}      
         </div>
+
+        <div className="parent-sessions-section">
+        <PreparetionChart chartData={problemType}/>
+        </div>
+
 
         <br />
         <div className="sessions-section">

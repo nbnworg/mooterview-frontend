@@ -78,6 +78,7 @@ export const classifyUserMessage = async (input: string, currentStage: string, r
         actor: Actor.SYSTEM,
         context: context,
         promptKey: "classify-user-response",
+        modelName: "gpt-4o"
     });
     
     return response.trim();

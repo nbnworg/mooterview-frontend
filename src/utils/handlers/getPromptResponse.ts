@@ -6,10 +6,12 @@ export const getPromptResponse = async ({
   actor,
   context,
   promptKey,
+  modelName
 }: {
   actor: string;
   context: string;
   promptKey: string;
+  modelName: string;
 }) => {
   const makeRequest = async (accessToken: string) => {
     const response = await fetch(`${BASE_URL}/prompt/response`, {
@@ -18,7 +20,7 @@ export const getPromptResponse = async ({
         "Content-Type": "application/json",
         Authorization: `Bearer ${accessToken}`,
       },
-      body: JSON.stringify({ actor, context, promptKey }),
+      body: JSON.stringify({ actor, context, promptKey, modelName }),
     });
 
     if (!response.ok) {

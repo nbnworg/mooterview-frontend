@@ -149,6 +149,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             Chat transcript:
             ${JSON.stringify(messages, null, 2)}`,
       promptKey,
+      modelName: "gpt-4o",
     });
 
     try {
@@ -291,6 +292,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         actor: Actor.INTERVIEWER,
         context: `The candidate has just started working on the following coding problem:\n\n${problem.problemDescription}`,
         promptKey: "explain-problem",
+        modelName: "gpt-3.5-turbo",
       });
       await addBotMessage(response);
       await addBotMessage("Have you understood the problem?");
@@ -328,6 +330,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             actor: Actor.INTERVIEWER,
             context: commonContext,
             promptKey: "nudge-start-coding",
+            modelName: "gpt-3.5-turbo",
           }).then(async (response) => await addBotMessage(response));
         } else if (phaseRef.current === "CODING") {
           const response = await getPromptResponse({
@@ -351,6 +354,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                         - One of: #STUCK, #WRONG_PATH, or #NORMAL
                         - Followed by a one-line suggestion.`,
             promptKey: "analyze-coding-progress",
+            modelName: "gpt-4o",
           });
 
           if (response.includes("#NORMAL")) {
@@ -363,6 +367,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
               actor: Actor.INTERVIEWER,
               context: `${commonContext}\nUser seems stuck. Offer hints or ask them to revisit logic.`,
               promptKey: "stuck-feedback",
+              modelName: "gpt-3.5-turbo",
             });
 
             await addBotMessage(tip);
@@ -372,6 +377,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
               actor: Actor.INTERVIEWER,
               context: `${commonContext}\nThe user seems to be going in a wrong direction or using an incorrect approach.`,
               promptKey: "wrong-path-feedback",
+              modelName: "gpt-4o",
             });
             await addBotMessage(warning);
           }
@@ -428,6 +434,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                             User's last message: ${input}
                         `,
               promptKey: "ask-approach",
+              modelName: "gpt-3.5-turbo",
             });
             await addBotMessage(followup);
             stageRef.current = "WAIT_FOR_APPROACH";
@@ -445,6 +452,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                         Description: ${problem.problemDescription}\n
                         User's last message: ${input}`,
             promptKey: "clarify-problem",
+            modelName: "gpt-4o",
           });
           await addBotMessage(clarification);
           break;
@@ -461,6 +469,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                         User's last message: ${input}
               `,
               promptKey: "follow-up-question-counter",
+              modelName: "gpt-3.5-turbo",
             });
             handleFollowUp.current += 1;
             questionCounterValueRef.current = {
@@ -480,6 +489,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                         Code: ${codeSnapshot}\n
                         User's last message: ${input}`,
               promptKey: "repeat-follow-up",
+              modelName: "gpt-4o",
             });
 
             await addBotMessage(response);
@@ -506,6 +516,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                         Description: ${problem.problemDescription}\n
                         User's last message: ${input}`,
             promptKey: "ack-followup",
+            modelName: "gpt-4o",
           });
           await addBotMessage(response);
           break;
@@ -522,6 +533,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                         User's last message: ${input}
                         `,
             promptKey: "provide-example",
+            modelName: "gpt-3.5-turbo",
           });
           await addBotMessage(exampleResponse);
           break;
@@ -544,6 +556,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                             Problem: ${problem.title}
                             Description: ${problem.problemDescription}`,
               promptKey: "ack-approach",
+              modelName: "gpt-4o",
             });
 
             if (ack.includes("#CORRECT")) {
@@ -568,6 +581,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                 Problem: ${problem.title},
                 Description: ${problem.problemDescription}`,
                 promptKey: "repeat-ask",
+                modelName: "gpt-3.5-turbo",
               });
               await addBotMessage(response);
             }
@@ -585,6 +599,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                             Description: ${problem.problemDescription}\n
                             User's last message: ${input}`,
               promptKey: "general-guidance",
+              modelName: "gpt-3.5-turbo",
             });
             await addBotMessage(response);
           }
@@ -610,6 +625,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                         Description: ${problem.problemDescription}\n
                         User's last message: ${input}`,
             promptKey: "general-problem",
+            modelName: "gpt-3.5-turbo",
           });
           await addBotMessage(responses);
           break;
@@ -637,6 +653,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                             Description: ${problem.problemDescription}
                             User's last message: ${input}`,
               promptKey: "ask-approach-before-coding",
+              modelName: "gpt-3.5-turbo",
             });
             await addBotMessage(clarificationPrompt);
           } else {
@@ -653,6 +670,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                             Current code: ${codeRef.current}\n
                             User's last message: ${input}`,
               promptKey: "coding-start-guidance",
+              modelName: "gpt-3.5-turbo",
             });
             await addBotMessage(response);
           }
@@ -673,6 +691,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                         Current code: ${codeRef.current}\n
                         User's last message: ${input}`,
             promptKey: "coding-debug-help",
+            modelName: "gpt-3.5-turbo",
           });
           await addBotMessage(response);
           break;
@@ -688,6 +707,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                         Description: ${problem.problemDescription}\n
                         User's last message: ${input}`,
             promptKey: "general-encouragement",
+            modelName: "gpt-3.5-turbo",
           });
           await addBotMessage(response);
           break;
@@ -705,6 +725,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
               Current stage: ${currentStage}
              `,
             promptKey: "off-topic",
+            modelName: "gpt-3.5-turbo",
           });
 
           await addBotMessage(followup);
@@ -738,6 +759,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                             Current code: ${codeRef.current}\n
                             User's last message: ${input}`,
               promptKey: "coding-guidance",
+              modelName: "gpt-3.5-turbo",
             });
             await addBotMessage(response);
           } else {
@@ -752,19 +774,20 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                 Description: ${problem.problemDescription}
                 Current code: ${codeRef.current || "N/A"}`,
               promptKey: "general-fallback",
+              modelName: "gpt-3.5-turbo",
             });
             await addBotMessage(response);
           }
           break;
         }
       }
-      console.log("ref", messages);
 
       if (stageRef.current === "CODING") {
         if (!sessionId) {
           const sessionId = await createSession({
             userId,
             problemId: problem.problemId || "",
+            problemPattern: problem.problemPattern || "",
           });
           localStorage.setItem("mtv-sessionId", sessionId);
           clearCachedReport();
@@ -813,6 +836,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         ${currentCode}
       `,
         promptKey: "check-approach-alignment",
+        modelName: "gpt-3.5-turbo",
       });
       if (approachCheckResponse.includes("#MISMATCH")) {
         await addBotMessage(
@@ -867,6 +891,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
       actor: Actor.INTERVIEWER,
       context,
       promptKey: "verify-code",
+      modelName: "gpt-4o",
     });
 
     await addBotMessage(response);
@@ -880,6 +905,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         actor: Actor.INTERVIEWER,
         context,
         promptKey: "follow-up",
+        modelName: "gpt-3.5-turbo",
       });
 
       await addBotMessage(followUpResponse);

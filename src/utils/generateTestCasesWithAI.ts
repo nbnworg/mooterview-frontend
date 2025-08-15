@@ -31,6 +31,7 @@ Rules:
     actor: "test-generator",
     context: prompt,
     promptKey: "generate-test-cases",
+    modelName: "gpt-4o"
   });
 
   try {
