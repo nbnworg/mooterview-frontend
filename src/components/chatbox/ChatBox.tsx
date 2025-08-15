@@ -763,7 +763,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           break;
         }
       }
-      console.log("ref", messages);
 
       if (stageRef.current === "CODING") {
         if (!sessionId) {
@@ -772,7 +771,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             problemId: problem.problemId || "",
             problemPattern: problem.problemPattern || ""
           });
-          console.log('problemPattern', problem.problemPattern)
           localStorage.setItem("mtv-sessionId", sessionId);
           clearCachedReport();
           updateChatsInSession([...messages]);
