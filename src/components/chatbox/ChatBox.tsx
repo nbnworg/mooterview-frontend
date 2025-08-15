@@ -377,7 +377,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
               actor: Actor.INTERVIEWER,
               context: `${commonContext}\nThe user seems to be going in a wrong direction or using an incorrect approach.`,
               promptKey: "wrong-path-feedback",
-              modelName: "gpt-40"
+              modelName: "gpt-4o"
             });
             await addBotMessage(warning);
           }
