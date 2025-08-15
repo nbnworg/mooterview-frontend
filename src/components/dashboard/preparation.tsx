@@ -82,6 +82,7 @@ ${chatMessages}`;
           actor: "INTERVIEWER",
           context,
           promptKey,
+          modelName: "gpt-4o"
         });
 
         const parsed = JSON.parse(gptResponse);
