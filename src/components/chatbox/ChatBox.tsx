@@ -371,7 +371,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             });
 
             await addBotMessage(tip);
-          } else if (response.includes("WRONG_PATH")) {
+          } else if (response.includes("#WRONG_PATH")) {
             phaseRef.current = "goingOnWrongPath";
             const warning = await getPromptResponse({
               actor: Actor.INTERVIEWER,
