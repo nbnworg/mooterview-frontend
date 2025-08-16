@@ -10,7 +10,7 @@ import Problempage from "./pages/problem/Problempage";
 import PrivateRoute from "./privateRoute";
 import SessionSummary from "./pages/sessionSummary/SessionSummary";
 import NotFound from "./pages/notFound/NotFound";
-import DashBoard from "./components/dashboard/DashBoard";
+import DashBoard from "./pages/dashboard/Dashboard";
 import SessionOfProblem from "./components/sessionInfo/SessionOfProblem";
 import Solution from "./pages/solution/Solution";
 
