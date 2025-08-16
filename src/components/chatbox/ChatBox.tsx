@@ -151,7 +151,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             Chat transcript:
             ${JSON.stringify(messages, null, 2)}`,
       promptKey,
-      modelName: "gpt-4o"
+      modelName: "gpt-4o",
     });
 
     try {
@@ -290,7 +290,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         actor: Actor.INTERVIEWER,
         context: `The candidate has just started working on the following coding problem:\n\n${problem.problemDescription}`,
         promptKey: "explain-problem",
-        modelName: "gpt-3.5-turbo"
+        modelName: "gpt-3.5-turbo",
       });
       await addBotMessage(response);
       await addBotMessage("Have you understood the problem?");
@@ -327,7 +327,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             actor: Actor.INTERVIEWER,
             context: commonContext,
             promptKey: "nudge-start-coding",
-            modelName: "gpt-3.5-turbo"
+            modelName: "gpt-4o",
           }).then(async (response) => await addBotMessage(response));
         } else if (phaseRef.current === "CODING") {
           const response = await getPromptResponse({
@@ -351,7 +351,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                         - One of: #STUCK, #WRONG_PATH, or #NORMAL
                         - Followed by a one-line suggestion.`,
             promptKey: "analyze-coding-progress",
-            modelName: "gpt-4o"
+            modelName: "gpt-4o",
           });
 
           if (response.includes("#NORMAL")) {
@@ -364,7 +364,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
               actor: Actor.INTERVIEWER,
               context: `${commonContext}\nUser seems stuck. Offer hints or ask them to revisit logic.`,
               promptKey: "stuck-feedback",
-              modelName: "gpt-3.5-turbo"
+              modelName: "gpt-3.5-turbo",
             });
 
             await addBotMessage(tip);
@@ -374,7 +374,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
               actor: Actor.INTERVIEWER,
               context: `${commonContext}\nThe user seems to be going in a wrong direction or using an incorrect approach.`,
               promptKey: "wrong-path-feedback",
-              modelName: "gpt-4o"
+              modelName: "gpt-4o",
             });
             await addBotMessage(warning);
           }
@@ -481,7 +481,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           addBotMessage("Okay, you can explain the approach now!");
           break;
         }
-
 
         case "#PROBLEM_EXPLANATION": {
           await handleProblemExplanationCase(stageRef.current, messages, problem, addBotMessage, input);
@@ -604,7 +603,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         ${currentCode}
       `,
         promptKey: "check-approach-alignment",
-        modelName: "gpt-3.5-turbo"
+        modelName: "gpt-3.5-turbo",
       });
       if (approachCheckResponse.includes("#MISMATCH")) {
         await addBotMessage(
@@ -659,7 +658,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
       actor: Actor.INTERVIEWER,
       context,
       promptKey: "verify-code",
-      modelName: "gpt-4o"
+      modelName: "gpt-4o",
     });
 
     await addBotMessage(response);
@@ -673,7 +672,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         actor: Actor.INTERVIEWER,
         context,
         promptKey: "follow-up",
-        modelName: "gpt-3.5-turbo"
+        modelName: "gpt-3.5-turbo",
       });
 
       await addBotMessage(followUpResponse);
