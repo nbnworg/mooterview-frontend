@@ -10,9 +10,22 @@ import { getProblemById } from "../../utils/handlers/getProblemById";
 import type { Problem } from "mooterview-client";
 import Navbar from "../navbar/Navbar";
 import Preparation from "./preparation";
-import PreparetionChart from "./userChart";
+import PreparationChart from "./PreparationChart";
 import { IoMdArrowRoundBack } from "react-icons/io";
 import Footer from "../footer/Footer";
+
+const BASE_PROBLEM_TYPES = [
+  "Arrays & Hashing",
+  "Two Pointers",
+  "Stack",
+  "Sliding Window",
+  "Linked List",
+  "Binary Search",
+  "Trees",
+  "Tries",
+  "Heap/Priority Queue",
+  "Backtracking"
+];
 
 const Pagination = ({
   currentPage,
@@ -32,18 +45,15 @@ const Pagination = ({
       >
         &larr;
       </button>
-
       {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
         <button
           key={page}
           onClick={() => onPageChange(page)}
-          className={`pagination-button ${currentPage === page ? "active" : ""
-            }`}
+          className={`pagination-button ${currentPage === page ? "active" : ""}`}
         >
           {page}
         </button>
       ))}
-
       <button
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage === totalPages}
@@ -61,13 +71,10 @@ const DashBoard = () => {
   const [userData, setUserData] = useState<GetUserByIdOutput>();
   const [problems, setProblems] = useState<{ [key: string]: string }>({});
   const [pageLoading, setPageLoading] = useState(true);
-
-  const [selectedProblemId, setSelectedProblemId] = useState<string | null>(
-    null
-  );
+  const [selectedProblemId, setSelectedProblemId] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const sessionsPerPage = 10;
-  const [problemType, setProblemType] = useState<{ [key: string]: number }>({});
+  const [typeToProblems, setTypeToProblems] = useState<{ [key: string]: string[] }>({});
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -79,63 +86,19 @@ const DashBoard = () => {
           getUserById(getTokenData().id),
           getAllSessionByUserId(getTokenData().id),
         ]);
-
         setUserData(userResponse);
 
         let fetchedSessions: Session[] | SessionSummary[] = sessionResponse.sessions || [];
-
-        fetchedSessions = fetchedSessions.sort((a, b) => {
-          const timeA = new Date(a.startTime ?? 0).getTime();
-          const timeB = new Date(b.startTime ?? 0).getTime();
-          return timeB - timeA;
-        });
+        fetchedSessions = fetchedSessions.sort(
+          (a, b) => new Date(b.startTime ?? 0).getTime() - new Date(a.startTime ?? 0).getTime()
+        );
         setSessions(fetchedSessions);
-
-        const baseProblemTypes: { [key: string]: number } = {
-          "Arrays & Hashing": 0,
-          "Two Pointers": 0,
-          "Stack": 0,
-          "Sliding Window": 0,
-          "Linked List": 0,
-          "Binary Search": 0,
-          "Trees": 0,
-          "Tries": 0,
-          "Heap / Priority Queue": 0,
-          "Backtracking": 0
-        };
-
-        const counts: { [key: string]: number } = { ...baseProblemTypes };
-
-        const seenProblems = new Set<string>();
-
-        fetchedSessions.forEach(session => {
-          if (!session.problemId || seenProblems.has(session.problemId)) return;
-
-          seenProblems.add(session.problemId);
-
-          let type: string;
-          if ("problemPattern" in session) {
-            type = (session.problemPattern as string) || "Unknown";
-          } else {
-            type = "Unknown";
-          }
-
-          if (counts.hasOwnProperty(type)) {
-            counts[type] += 1;
-          } else {
-            counts[type] = 1;
-          }
-        });
-
-        setProblemType(counts);
-
 
         const uniqueProblemIds = [
           ...new Set(fetchedSessions.map((s) => s.problemId).filter(Boolean)),
         ] as string[];
 
         const fetchedProblems: { [key: string]: string } = {};
-
         await Promise.all(
           uniqueProblemIds.map(async (problemId) => {
             try {
@@ -146,8 +109,27 @@ const DashBoard = () => {
             }
           })
         );
-
         setProblems(fetchedProblems);
+
+        const seenProblems = new Set<string>();
+        const typeMap: { [key: string]: string[] } = {};
+        fetchedSessions.forEach((session) => {
+          if (!session.problemId || seenProblems.has(session.problemId)) return;
+          seenProblems.add(session.problemId);
+          let type: string = "Unknown";
+          if ("problemPattern" in session) {
+            type = (session.problemPattern as string) || "Unknown";
+          }
+          if (!typeMap[type]) typeMap[type] = [];
+          typeMap[type].push(fetchedProblems[session.problemId] || "Untitled Problem");
+        });
+
+        const completeTypeToProblems: { [key: string]: string[] } = {};
+        BASE_PROBLEM_TYPES.forEach((type) => {
+          completeTypeToProblems[type] = typeMap[type] || [];
+        });
+        setTypeToProblems(completeTypeToProblems);
+
       } catch (err) {
         setError("Failed to load dashboard. Please try again later.");
         console.error(err);
@@ -161,13 +143,11 @@ const DashBoard = () => {
 
   const solvedProblems = useMemo(() => {
     const solved = new Set<string>();
-
     sessions.forEach((session) => {
       if (session.endTime && session.problemId) {
         solved.add(session.problemId);
       }
     });
-
     return Array.from(solved);
   }, [sessions]);
 
@@ -198,9 +178,7 @@ const DashBoard = () => {
   const isSessionArray = (
     sessions: (Session | SessionSummary)[]
   ): sessions is Session[] => {
-    if (sessions.length === 0) {
-      return true;
-    }
+    if (sessions.length === 0) return true;
     return "userId" in sessions[0];
   };
 
@@ -227,24 +205,18 @@ const DashBoard = () => {
         <div className="user-profile-section">
           <div className="profile-card">
             <div className="user-info">
-              <h2 className="user-name">
-                {userData?.fullName || "Loading..."}
-              </h2>
+              <h2 className="user-name">{userData?.fullName || "Loading..."}</h2>
               <p className="user-email">{userData?.email}</p>
               <p className="user-location">{userData?.location}</p>
             </div>
           </div>
         </div>
-
         <div className="sessions-section">
           {isSessionArray(sessions) && <Preparation sessions={sessions} />}
         </div>
-
         <div className="parent-sessions-section">
-          <PreparetionChart chartData={problemType} />
+          <PreparationChart typeToProblems={typeToProblems} />
         </div>
-
-
         <br />
         <div className="sessions-section">
           <h3 className="section-title">
@@ -257,15 +229,13 @@ const DashBoard = () => {
                   <IoMdArrowRoundBack />
                 </button>
                 <span>
-                  Sessions for:{" "}
-                  {problems[selectedProblemId] || "Selected Problem"}
+                  Sessions for: {problems[selectedProblemId] || "Selected Problem"}
                 </span>
               </div>
             ) : (
               "Solved Problems"
             )}
           </h3>
-
           {error ? (
             <p className="error-message">{error}</p>
           ) : selectedProblemId ? (
@@ -280,12 +250,10 @@ const DashBoard = () => {
                   >
                     <div className="session-details">
                       <div className="session-time">
-                        <strong>Started:</strong>{" "}
-                        {formatTime(session.startTime)}
+                        <strong>Started:</strong> {formatTime(session.startTime)}
                         {session.endTime && (
                           <span className="end-time">
-                            <strong> | Ended:</strong>{" "}
-                            {formatTime(session.endTime)}
+                            <strong> | Ended:</strong> {formatTime(session.endTime)}
                           </span>
                         )}
                       </div>
@@ -293,13 +261,11 @@ const DashBoard = () => {
                   </Link>
                 ))}
               </div>
-
               {problemSessions.length === 0 && (
                 <div className="no-sessions">
                   <p>No sessions found for this problem.</p>
                 </div>
               )}
-
               {totalPages > 1 && (
                 <Pagination
                   currentPage={currentPage}
@@ -322,8 +288,7 @@ const DashBoard = () => {
                     </div>
                     <div className="session-count">
                       {sessions.filter((s) => s.problemId === problemId).length}
-                      {sessions.filter((s) => s.problemId === problemId)
-                        .length === 1
+                      {sessions.filter((s) => s.problemId === problemId).length === 1
                         ? " session"
                         : " sessions"}
                     </div>
