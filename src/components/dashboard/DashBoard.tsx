@@ -37,9 +37,8 @@ const Pagination = ({
         <button
           key={page}
           onClick={() => onPageChange(page)}
-          className={`pagination-button ${
-            currentPage === page ? "active" : ""
-          }`}
+          className={`pagination-button ${currentPage === page ? "active" : ""
+            }`}
         >
           {page}
         </button>
@@ -68,7 +67,7 @@ const DashBoard = () => {
   );
   const [currentPage, setCurrentPage] = useState(1);
   const sessionsPerPage = 10;
-  const [problemType, setProblemType] = useState<{[key: string]: number}>({});
+  const [problemType, setProblemType] = useState<{ [key: string]: number }>({});
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -111,16 +110,16 @@ const DashBoard = () => {
 
         fetchedSessions.forEach(session => {
           if (!session.problemId || seenProblems.has(session.problemId)) return;
-        
+
           seenProblems.add(session.problemId);
-        
+
           let type: string;
           if ("problemPattern" in session) {
-            type = session.problemPattern || "Unknown";
+            type = (session.problemPattern as string) || "Unknown";
           } else {
             type = "Unknown";
           }
-        
+
           if (counts.hasOwnProperty(type)) {
             counts[type] += 1;
           } else {
@@ -196,14 +195,14 @@ const DashBoard = () => {
     );
   };
 
-const isSessionArray = (
-  sessions: (Session | SessionSummary)[]
-): sessions is Session[] => {
-  if (sessions.length === 0) {
-    return true;
-  }
-  return "userId" in sessions[0];
-};
+  const isSessionArray = (
+    sessions: (Session | SessionSummary)[]
+  ): sessions is Session[] => {
+    if (sessions.length === 0) {
+      return true;
+    }
+    return "userId" in sessions[0];
+  };
 
   const handleProblemSelect = (problemId: string) => {
     setSelectedProblemId(problemId);
@@ -238,11 +237,11 @@ const isSessionArray = (
         </div>
 
         <div className="sessions-section">
-            {isSessionArray(sessions) && <Preparation sessions={sessions} />}      
+          {isSessionArray(sessions) && <Preparation sessions={sessions} />}
         </div>
 
         <div className="parent-sessions-section">
-        <PreparetionChart chartData={problemType}/>
+          <PreparetionChart chartData={problemType} />
         </div>
 
 
