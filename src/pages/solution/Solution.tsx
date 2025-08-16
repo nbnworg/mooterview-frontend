@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { getSessionById } from "../../utils/handlers/getSessionById";
 import Navbar from "../../components/navbar/Navbar";
 import { FaRegFileAlt } from "react-icons/fa";
+import Loading from "../../components/Loader/Loading";
 import {
   Chart as ChartJS,
   RadialLinearScale,
@@ -42,7 +43,7 @@ const Solution = () => {
   };
 
   const [notes, setNotes] = useState<{ content: any }[]>([]);
-  const [, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -56,6 +57,9 @@ const Solution = () => {
       try {
         const session = await getSessionById(sessionId);
         setNotes(session.notes || []);
+        localStorage.removeItem("mtv-sessionId");
+        sessionStorage.removeItem("mtv-problemId");
+
       } catch (err) {
         setError("Failed to fetch session notes.");
       } finally {
@@ -98,13 +102,13 @@ const Solution = () => {
 
   const rubricValues = rubricResult
     ? [
-        rubricResult.isCorrect ? 3 : 1,
-        ratingMap[rubricResult.rubricScores.correctness],
-        ratingMap[rubricResult.rubricScores.edgeCases],
-        ratingMap[rubricResult.rubricScores.performance],
-        ratingMap[rubricResult.rubricScores.structureChoice],
-        ratingMap[rubricResult.rubricScores.readability],
-      ]
+      rubricResult.isCorrect ? 3 : 1,
+      ratingMap[rubricResult.rubricScores.correctness],
+      ratingMap[rubricResult.rubricScores.edgeCases],
+      ratingMap[rubricResult.rubricScores.performance],
+      ratingMap[rubricResult.rubricScores.structureChoice],
+      ratingMap[rubricResult.rubricScores.readability],
+    ]
     : [];
 
   const radarData = {
@@ -209,6 +213,10 @@ const Solution = () => {
           </ul>
         </section>
       </div>
+      {loading && (
+        <Loading message="Loading Evaluation..." size="large" />
+      )}
+
     </>
   );
 };
