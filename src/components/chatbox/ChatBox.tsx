@@ -51,6 +51,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
   onApproachCorrectChange,
 }) => {
   const [messages, setMessages] = useState<any[]>([]);
+  const [gptMessages, setGptMessages] = useState<any[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const lastAutoTimeRef = useRef(0);
@@ -108,7 +109,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     }
   }, [code, problem]);
 
-  const addBotMessage = async (text: string) => {
+  const addBotMessage = async (text: string, isOffTopic: boolean = false) => {
     const newMessage = { actor: Actor.INTERVIEWER, message: text };
     await updateChatsInSession([newMessage]);
 
@@ -116,6 +117,9 @@ const ChatBox: React.FC<ChatBoxProps> = ({
       const updated = [...prevMessages, newMessage];
       return updated;
     });
+     if (!isOffTopic) { 
+    setGptMessages((prev) => [...prev, newMessage]);
+  }
   };
 
   const updateChatsInSession = async (newChats: any[]) => {
@@ -411,13 +415,16 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         currentStage,
         updatedUserMessages
       );
+      if (classification !== "#OFF_TOPIC") {
+    setGptMessages((prev) => [...prev, userMsg]);
+  }
 
       switch (classification) {
         case "#UNDERSTOOD_CONFIRMATION": {
 
           await handleUnderstoodConfirmation(
             stageRef.current,
-            messages,
+           gptMessages,
             problem,
             input,
             stageRef,
@@ -429,7 +436,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         }
         case "#CONFUSED": {
           const clarification = await handleConfusedCase(
-            messages,
+            gptMessages,
             problem,
             input
           );
@@ -439,7 +446,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
 
         case "#RIGHT_ANSWER": {
           await handleRightAnswerCase(
-            messages,
+            gptMessages,
             problem,
             codeSnapshot,
             input,
@@ -452,19 +459,19 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         }
 
         case "#WRONG_ANSWER": {
-          await handleWrongCase(messages, problem, input, addBotMessage);
+          await handleWrongCase(gptMessages, problem, input, addBotMessage);
           break;
         }
 
         case "#REQUESTED_EXAMPLE": {
-          await handleRequestExampleCase(messages, problem, input, currentStage, addBotMessage);
+          await handleRequestExampleCase(gptMessages, problem, input, currentStage, addBotMessage);
           break;
         }
 
         case "#APPROACH_PROVIDED": {
           await handleApproachProvided(
             stageRef.current,
-            messages,
+            gptMessages,
             problem,
             input,
             approachAttemptCountRef,
@@ -483,7 +490,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         }
 
         case "#PROBLEM_EXPLANATION": {
-          await handleProblemExplanationCase(stageRef.current, messages, problem, addBotMessage, input);
+          await handleProblemExplanationCase(stageRef.current, gptMessages, problem, addBotMessage, input);
           break;
         }
 
@@ -495,7 +502,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         case "#CODING_QUESTION": {
           await handleCodingQuestion({
             currentStage: stageRef.current,
-            messages,
+          gptMessages,
             problem,
             input,
             currentCode: codeRef.current,
@@ -507,7 +514,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
 
         case "#CODING_HELP": {
           await handleCodingHelp(
-            messages,
+           gptMessages,
             problem,
             codeRef.current,
             input,
@@ -517,12 +524,12 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         }
 
         case "#GENERAL_ACKNOWLEDGMENT": {
-          await handleGenralAcknowledgement(stageRef.current, messages, problem, addBotMessage, input);
+          await handleGenralAcknowledgement(stageRef.current, gptMessages, problem, addBotMessage, input);
           break;
         }
 
         case "#OFF_TOPIC": {
-          await handleOffTopic(stageRef.current, messages, problem, addBotMessage);
+          await handleOffTopic(stageRef.current, gptMessages, problem, addBotMessage);
           break;
         }
 
@@ -539,7 +546,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         default: {
           await handleDefaultCase(
             stageRef.current,
-            messages,
+            gptMessages,
             problem,
             codeRef.current,
             input,
@@ -548,7 +555,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           break;
         }
       }
-
+console.log("gpt message",gptMessages)
       if (stageRef.current === "CODING") {
         if (!sessionId) {
           const sessionId = await createSession({
