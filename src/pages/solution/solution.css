@@ -97,8 +97,9 @@
   font-size: 0.792vw;
   color: #abb2bf;
   overflow-x: auto;
-  white-space: pre-wrap;
+  white-space: no-wrap;
   word-wrap: break-word;
+  overflow: auto;
 }
 
 .myCode {
