@@ -117,7 +117,7 @@ const CreateProblem = () => {
           />
 
           <select
-            name="Type"
+            name="problemPattern"
             value={formData.problemPattern}
             onChange={handleInputChange}
             required
