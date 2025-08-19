@@ -555,7 +555,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           break;
         }
       }
-console.log("gpt message",gptMessages)
+
       if (stageRef.current === "CODING") {
         if (!sessionId) {
           const sessionId = await createSession({
