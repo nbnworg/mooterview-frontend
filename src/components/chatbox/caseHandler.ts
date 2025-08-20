@@ -266,7 +266,7 @@ export const handleProblemExplanationCase = async (
 
 interface CodingQuestionParams {
     currentStage: Stage;
-    messages: any[];
+   gptMessages: any[];
     problem: Problem;
     input: string;
     currentCode: string;
@@ -278,7 +278,7 @@ interface CodingQuestionParams {
 export const handleCodingQuestion = async (params: CodingQuestionParams) => {
     const {
         currentStage,
-        messages,
+        gptMessages,
         problem,
         input,
         currentCode,
@@ -287,7 +287,7 @@ export const handleCodingQuestion = async (params: CodingQuestionParams) => {
     } = params;
 
     if (currentStage === "WAIT_FOR_APPROACH" && !hasProvidedApproachRef.current) {
-        const context = `Chat transcript: ${JSON.stringify(messages.slice(-3), null, 2)}
+        const context = `Chat transcript: ${JSON.stringify(gptMessages.slice(-3), null, 2)}
                     Problem: ${problem.title}
                     Description: ${problem.problemDescription}
                     User's last message: ${input}`;
@@ -301,7 +301,7 @@ export const handleCodingQuestion = async (params: CodingQuestionParams) => {
         await addBotMessage(clarificationPrompt);
     } else {
         const context = `User is asking a coding question. Provide helpful guidance.
-                    Chat transcript: ${JSON.stringify(messages, null, 2)}
+                    Chat transcript: ${JSON.stringify(gptMessages, null, 2)}
                     Problem: ${problem.title}
                     Description: ${problem.problemDescription}
                     Current code: ${currentCode || "No code written yet"}
@@ -371,7 +371,7 @@ export const handleOffTopic = async (
     currentStage: Stage,
     messages: any[],
     problem: Problem,
-    addBotMessage: (text: string) => Promise<void>,
+    addBotMessage: (text: string,texts:boolean) => Promise<void>,
 ) => {
     const followup = await getPromptResponse({
         actor: Actor.INTERVIEWER,
@@ -387,7 +387,7 @@ export const handleOffTopic = async (
         modelName: "gpt-3.5-turbo"
     });
 
-    await addBotMessage(followup);
+    await addBotMessage(followup,true);
 }
 
 // #DEFAULT CASE 
