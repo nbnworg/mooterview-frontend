@@ -336,7 +336,7 @@ export const handleCodingHelp = async (
         actor: Actor.INTERVIEWER,
         context,
         promptKey: "coding-debug-help",
-        modelName: "gpt-3.5-turbo"
+        modelName: "gpt-4o"
     });
 
     await addBotMessage(response);

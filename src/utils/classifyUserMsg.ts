@@ -36,12 +36,16 @@ export const classifyUserMessage = async (input: string, currentStage: string, r
            - User asks coding questions, "where do I start", "how do I..." → #CODING_QUESTION
            - User says "yes" to clarification → #GENERAL_ACKNOWLEDGMENT
            - User asks for help with debugging or says "am i doing this right" or "is this correct" or "am i going in right direction" → #CODING_HELP
+           - User gives assertive debugging statements like: “It’s not working”, “This gives wrong output”, “I tried recursion but it fails” →  #CODING_HELP
+           - User says "I already checked this", "I am handling it", "I wrote this line already" → #CODING_HELP
            - User talks about unrelated topics → #OFF_TOPIC
 
         4. If currentStage is "FOLLOW_UP":
            - If user answers the follow-up question correctly (see context/transcript for question) → #RIGHT_ANSWER
            - If user answers the follow-up question incorrectly or even slightly incorrect (see context/transcript for question) → #WRONG_ANSWER (not #CONFUSED)
+           - If user answers partially correct (incomplete or half-right) → #WRONG_ANSWER
            - If user asks for clarification or rephrasing the question ask the same question in different manner on the follow-up question → #REQUESTED_EXAMPLE
+           - If user says "I think so", "maybe the answer is X", or other uncertain phrasing → classify as #RIGHT_ANSWER or #WRONG_ANSWER depending on correctness
            - If user gives unrelated or off-topic response → #OFF_TOPIC
            - If user answers "yes, I'll reply" or "yes" after he went off topic last time → #RESPOND
          
@@ -50,6 +54,7 @@ export const classifyUserMessage = async (input: string, currentStage: string, r
 
         5. General rules:
            - If user just says "yes", "okay", "sure" and we're NOT in ASK_UNDERSTAND stage → #GENERAL_ACKNOWLEDGMENT
+           - If user acknowledges without answering (e.g., "hmm okay", "alright", "fine") → #GENERAL_ACKNOWLEDGMENT
            - If user describes algorithm/solution steps → #APPROACH_PROVIDED
            - If user asks about problem examples → #REQUESTED_EXAMPLE
            - If user seems confused about problem → #CONFUSED
@@ -57,6 +62,7 @@ export const classifyUserMessage = async (input: string, currentStage: string, r
            - If user asks "where do i start or how should i do it" in WAIT_FOR_APPROACH -> #CODING_QUESTION
            - If the user is in WAIT_FOR_APPROACH and asks something out of context or not related to coding problem -> #CODING_QUESTION
            - If user is in FOLLOW_UP stage NEVER return #CONFUSED.
+           - If user gives a vague uncertain answer ("I think so", "maybe") → do not leave ambiguous, always force into #RIGHT_ANSWER or #WRONG_ANSWER based on context correctness
 
         Respond with ONLY one of:
         #UNDERSTOOD_CONFIRMATION
