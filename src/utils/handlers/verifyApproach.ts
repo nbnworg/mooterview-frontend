@@ -9,7 +9,6 @@ interface VerifyApproachPayload {
 }
 
 interface VerifyApproachResponse {
-  similarity_score: number;
   alignment: "MATCH" | "MISMATCH";
   feedback: string;
 }
