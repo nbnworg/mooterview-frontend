@@ -18,10 +18,12 @@ export default function Homepage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedLevel, setSelectedLevel] = useState("All");
   const [solved, setSolved] = useState("All");
+  const [selectedType, setType] = useState("All");
 
   const navigate = useNavigate();
 
   const filteredProblems = problems?.filter((p) => {
+    console.log("Problem object:", p);
     const matchesLevel =
       selectedLevel === "All" ||
       p.level?.toLowerCase() === selectedLevel.toLowerCase();
@@ -29,11 +31,18 @@ export default function Homepage() {
       ?.toLowerCase()
       .includes(searchTerm.toLowerCase());
     const isSolved = solvedIds.includes(String(p.problemId));
-    const matchesSolve =
+    const matchesSolve =  
       solved === "All" ||
       (solved === "Solved" && isSolved) ||
       (solved === "UnSolved" && !isSolved);
-    return matchesLevel && matchesSearch && matchesSolve;
+    const matchType = selectedType === "All" || p.problemPattern?.trim().toLowerCase() === selectedType.trim().toLowerCase();
+    console.log({
+  problemPattern: p.problemPattern,
+  selectedType,
+  comparison: p.problemPattern?.trim().toLowerCase() === selectedType.trim().toLowerCase()
+});
+    
+    return matchesLevel && matchesSearch && matchesSolve && matchType;
   });
 
   return (
@@ -64,6 +73,8 @@ export default function Homepage() {
           setSelectedLevel={setSelectedLevel}
           solved={solved}
           setSolved={setSolved}
+          selectedType={selectedType}
+          setType={setType}
           onAddProblem={() => navigate("/create-a-problem")}
         />
       </div>
