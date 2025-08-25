@@ -12,6 +12,7 @@ import { evaluateSolutionWithRubric } from "../../utils/evaluateSolutionWithRubr
 import { generateTestCasesWithAI } from "../../utils/generateTestCasesWithAI";
 import ConfirmationModal from "../Confirmationmodal/Confirmationmodal";
 import { clearCachedReport } from "../../utils/localStorageReport";
+import { verifyApproach } from "../../utils/handlers/verifyApproach";
 import { IoSend } from "react-icons/io5";
 import { GoMoveToEnd } from "react-icons/go";
 import Loading from "../Loader/Loading";
@@ -591,6 +592,8 @@ const ChatBox: React.FC<ChatBoxProps> = ({
 
   const handleVerifyCode = async () => {
     const currentCode = codeRef.current;
+    const userApproach = approachTextRef.current;
+
 
     if (!currentCode) {
       await addBotMessage(
@@ -599,29 +602,33 @@ const ChatBox: React.FC<ChatBoxProps> = ({
       return;
     }
 
-    if (approachTextRef.current.trim()) {
-      const approachCheckResponse = await getPromptResponse({
-        actor: Actor.INTERVIEWER,
-        context: `
-        The candidate initially described the following approach:
-        ${approachTextRef.current}
+    if (!problem.title) {
+    console.error("Problem title is missing, cannot verify approach.");
+    await addBotMessage("An unexpected error occurred and I cannot verify your solution right now.");
+    return;
+  }
 
-        Their final submitted code is:
-        ${currentCode}
-      `,
-        promptKey: "check-approach-alignment",
-        modelName: "gpt-3.5-turbo",
+  if (userApproach) {
+
+    try {
+      const alignment = await verifyApproach({
+        approach: userApproach,
+        code: currentCode,
+        problemTitle: problem.title,
       });
-      if (approachCheckResponse.includes("#MISMATCH")) {
-        await addBotMessage(
-          approachCheckResponse.replace(
-            "#MISMATCH:",
-            "Your code does not seem to follow the approach you described: "
-          )
-        );
-        return;
-      }
+  if (alignment.alignment === "MISMATCH") {
+  await addBotMessage(alignment.feedback + "\nPlease correct your code to match your approach and verify again.");
+  return; 
+}
+
+await addBotMessage(alignment.feedback || "Great, your code correctly implements the approach you described. Now, I'm checking it for correctness...");
+    } catch (error) {
+      console.error("Error verifying approach:", error);
+      await addBotMessage(
+        "Sorry, I had an issue verifying your approach. Let's proceed with checking the code's correctness."
+      );
     }
+  }
 
     const testCases = await generateTestCasesWithAI(problem);
     if (!testCases || testCases.length === 0) {
