@@ -131,8 +131,9 @@ input[type="radio"]:checked::before {
 
 .randomizerButtonDiv {
   display: flex;
-  justify-content: space-around;
+  justify-content: end;
   align-items: end;
+  margin-right: 2.3vw;
 }
 
 .createProblemButton {
