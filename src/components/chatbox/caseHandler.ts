@@ -173,9 +173,9 @@ export const handleApproachProvided = async (
     addBotMessage: (text: string) => Promise<void>
 ) => {
     if (currentStage === "WAIT_FOR_APPROACH" && !hasProvidedApproachRef.current) {
-        const ack = await getPromptResponse({
+        const evaluation = await getPromptResponse({
             actor: Actor.INTERVIEWER,
-            context: `User has shared an approach. Evaluate it and respond with one of "#CORRECT" or "#WRONG" followed by your message.
+            context: `User has shared an approach. Evaluate it and respond with one of "#CORRECT", "#PARTIAL", or "#WRONG" followed by your message.
                 Chat transcript: ${JSON.stringify(messages, null, 2)}
                 User approach: ${input}
                 Problem: ${problem.title}
@@ -183,8 +183,14 @@ export const handleApproachProvided = async (
             promptKey: "ack-approach",
             modelName: "gpt-4o"
         });
+        console.log("data ", evaluation);
 
-        if (ack.includes("#CORRECT")) {
+        const tagMatch = evaluation.match(/^(#CORRECT|#PARTIAL|#WRONG)/);
+        const tag = tagMatch ? tagMatch[0] : "#WRONG";
+        const message = evaluation.replace(/^(#CORRECT|#PARTIAL|#WRONG)[:\s]*/, '').trim();
+        console.log("current tag is ", tag);
+
+        if (tag === "#CORRECT") {
             await addBotMessage(
                 "Alright, you can start coding now.\nIf you get stuck at any point, feel free to ask for help. Once you've completed your code, click on 'Verify Code' button to check your solution."
             );
@@ -194,17 +200,36 @@ export const handleApproachProvided = async (
             if (onApproachCorrectChange) {
                 onApproachCorrectChange(true);
             }
-        } else {
+        } else if (tag === "#PARTIAL") {
             approachAttemptCountRef.current += 1;
 
             if (approachAttemptCountRef.current >= 2) {
                 await addBotMessage(
-                    "That's okay, you can start coding now and we'll work through it together."
+                    "I see you're making progress. Let's move to coding and refine your approach as you implement it."
                 );
+                approachTextRef.current = input;
                 stageRef.current = "CODING";
                 hasProvidedApproachRef.current = true;
                 if (onApproachCorrectChange) {
-                    onApproachCorrectChange(true);
+                    onApproachCorrectChange(true); 
+                }
+            } else {
+                await addBotMessage(message ||
+                    "Your approach has some good elements but needs refinement. Consider how you'll handle edge cases and the specific data structures needed."
+                );
+            }
+        } else { 
+            approachAttemptCountRef.current += 1;
+
+            if (approachAttemptCountRef.current >= 3) {
+                await addBotMessage(
+                    "That's okay, you can start coding now and we'll work through it together."
+                );
+                approachTextRef.current = input;
+                stageRef.current = "CODING";
+                hasProvidedApproachRef.current = true;
+                if (onApproachCorrectChange) {
+                    onApproachCorrectChange(true); 
                 }
             } else {
                 const response = await getPromptResponse({
@@ -266,7 +291,7 @@ export const handleProblemExplanationCase = async (
 
 interface CodingQuestionParams {
     currentStage: Stage;
-   gptMessages: any[];
+    gptMessages: any[];
     problem: Problem;
     input: string;
     currentCode: string;
@@ -371,7 +396,7 @@ export const handleOffTopic = async (
     currentStage: Stage,
     messages: any[],
     problem: Problem,
-    addBotMessage: (text: string,texts:boolean) => Promise<void>,
+    addBotMessage: (text: string, texts: boolean) => Promise<void>,
 ) => {
     const followup = await getPromptResponse({
         actor: Actor.INTERVIEWER,
@@ -387,7 +412,7 @@ export const handleOffTopic = async (
         modelName: "gpt-3.5-turbo"
     });
 
-    await addBotMessage(followup,true);
+    await addBotMessage(followup, true);
 }
 
 // #DEFAULT CASE 
