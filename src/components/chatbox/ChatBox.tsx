@@ -15,7 +15,20 @@ import { clearCachedReport } from "../../utils/localStorageReport";
 import { IoSend } from "react-icons/io5";
 import { GoMoveToEnd } from "react-icons/go";
 import Loading from "../Loader/Loading";
-import { handleUnderstoodConfirmation, handleConfusedCase, handleRightAnswerCase, handleWrongCase, handleRequestExampleCase, handleApproachProvided, handleProblemExplanationCase, handleCodingQuestion, handleCodingHelp, handleGenralAcknowledgement, handleOffTopic, handleDefaultCase } from "./caseHandler"
+import {
+  handleUnderstoodConfirmation,
+  handleConfusedCase,
+  handleRightAnswerCase,
+  handleWrongCase,
+  handleRequestExampleCase,
+  handleApproachProvided,
+  handleProblemExplanationCase,
+  handleCodingQuestion,
+  handleCodingHelp,
+  handleGenralAcknowledgement,
+  handleOffTopic,
+  handleDefaultCase,
+} from "./caseHandler";
 
 interface ChatBoxProps {
   problem: Problem;
@@ -71,7 +84,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
 
   const sessionId = localStorage.getItem("mtv-sessionId");
   const [rubricResult, setrubricResult] = useState<any>();
-  const [isInputDisabled, setIsInputDisabled] = useState(false);
+  const [isInputDisabled, setIsInputDisabled] = useState(true);
 
   const navigate = useNavigate();
   const [loadingSessionEnd, setLoadingSessionEnd] = useState(false);
@@ -117,9 +130,9 @@ const ChatBox: React.FC<ChatBoxProps> = ({
       const updated = [...prevMessages, newMessage];
       return updated;
     });
-     if (!isOffTopic) { 
-    setGptMessages((prev) => [...prev, newMessage]);
-  }
+    if (!isOffTopic) {
+      setGptMessages((prev) => [...prev, newMessage]);
+    }
   };
 
   const updateChatsInSession = async (newChats: any[]) => {
@@ -227,7 +240,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                 endTime: new Date().toISOString(),
               });
 
-
               const evaluation = await generateEvaluationSummary();
 
               await updateSessionById({
@@ -257,7 +269,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         sessionId,
         endTime: new Date().toISOString(),
       });
-
 
       if (wantsSolution) {
         const evaluation = await generateEvaluationSummary();
@@ -299,6 +310,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
       await addBotMessage(response);
       await addBotMessage("Have you understood the problem?");
       stageRef.current = "ASK_UNDERSTAND";
+      setIsInputDisabled(false);
     };
 
     explainProblem();
@@ -318,11 +330,12 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           phaseRef.current = "CODING";
         }
 
-        const commonContext = `Problem: ${problem.title}\n\n${problem.problemDescription
-          }
+        const commonContext = `Problem: ${problem.title}\n\n${
+          problem.problemDescription
+        }
                     Elapsed time: ${Math.floor(
-            elapsed / 60
-          )} minutes\nUser's last message: ${input}
+                      elapsed / 60
+                    )} minutes\nUser's last message: ${input}
                     Current stage: ${stageRef.current}`;
         const prevAnalysisCode = intitalCodeContextRef.current;
 
@@ -416,15 +429,14 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         updatedUserMessages
       );
       if (classification !== "#OFF_TOPIC") {
-    setGptMessages((prev) => [...prev, userMsg]);
-  }
+        setGptMessages((prev) => [...prev, userMsg]);
+      }
 
       switch (classification) {
         case "#UNDERSTOOD_CONFIRMATION": {
-
           await handleUnderstoodConfirmation(
             stageRef.current,
-           gptMessages,
+            gptMessages,
             problem,
             input,
             stageRef,
@@ -455,7 +467,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             stageRef,
             addBotMessage
           );
-          break
+          break;
         }
 
         case "#WRONG_ANSWER": {
@@ -464,7 +476,13 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         }
 
         case "#REQUESTED_EXAMPLE": {
-          await handleRequestExampleCase(gptMessages, problem, input, currentStage, addBotMessage);
+          await handleRequestExampleCase(
+            gptMessages,
+            problem,
+            input,
+            currentStage,
+            addBotMessage
+          );
           break;
         }
 
@@ -490,7 +508,13 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         }
 
         case "#PROBLEM_EXPLANATION": {
-          await handleProblemExplanationCase(stageRef.current, gptMessages, problem, addBotMessage, input);
+          await handleProblemExplanationCase(
+            stageRef.current,
+            gptMessages,
+            problem,
+            addBotMessage,
+            input
+          );
           break;
         }
 
@@ -502,19 +526,19 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         case "#CODING_QUESTION": {
           await handleCodingQuestion({
             currentStage: stageRef.current,
-          gptMessages,
+            gptMessages,
             problem,
             input,
             currentCode: codeRef.current,
             hasProvidedApproachRef,
-            addBotMessage
+            addBotMessage,
           });
           break;
         }
 
         case "#CODING_HELP": {
           await handleCodingHelp(
-           gptMessages,
+            gptMessages,
             problem,
             codeRef.current,
             input,
@@ -524,17 +548,30 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         }
 
         case "#GENERAL_ACKNOWLEDGMENT": {
-          await handleGenralAcknowledgement(stageRef.current, gptMessages, problem, addBotMessage, input);
+          await handleGenralAcknowledgement(
+            stageRef.current,
+            gptMessages,
+            problem,
+            addBotMessage,
+            input
+          );
           break;
         }
 
         case "#OFF_TOPIC": {
-          await handleOffTopic(stageRef.current, gptMessages, problem, addBotMessage);
+          await handleOffTopic(
+            stageRef.current,
+            gptMessages,
+            problem,
+            addBotMessage
+          );
           break;
         }
 
         case "#INTERVIEW_END": {
-          addBotMessage("The interview is over, Now you will be redirected to evaluation page!");
+          addBotMessage(
+            "The interview is over, Now you will be redirected to evaluation page!"
+          );
           stageRef.current = "SESSION_END";
           setIsInputDisabled(true);
           setTimeout(() => {
@@ -561,7 +598,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           const sessionId = await createSession({
             userId,
             problemId: problem.problemId || "",
-            problemPattern: (problem as any).problemPattern || ""
+            problemPattern: (problem as any).problemPattern || "",
           });
           localStorage.setItem("mtv-sessionId", sessionId);
           clearCachedReport();
@@ -727,7 +764,10 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         </div>
       </form>
       {loadingSessionEnd && (
-        <Loading message="Ending session and generating evaluation..." size="large" />
+        <Loading
+          message="Ending session and generating evaluation..."
+          size="large"
+        />
       )}
       {confirmationModal && <ConfirmationModal modalData={confirmationModal} />}
     </div>
