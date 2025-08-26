@@ -20,6 +20,7 @@ export const classifyUserMessage = async (input: string, currentStage: string, r
         
         1. If currentStage is "ASK_UNDERSTAND":
            - User says "yes", "I understand", "clear", "got it" → #UNDERSTOOD_CONFIRMATION
+           - If the user first acknowledges ("yes", "I understand", "clear", "got it") AND immediately follows with "but...", "however...", or any question ("?") → #CONFUSED
            - User asks for clarification, "I don't understand" → #CONFUSED
            - User asks for example → #REQUESTED_EXAMPLE
            - User talks about unrelated topics → #OFF_TOPIC
