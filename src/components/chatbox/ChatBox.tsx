@@ -591,8 +591,8 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           stageRef.current = "SESSION_END";
           setIsInputDisabled(true);
           setTimeout(() => {
-            endSession(true, undefined, true);
-          }, 1000);
+            endSession(false, setConfirmationModal, true);
+          }, 2000);
           break;
         }
 
@@ -673,7 +673,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
   return; 
 }
 
-await addBotMessage(alignment.feedback || "Great, your code correctly implements the approach you described. Now, I'm checking it for correctness...");
+// await addBotMessage(alignment.feedback || "Great, your code correctly implements the approach you described. Now, I'm checking it for correctness...");
     } catch (error) {
       console.error("Error verifying approach:", error);
       await addBotMessage(
