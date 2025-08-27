@@ -119,9 +119,9 @@ const ChatBox: React.FC<ChatBoxProps> = ({
 
   useEffect(() => {
     if (onEndRef) {
-      onEndRef.current = () => endSession(true);
+      onEndRef.current = () => endSession(true, setConfirmationModal, false);
     }
-  }, [code, problem]);
+  }, [code, setConfirmationModal, problem]);
 
   const addBotMessage = async (text: string, isOffTopic: boolean = false) => {
     const newMessage = { actor: Actor.INTERVIEWER, message: text };
@@ -200,7 +200,20 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     const sessionId = localStorage.getItem("mtv-sessionId");
 
     if (!sessionId) {
-      navigate("/home", { replace: true });
+      if(setConfirmationModal) {
+          setConfirmationModal({
+          text1: "Are you sure?",
+          text2: `This will end your session and ${(!sessionId) ? `take you to home.` : `take you to the evaluation.`}`,
+          btn1Text: "Yes, End Session",
+          btn2Text: "Cancel",
+          btn1Handler: () => {
+            setConfirmationModal(null);
+            navigate("/home", { replace: true });
+            endSession(true, undefined, true);
+          },
+          btn2Handler: () => setConfirmationModal(null),
+        });
+      }
       return;
     }
 
@@ -210,11 +223,12 @@ const ChatBox: React.FC<ChatBoxProps> = ({
       if (setConfirmationModal) {
         setConfirmationModal({
           text1: "Are you sure?",
-          text2: "This will end your session and take you to the evaluation.",
+          text2: `This will end your session and ${(!sessionId) ? `take you to home.` : `take you to the evaluation.`}`,
           btn1Text: "Yes, End Session",
           btn2Text: "Cancel",
           btn1Handler: () => {
             setConfirmationModal(null);
+            console.log("Auto alert");
             endSession(true, undefined, true);
           },
           btn2Handler: () => setConfirmationModal(null),
@@ -222,15 +236,15 @@ const ChatBox: React.FC<ChatBoxProps> = ({
       }
       return;
     } else if (!skipAutoAlert) {
+      console.log("Auto alert");
       if (setConfirmationModal) {
         setConfirmationModal({
           text1: "Your time is up!",
-          text2: "This will end your session and take you to the evaluation.",
+          text2: `This will end your session and ${(!sessionId) ? `take you to home.` : `take you to the evaluation.`}`,
           btn1Text: "OK, Proceed",
           btn2Text: "Cancel",
           btn1Handler: async () => {
             setConfirmationModal(null);
-
             if (
               stageRef.current === "CODING" ||
               stageRef.current === "FOLLOW_UP" ||
@@ -241,8 +255,8 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                 endTime: new Date().toISOString(),
               });
 
+              setLoadingSessionEnd(true);
               const evaluation = await generateEvaluationSummary();
-
               await updateSessionById({
                 sessionId,
                 notes: [
@@ -261,9 +275,10 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           },
           btn2Handler: () => setConfirmationModal(null),
         });
+        return;
       }
     }
-
+    
     try {
       setLoadingSessionEnd(true);
       await updateSessionById({
@@ -577,7 +592,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           setIsInputDisabled(true);
           setTimeout(() => {
             endSession(true, undefined, true);
-          }, 1500);
+          }, 1000);
           break;
         }
 
@@ -761,7 +776,7 @@ await addBotMessage(alignment.feedback || "Great, your code correctly implements
           </button>
           <button
             className="endSessionButton"
-            onClick={() => endSession(false, setConfirmationModal)}
+            onClick={() => endSession(false, setConfirmationModal, true)}
           >
             <div className="buttonIcon">
               <GoMoveToEnd />
