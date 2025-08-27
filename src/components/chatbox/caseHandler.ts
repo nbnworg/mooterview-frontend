@@ -167,7 +167,7 @@ export const handleApproachProvided = async (
   messages: any[],
   problem: Problem,
   input: string,
-  approachAttemptCountRef: React.MutableRefObject<number>,
+  // approachAttemptCountRef: React.MutableRefObject<number>,
   hasProvidedApproachRef: React.MutableRefObject<boolean>,
   stageRef: React.MutableRefObject<Stage>,
   approachTextRef: React.MutableRefObject<string>,
