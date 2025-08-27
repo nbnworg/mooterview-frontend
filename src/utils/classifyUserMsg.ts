@@ -19,8 +19,15 @@ export const classifyUserMessage = async (input: string, currentStage: string, r
         IMPORTANT CLASSIFICATION RULES:
         
         1. If currentStage is "ASK_UNDERSTAND":
-           - User says "yes", "I understand", "clear", "got it" → #UNDERSTOOD_CONFIRMATION
-           - If the user first acknowledges ("yes", "I understand", "clear", "got it") AND immediately follows with "but...", "however...", or any question ("?") → #CONFUSED
+
+          - If user message is EXACTLY (nothing more, nothing less) one of these confirmation words/phrases (case-insensitive):
+             "yes", "ok", "okay", "yep", "yeah", 
+             "i understand", "understood", "clear", "got it", "got that"
+               → #UNDERSTOOD_CONFIRMATION
+          - If user message starts with any confirmation phrase BUT contains ANY additional text, symbols, or questions
+            → #CONFUSED
+          - If user message contains ANY question mark ("?"), "but", "however", "explain", "clarify", "don't understand", "not sure"
+            → #CONFUSED
            - User asks for clarification, "I don't understand" → #CONFUSED
            - User asks for example → #REQUESTED_EXAMPLE
            - User talks about unrelated topics → #OFF_TOPIC
