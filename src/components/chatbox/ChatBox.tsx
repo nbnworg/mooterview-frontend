@@ -493,7 +493,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             gptMessages,
             problem,
             input,
-            approachAttemptCountRef,
             hasProvidedApproachRef,
             stageRef,
             approachTextRef,
@@ -603,7 +602,8 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           });
           localStorage.setItem("mtv-sessionId", sessionId);
           clearCachedReport();
-          updateChatsInSession([...messages]);
+          updateChatsInSession(updatedUserMessages);
+          
         }
       }
     } catch (err) {

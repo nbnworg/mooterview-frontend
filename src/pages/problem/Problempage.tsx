@@ -65,6 +65,10 @@ const ProblemPage = () => {
     fetchProblem();
   }, [problemId]);
 
+  useEffect(() => {
+    localStorage.removeItem("mtv-sessionId");
+  }, []);
+
   if (!problemId) {
     return <Navigate to="/home" replace />;
   }
