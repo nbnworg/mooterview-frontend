@@ -493,7 +493,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             gptMessages,
             problem,
             input,
-            // approachAttemptCountRef,
             hasProvidedApproachRef,
             stageRef,
             approachTextRef,

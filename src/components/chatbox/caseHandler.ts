@@ -167,7 +167,6 @@ export const handleApproachProvided = async (
   messages: any[],
   problem: Problem,
   input: string,
-  // approachAttemptCountRef: React.MutableRefObject<number>,
   hasProvidedApproachRef: React.MutableRefObject<boolean>,
   stageRef: React.MutableRefObject<Stage>,
   approachTextRef: React.MutableRefObject<string>,
@@ -185,12 +184,10 @@ export const handleApproachProvided = async (
       promptKey: "ack-approach",
       modelName: "gpt-4o"
     });
-    console.log("data ", evaluation);
 
     const tagMatch = evaluation.match(/^(#CORRECT|#PARTIAL|#WRONG)/);
     const tag = tagMatch ? tagMatch[0] : "#WRONG";
 
-    // Check for sufficiency indicator in partial approaches
     const isSufficient = evaluation.includes("[SUFFICIENT]");
     const message = evaluation
       .replace(/^(#CORRECT|#PARTIAL|#WRONG)[:\s]*/, '')
