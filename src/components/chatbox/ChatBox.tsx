@@ -30,6 +30,8 @@ import {
   handleOffTopic,
   handleDefaultCase,
 } from "./caseHandler";
+import axios from "axios";
+import { BASE_URL, getTokenData } from "../../utils/constants";
 
 interface ChatBoxProps {
   problem: Problem;
@@ -92,6 +94,9 @@ const ChatBox: React.FC<ChatBoxProps> = ({
 
   const approachTextRef = useRef<string>("");
 
+  const [summary, setSummary] = useState<string>("");
+  const messagesSinceLastSummary = useRef(0);
+
   const [confirmationModal, setConfirmationModal] = useState<{
     text1: string;
     text2: string;
@@ -121,7 +126,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     if (onEndRef) {
       onEndRef.current = () => endSession(true);
     }
-  }, [code, problem]);
+  }, [code, problem, messages, summary]); 
 
   const addBotMessage = async (text: string, isOffTopic: boolean = false) => {
     const newMessage = { actor: Actor.INTERVIEWER, message: text };
@@ -403,22 +408,50 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     }, 10000);
 
     return () => clearInterval(interval);
-  }, [problem]);
+  }, [problem, messages, input]); 
 
-  // let followUp;
+  const handleSummarization = async () => {
+    if (messages.length < 6) return;
+
+    try {
+      const tokenData = getTokenData();
+      if (!tokenData) throw new Error("No token found");
+
+      const response = await axios.post(
+        `${BASE_URL}/prompt/summarize`,
+        {
+          chatHistory: gptMessages, 
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${tokenData.accessToken}`,
+          },
+        }
+      );
+      setSummary(response.data.summary);
+      messagesSinceLastSummary.current = 0; 
+    } catch (error) {
+      console.error("Failed to summarize chat history:", error);
+    }
+  };
+
   const questionCounterValueRef = useRef<{ number: number } | null>(null);
   const handleFollowUp = useRef(0);
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim()) return;
+    if (!input.trim() || loading) return;
 
     const userMsg = { actor: Actor.USER, message: input };
-    const updatedUserMessages = [...messages, userMsg];
-    setMessages(updatedUserMessages);
+    setMessages((prev) => [...prev, userMsg]);
     setInput("");
     setLoading(true);
 
     await updateChatsInSession([userMsg]);
+
+    messagesSinceLastSummary.current += 2; 
+    if (messagesSinceLastSummary.current >= 6) {
+      await handleSummarization();
+    }
 
     const currentStage = stageRef.current;
     const codeSnapshot = codeRef.current?.trim() || "";
@@ -427,11 +460,21 @@ const ChatBox: React.FC<ChatBoxProps> = ({
       const classification = await classifyUserMessage(
         input,
         currentStage,
-        updatedUserMessages
+        messages.slice(-5) 
       );
       if (classification !== "#OFF_TOPIC") {
         setGptMessages((prev) => [...prev, userMsg]);
       }
+      
+      const recentMessages = gptMessages.slice(-4);
+      const contextForGpt = `
+        CONVERSATION SUMMARY:
+        ${summary || "The conversation has just begun."}
+
+        RECENT CHAT HISTORY:
+        ${JSON.stringify(recentMessages, null, 2)}
+      `;
+
 
       switch (classification) {
         case "#UNDERSTOOD_CONFIRMATION": {
@@ -562,7 +605,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         case "#OFF_TOPIC": {
           await handleOffTopic(
             stageRef.current,
-            gptMessages,
+            messages, 
             problem,
             addBotMessage
           );
@@ -596,14 +639,14 @@ const ChatBox: React.FC<ChatBoxProps> = ({
 
       if (stageRef.current === "CODING") {
         if (!sessionId) {
-          const sessionId = await createSession({
+          const newSessionId = await createSession({
             userId,
             problemId: problem.problemId || "",
             problemPattern: (problem as any).problemPattern || "",
           });
-          localStorage.setItem("mtv-sessionId", sessionId);
+          localStorage.setItem("mtv-sessionId", newSessionId);
           clearCachedReport();
-          updateChatsInSession([...messages]);
+          updateChatsInSession([...messages, userMsg]);
         }
       }
     } catch (err) {
@@ -611,11 +654,10 @@ const ChatBox: React.FC<ChatBoxProps> = ({
       const errorMsg = {
         actor: Actor.INTERVIEWER,
         message:
-          "I couldn't comprehend due to network issue, can you state that again?",
+          "I couldn't comprehend due to a network issue, can you state that again?",
       };
-      const fallbackMessages = [...updatedUserMessages, errorMsg];
-      setMessages(fallbackMessages);
-      await updateChatsInSession(fallbackMessages);
+      setMessages((prev) => [...prev, errorMsg]);
+      await updateChatsInSession([errorMsg]);
     }
 
     setLoading(false);
@@ -625,7 +667,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     if (onVerifyRef) {
       onVerifyRef.current = handleVerifyCode;
     }
-  }, [code, problem]);
+  }, [code, problem, approachTextRef.current]); 
 
   const handleVerifyCode = async () => {
     const currentCode = codeRef.current;
@@ -663,6 +705,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
               alignmentResult.feedback +
                 "\nPlease correct your code to match your approach and verify again."
             );
+            setLoading(false);
             return; 
           }
 
@@ -679,6 +722,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         await addBotMessage(
           "⚠️ AI couldn't generate test cases. Please try again later."
         );
+        setLoading(false);
         return;
       }
 
@@ -771,7 +815,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           placeholder="Ask for guidance..."
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          disabled={isInputDisabled}
+          disabled={isInputDisabled || loading}
         />
         <div className="buttonsContainer">
           <button type="submit" className="chatSendButton" disabled={loading}>
