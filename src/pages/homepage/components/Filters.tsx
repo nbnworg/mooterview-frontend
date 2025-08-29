@@ -5,6 +5,8 @@ interface FiltersProps {
   setSelectedLevel: (value: string) => void;
   solved: string;
   setSolved: (value: string) => void;
+  selectedType: string;
+  setType: (value: string) => void;
   onAddProblem: () => void;
 }
 
@@ -15,6 +17,8 @@ export default function Filters({
   setSelectedLevel,
   solved,
   setSolved,
+  selectedType,
+  setType,
   onAddProblem,
 }: FiltersProps) {
   return (
@@ -75,6 +79,31 @@ export default function Filters({
           />
           Not Attempted
         </label>
+      </div>
+      <hr className="horizontalLines" />
+      <p className="filterHeading">Problem Type:</p>
+      <div className="filterOptionContainer">
+        {["All","Arrays & Hashing",
+  "Two Pointers",
+  "Stack",
+  "Sliding Window",
+  "Linked List",
+  "Binary Search",
+  "Trees",
+  "Tries",
+  "Heap/Priority Queue",
+  "Backtracking"].map((type) => (
+    <label className="radioButton" key={type}>
+      <input 
+      type="radio"
+      name="problemPattern"
+      value={type}
+      onChange={(e) => setType(e.target.value)}
+      checked={selectedType === type}
+      />
+      {type}
+    </label>
+  ))}
       </div>
       <hr className="horizontalLines" />
       <button className="createProblemButton" onClick={onAddProblem}>
