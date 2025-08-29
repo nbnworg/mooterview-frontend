@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { getAllProblems } from "../utils/handlers/getAllProblems";
-import type { Problem, ProblemSummary } from "mooterview-client";
+import type { ProblemSummary } from "mooterview-client";
 
 export const useProblems = () => {
   const [problems, setProblems] = useState<ProblemSummary[]>([]);
