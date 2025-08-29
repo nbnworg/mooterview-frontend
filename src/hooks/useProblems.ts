@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { getAllProblems } from "../utils/handlers/getAllProblems";
-import type { Problem } from "mooterview-client";
+import type { Problem, ProblemSummary } from "mooterview-client";
 
 export const useProblems = () => {
-  const [problems, setProblems] = useState<Problem[]>([]);
+  const [problems, setProblems] = useState<ProblemSummary[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -29,7 +29,7 @@ export const useProblems = () => {
           }
         }
 
-        const freshProblems: Problem[] = await getAllProblems();
+        const freshProblems = await getAllProblems();
         console.log("Problem", problems);
         localStorage.setItem(
           CACHE_KEY,

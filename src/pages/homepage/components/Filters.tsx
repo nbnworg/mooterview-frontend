@@ -112,19 +112,3 @@ export default function Filters({
     </div>
   );
 }
-
-/* 
-const BASE_PROBLEM_TYPES = [
-  "Arrays & Hashing",
-  "Two Pointers",
-  "Stack",
-  "Sliding Window",
-  "Linked List",
-  "Binary Search",
-  "Trees",
-  "Tries",
-  "Heap/Priority Queue",
-  "Backtracking"
-];
-
-*/
