@@ -3,7 +3,7 @@ import { getUserById } from "../utils/handlers/getUserInfoById";
 import { getTokenData } from "../utils/constants";
 import type { GetUserByIdOutput } from "mooterview-client";
 
-export const useStreak = ({ userId }: { userId: string }) => {
+export const useStreak = () => {
     const [streak, setStreak] = useState<GetUserByIdOutput | null>(null);
 
     useEffect(() => {
@@ -17,7 +17,7 @@ export const useStreak = ({ userId }: { userId: string }) => {
         };
 
         fetchData();
-    }, [userId]);
+    }, []);
 
     return { streak };
 }

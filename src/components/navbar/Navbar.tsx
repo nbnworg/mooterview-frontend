@@ -8,7 +8,6 @@ import { FiLogOut } from "react-icons/fi";
 import ConfirmationModal from "../Confirmationmodal/Confirmationmodal";
 import mooLogo from "../../assets/moo_logo_1.png";
 import { useStreak } from "../../hooks/useStreak";
-import { getTokenData } from "../../utils/constants";
 import streakImage from "../../assets/landingPage/streak.jpg";
 
 interface ConfirmationModalData {
@@ -22,7 +21,7 @@ interface ConfirmationModalData {
 
 const Navbar = () => {
     const navigate = useNavigate();
-    const { streak } = useStreak(getTokenData().id);
+    const { streak } = useStreak();
     const { isLoggedIn, logout } = useAuth();
     const [confirmationModal, setConfirmationModal] =
         useState<ConfirmationModalData | null>(null);

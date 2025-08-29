@@ -12,12 +12,11 @@ import { useNavigate } from "react-router-dom";
 import Footer from "../../components/footer/Footer";
 import streakImage from "../../assets/landingPage/streak.jpg";
 import Randomizer from "./components/Randomizer";
-import { getTokenData } from "../../utils/constants";
 import { useStreak } from "../../hooks/useStreak";
 
 export default function Homepage() {
     const { problems, loading, error } = useProblems();
-    const { streak } = useStreak({ userId: getTokenData().id });
+    const { streak } = useStreak();
     const solvedIds = useSolvedProblems();
     const progressData = useProgressData(problems, solvedIds);
 
