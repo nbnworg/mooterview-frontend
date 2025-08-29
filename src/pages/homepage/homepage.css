@@ -19,6 +19,30 @@
   width: 30%;
 }
 
+.progressSection {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+}
+
+.progressContent {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex-grow: 1;
+}
+
+.streakContent {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.streakImage {
+  width: 4vw;
+}
+
 .graphContainer {
   padding-left: 5vw;
   padding-right: 5vw;

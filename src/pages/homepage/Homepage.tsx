@@ -10,6 +10,7 @@ import Filters from "./components/Filters";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Footer from "../../components/footer/Footer";
+import streakImage from "../../assets/landingPage/streak.jpg"
 
 export default function Homepage() {
   const { problems, loading, error } = useProblems();
@@ -43,7 +44,18 @@ export default function Homepage() {
   return (
     <>
       <Navbar />
-      <ProgressSection progressData={progressData} />
+      <div className="progressSection">
+        <div className="progressContent">
+          <ProgressSection progressData={progressData} />
+        </div>
+        <div className="streakContent">
+          <img
+            className="streakImage"
+            src={streakImage}
+            alt="User's streak fire"
+          />
+        </div>
+      </div>
       <div className="seperationLineContainer">
         <hr className="seperationLine" />
       </div>
