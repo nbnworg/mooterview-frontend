@@ -10,80 +10,90 @@ import Filters from "./components/Filters";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Footer from "../../components/footer/Footer";
-import streakImage from "../../assets/landingPage/streak.jpg"
+import streakImage from "../../assets/landingPage/streak.jpg";
+import Randomizer from "./components/Randomizer";
+import { getTokenData } from "../../utils/constants";
+import { useStreak } from "../../hooks/useStreak";
 
 export default function Homepage() {
-  const { problems, loading, error } = useProblems();
-  const solvedIds = useSolvedProblems();
-  const progressData = useProgressData(problems, solvedIds);
+    const { problems, loading, error } = useProblems();
+    const { streak } = useStreak({ userId: getTokenData().id });
+    const solvedIds = useSolvedProblems();
+    const progressData = useProgressData(problems, solvedIds);
 
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedLevel, setSelectedLevel] = useState("All");
-  const [solved, setSolved] = useState("All");
+    const [searchTerm, setSearchTerm] = useState("");
+    const [selectedLevel, setSelectedLevel] = useState("All");
+    const [solved, setSolved] = useState("All");
 
-  const navigate = useNavigate();
-  useEffect(() => {
-    localStorage.removeItem("mtv-sessionId");
-  }, []);
+    const navigate = useNavigate();
+    useEffect(() => {
+        localStorage.removeItem("mtv-sessionId");
+    }, []);
 
-  const filteredProblems = problems?.filter((p) => {
-    const matchesLevel =
-      selectedLevel === "All" ||
-      p.level?.toLowerCase() === selectedLevel.toLowerCase();
-    const matchesSearch = p.title
-      ?.toLowerCase()
-      .includes(searchTerm.toLowerCase());
-    const isSolved = solvedIds.includes(String(p.problemId));
-    const matchesSolve =
-      solved === "All" ||
-      (solved === "Solved" && isSolved) ||
-      (solved === "UnSolved" && !isSolved);
-    return matchesLevel && matchesSearch && matchesSolve;
-  });
+    const filteredProblems = problems?.filter((p) => {
+        const matchesLevel =
+            selectedLevel === "All" ||
+            p.level?.toLowerCase() === selectedLevel.toLowerCase();
+        const matchesSearch = p.title
+            ?.toLowerCase()
+            .includes(searchTerm.toLowerCase());
+        const isSolved = solvedIds.includes(String(p.problemId));
+        const matchesSolve =
+            solved === "All" ||
+            (solved === "Solved" && isSolved) ||
+            (solved === "UnSolved" && !isSolved);
+        return matchesLevel && matchesSearch && matchesSolve;
+    });
 
-  return (
-    <>
-      <Navbar />
-      <div className="progressSection">
-        <div className="progressContent">
-          <ProgressSection progressData={progressData} />
-        </div>
-        <div className="streakContent">
-          <img
-            className="streakImage"
-            src={streakImage}
-            alt="User's streak fire"
-          />
-        </div>
-      </div>
-      <div className="seperationLineContainer">
-        <hr className="seperationLine" />
-      </div>
-      <div className="homepageContainer">
-        <section className="homepage" id="homePage">
-          {loading ? (
-            <div className="loaderContainer">
-              <div className="loader"></div>
+    return (
+        <>
+            <Navbar />
+            <div className="progressContent">
+                <ProgressSection progressData={progressData} />
+                <div className="streakAndRandomButton">
+                    <div className="streakCountContainer">
+                        <img
+                            className="streakImage"
+                            src={streakImage}
+                            alt="User's streak fire"
+                        />
+                        <h1>{streak?.currentStreak}</h1>
+                    </div>
+                    <Randomizer problems={problems} />
+                </div>
             </div>
-          ) : error ? (
-            <p className="error">{error}</p>
-          ) : filteredProblems.length === 0 ? (
-            <p>No problems available.</p>
-          ) : (
-            <ProblemTable problems={filteredProblems} solvedIds={solvedIds} />
-          )}
-        </section>
-        <Filters
-          searchTerm={searchTerm}
-          setSearchTerm={setSearchTerm}
-          selectedLevel={selectedLevel}
-          setSelectedLevel={setSelectedLevel}
-          solved={solved}
-          setSolved={setSolved}
-          onAddProblem={() => navigate("/create-a-problem")}
-        />
-      </div>
-      <Footer />
-    </>
-  );
+            <div className="randomizerButtonDiv"></div>
+            <div className="seperationLineContainer">
+                <hr className="seperationLine" />
+            </div>
+            <div className="homepageContainer">
+                <section className="homepage" id="homePage">
+                    {loading ? (
+                        <div className="loaderContainer">
+                            <div className="loader"></div>
+                        </div>
+                    ) : error ? (
+                        <p className="error">{error}</p>
+                    ) : filteredProblems.length === 0 ? (
+                        <p>No problems available.</p>
+                    ) : (
+                        <ProblemTable
+                            problems={filteredProblems}
+                            solvedIds={solvedIds}
+                        />
+                    )}
+                </section>
+                <Filters
+                    searchTerm={searchTerm}
+                    setSearchTerm={setSearchTerm}
+                    selectedLevel={selectedLevel}
+                    setSelectedLevel={setSelectedLevel}
+                    solved={solved}
+                    setSolved={setSolved}
+                    onAddProblem={() => navigate("/create-a-problem")}
+                />
+            </div>
+            <Footer />
+        </>
+    );
 }

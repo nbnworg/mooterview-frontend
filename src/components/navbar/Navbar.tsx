@@ -7,77 +7,99 @@ import { useNavigate } from "react-router-dom";
 import { FiLogOut } from "react-icons/fi";
 import ConfirmationModal from "../Confirmationmodal/Confirmationmodal";
 import mooLogo from "../../assets/moo_logo_1.png";
+import { useStreak } from "../../hooks/useStreak";
+import { getTokenData } from "../../utils/constants";
+import streakImage from "../../assets/landingPage/streak.jpg";
 
 interface ConfirmationModalData {
-  text1: string;
-  text2: string;
-  btn1Text: string;
-  btn2Text: string;
-  btn1Handler: () => void;
-  btn2Handler: () => void;
+    text1: string;
+    text2: string;
+    btn1Text: string;
+    btn2Text: string;
+    btn1Handler: () => void;
+    btn2Handler: () => void;
 }
 
 const Navbar = () => {
-  const navigate = useNavigate();
-  const { isLoggedIn, logout } = useAuth();
-  const [confirmationModal, setConfirmationModal] =
-    useState<ConfirmationModalData | null>(null);
+    const navigate = useNavigate();
+    const { streak } = useStreak(getTokenData().id);
+    const { isLoggedIn, logout } = useAuth();
+    const [confirmationModal, setConfirmationModal] =
+        useState<ConfirmationModalData | null>(null);
 
-  const handleLogout = () => {
-    logout();
-    setConfirmationModal(null);
-    navigate("/log-in");
-  };
+    const handleLogout = () => {
+        logout();
+        setConfirmationModal(null);
+        navigate("/log-in");
+    };
 
-  return (
-    <nav className="navbar">
-      <Link to="/" className="brandName">
-        <img src={mooLogo} alt="Moo Logo" className="brandLogo" />
-        <span className="brandText">Mooterview</span>
-      </Link>
+    const location = window.location.pathname;
+    // if(location === "home") {
+    //   display =
+    // }
 
-      {isLoggedIn ? (
-        <div className="navMenu">
-          <button
-            className="profileAvatar"
-            onClick={() => navigate("/dashboard")}
-          >
-            <img
-              className="profileAvatarImage"
-              src={avatar}
-              alt="User avatar"
-            />
-          </button>
-          <button
-            onClick={() =>
-              setConfirmationModal({
-                text1: "Are you Sure?",
-                text2: "You will be logged out of your Account",
-                btn1Text: "Logout",
-                btn2Text: "Cancel",
-                btn1Handler: handleLogout,
-                btn2Handler: () => setConfirmationModal(null),
-              })
-            }
-            className="logoutButton"
-          >
-            <FiLogOut size={18} />
-            <span>Logout</span>
-          </button>
-        </div>
-      ) : (
-        <div className="navMenu">
-          <Link to={"/log-in"} className="navMenuLinks">
-            Login
-          </Link>
-          <Link to={"/sign-up"} className="navMenuLinks signupBtn">
-            Signup
-          </Link>
-        </div>
-      )}
-      {confirmationModal && <ConfirmationModal modalData={confirmationModal} />}
-    </nav>
-  );
+    return (
+        <nav className="navbar">
+            <Link to="/" className="brandName">
+                <img src={mooLogo} alt="Moo Logo" className="brandLogo" />
+                <span className="brandText">Mooterview</span>
+            </Link>
+
+            {isLoggedIn ? (
+                <div className="navMenu">
+                    {location === "/home" && (
+                        <div className="streakContainer">
+                            <img
+                                src={streakImage}
+                                alt="Streak image"
+                                className="streakImageNavbar"
+                            />
+                            <h3>{streak?.currentStreak}</h3>
+                        </div>
+                    )}
+
+                    <button
+                        className="profileAvatar"
+                        onClick={() => navigate("/dashboard")}
+                    >
+                        <img
+                            className="profileAvatarImage"
+                            src={avatar}
+                            alt="User avatar"
+                        />
+                    </button>
+                    <button
+                        onClick={() =>
+                            setConfirmationModal({
+                                text1: "Are you Sure?",
+                                text2: "You will be logged out of your Account",
+                                btn1Text: "Logout",
+                                btn2Text: "Cancel",
+                                btn1Handler: handleLogout,
+                                btn2Handler: () => setConfirmationModal(null),
+                            })
+                        }
+                        className="logoutButton"
+                    >
+                        <FiLogOut size={18} />
+                        <span>Logout</span>
+                    </button>
+                </div>
+            ) : (
+                <div className="navMenu">
+                    <Link to={"/log-in"} className="navMenuLinks">
+                        Login
+                    </Link>
+                    <Link to={"/sign-up"} className="navMenuLinks signupBtn">
+                        Signup
+                    </Link>
+                </div>
+            )}
+            {confirmationModal && (
+                <ConfirmationModal modalData={confirmationModal} />
+            )}
+        </nav>
+    );
 };
 
 export default Navbar;
