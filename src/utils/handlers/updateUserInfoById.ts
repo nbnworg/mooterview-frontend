@@ -7,7 +7,7 @@ export const updateUserById = async (input: GetUserByIdInput): Promise<void> => 
     const { userId } = input;
 
     const attemptUpdate = async (accessToken: string) => {
-        return axios.patch(`${BASE_URL}/sessions/${userId}`, {
+        return axios.patch(`${BASE_URL}/users/updateStreak/${userId}`, {
             headers: {
                 Authorization: `Bearer ${accessToken}`,
             },
