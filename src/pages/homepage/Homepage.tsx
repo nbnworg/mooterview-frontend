@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import Navbar from "../../components/navbar/Navbar";
 import "./homepage.css";
 import { useProblems } from "../../hooks/useProblems";
@@ -20,6 +21,9 @@ export default function Homepage() {
   const [solved, setSolved] = useState("All");
 
   const navigate = useNavigate();
+  useEffect(() => {
+    localStorage.removeItem("mtv-sessionId");
+  }, []);
 
   const filteredProblems = problems?.filter((p) => {
     const matchesLevel =

@@ -536,7 +536,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             gptMessages,
             problem,
             input,
-            approachAttemptCountRef,
             hasProvidedApproachRef,
             stageRef,
             approachTextRef,
@@ -544,7 +543,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             addBotMessage
           );
           break;
-        }
+        } 
 
         case "#PROBLEM_EXPLANATIONS": {
           addBotMessage("Okay, you can explain the approach now!");
@@ -647,6 +646,8 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           localStorage.setItem("mtv-sessionId", newSessionId);
           clearCachedReport();
           updateChatsInSession([...messages, userMsg]);
+
+          
         }
       }
     } catch (err) {
