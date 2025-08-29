@@ -10,6 +10,7 @@ import Filters from "./components/Filters";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Footer from "../../components/footer/Footer";
+import Randomizer from "./components/Randomizer";
 
 export default function Homepage() {
   const { problems, loading, error } = useProblems();
@@ -44,6 +45,9 @@ export default function Homepage() {
     <>
       <Navbar />
       <ProgressSection progressData={progressData} />
+      <div className="randomizerButtonDiv">
+        <Randomizer problems={problems}/>
+      </div>
       <div className="seperationLineContainer">
         <hr className="seperationLine" />
       </div>
