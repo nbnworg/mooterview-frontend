@@ -20,15 +20,15 @@ export default function Homepage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedLevel, setSelectedLevel] = useState("All");
   const [solved, setSolved] = useState("All");
-  const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
+  const [selectedTypes, setSelectedTypes] = useState<string[]>([]);  
 
   const navigate = useNavigate();
   useEffect(() => {
     localStorage.removeItem("mtv-sessionId");
   }, []);
+  
 
   const filteredProblems = problems?.filter((p: any) => {
-    console.log("Problem object:", p);
     const matchesLevel =
       selectedLevel === "All" ||
       p.level?.toLowerCase() === selectedLevel.toLowerCase();
