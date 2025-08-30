@@ -33,9 +33,6 @@ const Navbar = () => {
     };
 
     const location = window.location.pathname;
-    // if(location === "home") {
-    //   display =
-    // }
 
     return (
         <nav className="navbar">
