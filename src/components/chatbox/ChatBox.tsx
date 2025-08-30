@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import "./Chatbox.css";
 import { getPromptResponse } from "../../utils/handlers/getPromptResponse";
 import { updateSessionById } from "../../utils/handlers/updateSessionById";
@@ -94,9 +94,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
 
   const approachTextRef = useRef<string>("");
 
-  const [summary, setSummary] = useState<string>("");
-  const messagesSinceLastSummary = useRef(0);
-
   const [confirmationModal, setConfirmationModal] = useState<{
     text1: string;
     text2: string;
@@ -105,6 +102,35 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     btn1Handler: () => void;
     btn2Handler: () => void;
   } | null>(null);
+
+  const [summary, setSummary] = useState<string>("");
+  const messagesSinceLastSummary = useRef(0);
+
+  const handleSummarization = async () => {
+    if (gptMessages.length < 6) return;
+
+    try {
+      const tokenData = getTokenData();
+      if (!tokenData) throw new Error("No token found");
+
+      const response = await axios.post(
+        `${BASE_URL}/prompt/summarize`,
+        {
+          chatHistory: gptMessages,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${tokenData.accessToken}`,
+          },
+        }
+      );
+      setSummary(response.data.summary);
+      messagesSinceLastSummary.current = 0;
+    } catch (error) {
+      console.error("Failed to summarize chat history:", error);
+    }
+  };
+
 
   useEffect(() => {
     elapsedTimeRef.current = elapsedTime;
@@ -122,26 +148,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     messagesRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  useEffect(() => {
-    if (onEndRef) {
-      onEndRef.current = () => endSession(true);
-    }
-  }, [code, problem, messages, summary]); 
-
-  const addBotMessage = async (text: string, isOffTopic: boolean = false) => {
-    const newMessage = { actor: Actor.INTERVIEWER, message: text };
-    await updateChatsInSession([newMessage]);
-
-    setMessages((prevMessages) => {
-      const updated = [...prevMessages, newMessage];
-      return updated;
-    });
-    if (!isOffTopic) {
-      setGptMessages((prev) => [...prev, newMessage]);
-    }
-  };
-
-  const updateChatsInSession = async (newChats: any[]) => {
+  const updateChatsInSession = useCallback(async (newChats: any[]) => {
     const sessionId = localStorage.getItem("mtv-sessionId");
     if (!sessionId) return;
 
@@ -153,9 +160,22 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     } catch (err) {
       console.error("Failed to update chatsQueue", err);
     }
-  };
+  }, []);
 
-  const generateEvaluationSummary = async (): Promise<{
+  const addBotMessage = useCallback(async (text: string, isOffTopic: boolean = false) => {
+    const newMessage = { actor: Actor.INTERVIEWER, message: text };
+    await updateChatsInSession([newMessage]);
+
+    setMessages((prevMessages) => {
+      const updated = [...prevMessages, newMessage];
+      return updated;
+    });
+    if (!isOffTopic) {
+      setGptMessages((prev) => [...prev, newMessage]);
+    }
+  }, [updateChatsInSession]);
+
+  const generateEvaluationSummary = useCallback(async (): Promise<{
     summary: string;
     alternativeSolutions: string[];
   }> => {
@@ -186,25 +206,16 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         alternativeSolutions: [],
       };
     }
-  };
+  }, [messages, problem.title, problem.problemDescription]);
 
-  const endSession = async (
+  const endSession = useCallback(async (
     calledAutomatically: boolean,
-    setConfirmationModal?: React.Dispatch<
-      React.SetStateAction<{
-        text1: string;
-        text2: string;
-        btn1Text: string;
-        btn2Text: string;
-        btn1Handler: () => void;
-        btn2Handler: () => void;
-      } | null>
-    >,
+    setConfirmationModalLocal?: typeof setConfirmationModal,
     skipAutoAlert?: boolean
   ) => {
-    const sessionId = localStorage.getItem("mtv-sessionId");
+    const currentSessionId = localStorage.getItem("mtv-sessionId");
 
-    if (!sessionId) {
+    if (!currentSessionId) {
       navigate("/home", { replace: true });
       return;
     }
@@ -212,29 +223,29 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     const wantsSolution = true;
 
     if (!calledAutomatically) {
-      if (setConfirmationModal) {
-        setConfirmationModal({
+      if (setConfirmationModalLocal) {
+        setConfirmationModalLocal({
           text1: "Are you sure?",
           text2: "This will end your session and take you to the evaluation.",
           btn1Text: "Yes, End Session",
           btn2Text: "Cancel",
           btn1Handler: () => {
-            setConfirmationModal(null);
+            setConfirmationModalLocal(null);
             endSession(true, undefined, true);
           },
-          btn2Handler: () => setConfirmationModal(null),
+          btn2Handler: () => setConfirmationModalLocal(null),
         });
       }
       return;
     } else if (!skipAutoAlert) {
-      if (setConfirmationModal) {
-        setConfirmationModal({
+      if (setConfirmationModalLocal) {
+        setConfirmationModalLocal({
           text1: "Your time is up!",
           text2: "This will end your session and take you to the evaluation.",
           btn1Text: "OK, Proceed",
           btn2Text: "Cancel",
           btn1Handler: async () => {
-            setConfirmationModal(null);
+            setConfirmationModalLocal(null);
 
             if (
               stageRef.current === "CODING" ||
@@ -242,14 +253,14 @@ const ChatBox: React.FC<ChatBoxProps> = ({
               stageRef.current === "SESSION_END"
             ) {
               await updateSessionById({
-                sessionId,
+                sessionId: currentSessionId,
                 endTime: new Date().toISOString(),
               });
 
               const evaluation = await generateEvaluationSummary();
 
               await updateSessionById({
-                sessionId,
+                sessionId: currentSessionId,
                 notes: [
                   { content: evaluation.summary },
                   { content: codeRef.current.trim() || "No code provided" },
@@ -257,14 +268,14 @@ const ChatBox: React.FC<ChatBoxProps> = ({
               });
 
               navigate(`/solution/${encodeURIComponent(problem.title ?? "")}`, {
-                state: { evaluation, sessionId, rubricResult },
+                state: { evaluation, sessionId: currentSessionId, rubricResult },
                 replace: true,
               });
             } else {
               navigate("/home", { replace: true });
             }
           },
-          btn2Handler: () => setConfirmationModal(null),
+          btn2Handler: () => setConfirmationModalLocal(null),
         });
       }
     }
@@ -272,7 +283,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     try {
       setLoadingSessionEnd(true);
       await updateSessionById({
-        sessionId,
+        sessionId: currentSessionId,
         endTime: new Date().toISOString(),
       });
 
@@ -280,7 +291,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         const evaluation = await generateEvaluationSummary();
 
         await updateSessionById({
-          sessionId,
+          sessionId: currentSessionId,
           notes: [
             { content: evaluation.summary },
             {
@@ -290,7 +301,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         });
 
         navigate(`/solution/${encodeURIComponent(problem.title ?? "")}`, {
-          state: { evaluation, sessionId, rubricResult },
+          state: { evaluation, sessionId: currentSessionId, rubricResult },
           replace: true,
         });
       } else {
@@ -301,7 +312,14 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     } finally {
       setLoadingSessionEnd(false);
     }
-  };
+  }, [navigate, generateEvaluationSummary, problem.title, rubricResult]);
+
+  useEffect(() => {
+    if (onEndRef) {
+      onEndRef.current = () => endSession(true, setConfirmationModal);
+    }
+  }, [endSession, onEndRef]);
+
 
   useEffect(() => {
     const explainProblem = async () => {
@@ -320,7 +338,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     };
 
     explainProblem();
-  }, [problem]);
+  }, [problem, addBotMessage]);
 
   useEffect(() => {
     const interval = setInterval(async () => {
@@ -408,50 +426,36 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     }, 10000);
 
     return () => clearInterval(interval);
-  }, [problem, messages, input]); 
-
-  const handleSummarization = async () => {
-    if (messages.length < 6) return;
-
-    try {
-      const tokenData = getTokenData();
-      if (!tokenData) throw new Error("No token found");
-
-      const response = await axios.post(
-        `${BASE_URL}/prompt/summarize`,
-        {
-          chatHistory: gptMessages, 
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${tokenData.accessToken}`,
-          },
-        }
-      );
-      setSummary(response.data.summary);
-      messagesSinceLastSummary.current = 0; 
-    } catch (error) {
-      console.error("Failed to summarize chat history:", error);
-    }
-  };
+  }, [problem.title, problem.problemDescription, input, messages, addBotMessage]);
 
   const questionCounterValueRef = useRef<{ number: number } | null>(null);
   const handleFollowUp = useRef(0);
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim() || loading) return;
+    if (!input.trim()) return;
 
     const userMsg = { actor: Actor.USER, message: input };
-    setMessages((prev) => [...prev, userMsg]);
+    const updatedUserMessages = [...messages, userMsg];
+    setMessages(updatedUserMessages);
+    setGptMessages((prev) => [...prev, userMsg]);
     setInput("");
     setLoading(true);
 
     await updateChatsInSession([userMsg]);
 
-    messagesSinceLastSummary.current += 2; 
+    messagesSinceLastSummary.current += 1;
     if (messagesSinceLastSummary.current >= 6) {
       await handleSummarization();
     }
+
+    const recentMessages = gptMessages.slice(-4);
+    const contextForGpt = `
+      CONVERSATION SUMMARY:
+      ${summary || "The conversation has just begun."}
+
+      RECENT CHAT HISTORY:
+      ${JSON.stringify(recentMessages, null, 2)}
+    `;
 
     const currentStage = stageRef.current;
     const codeSnapshot = codeRef.current?.trim() || "";
@@ -460,27 +464,14 @@ const ChatBox: React.FC<ChatBoxProps> = ({
       const classification = await classifyUserMessage(
         input,
         currentStage,
-        messages.slice(-5) 
+        updatedUserMessages
       );
-      if (classification !== "#OFF_TOPIC") {
-        setGptMessages((prev) => [...prev, userMsg]);
-      }
       
-      const recentMessages = gptMessages.slice(-4);
-      const contextForGpt = `
-        CONVERSATION SUMMARY:
-        ${summary || "The conversation has just begun."}
-
-        RECENT CHAT HISTORY:
-        ${JSON.stringify(recentMessages, null, 2)}
-      `;
-
-
       switch (classification) {
         case "#UNDERSTOOD_CONFIRMATION": {
           await handleUnderstoodConfirmation(
             stageRef.current,
-            gptMessages,
+            contextForGpt,
             problem,
             input,
             stageRef,
@@ -492,7 +483,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         }
         case "#CONFUSED": {
           const clarification = await handleConfusedCase(
-            gptMessages,
+            contextForGpt,
             problem,
             input
           );
@@ -502,7 +493,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
 
         case "#RIGHT_ANSWER": {
           await handleRightAnswerCase(
-            gptMessages,
+            contextForGpt,
             problem,
             codeSnapshot,
             input,
@@ -515,13 +506,13 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         }
 
         case "#WRONG_ANSWER": {
-          await handleWrongCase(gptMessages, problem, input, addBotMessage);
+          await handleWrongCase(contextForGpt, problem, input, addBotMessage);
           break;
         }
 
         case "#REQUESTED_EXAMPLE": {
           await handleRequestExampleCase(
-            gptMessages,
+            contextForGpt,
             problem,
             input,
             currentStage,
@@ -533,9 +524,10 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         case "#APPROACH_PROVIDED": {
           await handleApproachProvided(
             stageRef.current,
-            gptMessages,
+            contextForGpt,
             problem,
             input,
+            approachAttemptCountRef,
             hasProvidedApproachRef,
             stageRef,
             approachTextRef,
@@ -553,7 +545,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         case "#PROBLEM_EXPLANATION": {
           await handleProblemExplanationCase(
             stageRef.current,
-            gptMessages,
+            contextForGpt,
             problem,
             addBotMessage,
             input
@@ -569,7 +561,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         case "#CODING_QUESTION": {
           await handleCodingQuestion({
             currentStage: stageRef.current,
-            gptMessages,
+            context: contextForGpt,
             problem,
             input,
             currentCode: codeRef.current,
@@ -581,7 +573,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
 
         case "#CODING_HELP": {
           await handleCodingHelp(
-            gptMessages,
+            contextForGpt,
             problem,
             codeRef.current,
             input,
@@ -593,7 +585,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         case "#GENERAL_ACKNOWLEDGMENT": {
           await handleGenralAcknowledgement(
             stageRef.current,
-            gptMessages,
+            contextForGpt,
             problem,
             addBotMessage,
             input
@@ -604,7 +596,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         case "#OFF_TOPIC": {
           await handleOffTopic(
             stageRef.current,
-            messages, 
+            contextForGpt,
             problem,
             addBotMessage
           );
@@ -626,7 +618,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         default: {
           await handleDefaultCase(
             stageRef.current,
-            gptMessages,
+            contextForGpt,
             problem,
             codeRef.current,
             input,
@@ -645,9 +637,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           });
           localStorage.setItem("mtv-sessionId", newSessionId);
           clearCachedReport();
-          updateChatsInSession([...messages, userMsg]);
-
-          
+          updateChatsInSession([...messages]);
         }
       }
     } catch (err) {
@@ -655,22 +645,17 @@ const ChatBox: React.FC<ChatBoxProps> = ({
       const errorMsg = {
         actor: Actor.INTERVIEWER,
         message:
-          "I couldn't comprehend due to a network issue, can you state that again?",
+          "I couldn't comprehend due to network issue, can you state that again?",
       };
-      setMessages((prev) => [...prev, errorMsg]);
-      await updateChatsInSession([errorMsg]);
+      const fallbackMessages = [...updatedUserMessages, errorMsg];
+      setMessages(fallbackMessages);
+      await updateChatsInSession(fallbackMessages);
     }
 
     setLoading(false);
   };
 
-  useEffect(() => {
-    if (onVerifyRef) {
-      onVerifyRef.current = handleVerifyCode;
-    }
-  }, [code, problem, approachTextRef.current]); 
-
-  const handleVerifyCode = async () => {
+  const handleVerifyCode = useCallback(async () => {
     const currentCode = codeRef.current;
     const userApproach = approachTextRef.current;
 
@@ -706,7 +691,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
               alignmentResult.feedback +
                 "\nPlease correct your code to match your approach and verify again."
             );
-            setLoading(false);
             return; 
           }
 
@@ -723,7 +707,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         await addBotMessage(
           "⚠️ AI couldn't generate test cases. Please try again later."
         );
-        setLoading(false);
         return;
       }
 
@@ -792,8 +775,13 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [addBotMessage, problem]);
 
+  useEffect(() => {
+    if (onVerifyRef) {
+      onVerifyRef.current = handleVerifyCode;
+    }
+  }, [onVerifyRef, handleVerifyCode]);
 
 
   return (
@@ -816,7 +804,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           placeholder="Ask for guidance..."
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          disabled={isInputDisabled || loading}
+          disabled={isInputDisabled}
         />
         <div className="buttonsContainer">
           <button type="submit" className="chatSendButton" disabled={loading}>
@@ -848,3 +836,4 @@ const ChatBox: React.FC<ChatBoxProps> = ({
 };
 
 export default ChatBox;
+
