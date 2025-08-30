@@ -119,9 +119,12 @@ const ChatBox: React.FC<ChatBoxProps> = ({
 
   useEffect(() => {
     if (onEndRef) {
-      onEndRef.current = () => endSession(true, setConfirmationModal, false);
+      onEndRef.current = () => {
+        endSession(true, undefined, false);
+        setLoading(true);
+      };
     }
-  }, [code, setConfirmationModal, problem]);
+  }, [code, problem]);
 
   const addBotMessage = async (text: string, isOffTopic: boolean = false) => {
     const newMessage = { actor: Actor.INTERVIEWER, message: text };
@@ -200,20 +203,10 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     const sessionId = localStorage.getItem("mtv-sessionId");
 
     if (!sessionId) {
-      if(setConfirmationModal) {
-          setConfirmationModal({
-          text1: "Are you sure?",
-          text2: `This will end your session and ${(!sessionId) ? `take you to home.` : `take you to the evaluation.`}`,
-          btn1Text: "Yes, End Session",
-          btn2Text: "Cancel",
-          btn1Handler: () => {
-            setConfirmationModal(null);
-            navigate("/home", { replace: true });
-            endSession(true, undefined, true);
-          },
-          btn2Handler: () => setConfirmationModal(null),
-        });
-      }
+      setLoadingSessionEnd(true);
+      setTimeout(() => {
+        navigate("/home");
+      }, 2000);
       return;
     }
 
@@ -228,7 +221,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           btn2Text: "Cancel",
           btn1Handler: () => {
             setConfirmationModal(null);
-            console.log("Auto alert");
             endSession(true, undefined, true);
           },
           btn2Handler: () => setConfirmationModal(null),
@@ -236,7 +228,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
       }
       return;
     } else if (!skipAutoAlert) {
-      console.log("Auto alert");
       if (setConfirmationModal) {
         setConfirmationModal({
           text1: "Your time is up!",
