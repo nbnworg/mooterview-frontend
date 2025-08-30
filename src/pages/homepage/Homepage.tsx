@@ -19,14 +19,14 @@ export default function Homepage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedLevel, setSelectedLevel] = useState("All");
   const [solved, setSolved] = useState("All");
-  const [selectedType, setType] = useState("All");
+  const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
 
   const navigate = useNavigate();
   useEffect(() => {
     localStorage.removeItem("mtv-sessionId");
   }, []);
 
-  const filteredProblems = problems?.filter((p) => {
+  const filteredProblems = problems?.filter((p: any) => {
     console.log("Problem object:", p);
     const matchesLevel =
       selectedLevel === "All" ||
@@ -35,17 +35,14 @@ export default function Homepage() {
       ?.toLowerCase()
       .includes(searchTerm.toLowerCase());
     const isSolved = solvedIds.includes(String(p.problemId));
-    const matchesSolve =  
+    const matchesSolve =
       solved === "All" ||
       (solved === "Solved" && isSolved) ||
       (solved === "UnSolved" && !isSolved);
-    const matchType = selectedType === "All" || p.problemPattern?.trim().toLowerCase() === selectedType.trim().toLowerCase();
-    console.log({
-  problemPattern: p.problemPattern,
-  selectedType,
-  comparison: p.problemPattern?.trim().toLowerCase() === selectedType.trim().toLowerCase()
-});
-    
+    const matchType =
+      selectedTypes.length === 0 ||
+      selectedTypes.includes(p.problemPattern?.trim().toLowerCase());
+
     return matchesLevel && matchesSearch && matchesSolve && matchType;
   });
 
@@ -77,8 +74,8 @@ export default function Homepage() {
           setSelectedLevel={setSelectedLevel}
           solved={solved}
           setSolved={setSolved}
-          selectedType={selectedType}
-          setType={setType}
+          selectedTypes={selectedTypes}
+          setSelectedTypes={setSelectedTypes}
           onAddProblem={() => navigate("/create-a-problem")}
         />
       </div>

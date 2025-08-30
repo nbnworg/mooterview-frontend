@@ -1,3 +1,6 @@
+import { useState } from "react";
+import { FaChevronDown, FaChevronUp } from "react-icons/fa";
+
 interface FiltersProps {
   searchTerm: string;
   setSearchTerm: (value: string) => void;
@@ -5,8 +8,8 @@ interface FiltersProps {
   setSelectedLevel: (value: string) => void;
   solved: string;
   setSolved: (value: string) => void;
-  selectedType: string;
-  setType: (value: string) => void;
+  selectedTypes: string[];
+  setSelectedTypes: (types: string[]) => void;
   onAddProblem: () => void;
 }
 
@@ -17,10 +20,39 @@ export default function Filters({
   setSelectedLevel,
   solved,
   setSolved,
-  selectedType,
-  setType,
+  selectedTypes,
+  setSelectedTypes,
   onAddProblem,
 }: FiltersProps) {
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const problemTypes = [
+    "Arrays & Hashing",
+    "Two Pointers",
+    "Stack",
+    "Sliding Window",
+    "Linked List",
+    "Binary Search",
+    "Trees",
+    "Tries",
+    "Heap/Priority Queue",
+    "Backtracking"
+  ];
+
+  
+  const toggleProblemType = (type: string) => {
+    const normalizedType = type.trim().toLowerCase();
+    if (selectedTypes.includes(normalizedType)) {
+      setSelectedTypes(selectedTypes.filter(t => t !== normalizedType));
+    } else {
+      setSelectedTypes([...selectedTypes, normalizedType]);
+    }
+  };
+
+  const removeProblemType = (type: string) => {
+    setSelectedTypes(selectedTypes.filter(t => t !== type));
+  };
+
+
   return (
     <div className="filterContainer">
       <input
@@ -81,29 +113,48 @@ export default function Filters({
         </label>
       </div>
       <hr className="horizontalLines" />
-      <p className="filterHeading">Problem Type:</p>
-      <div className="filterOptionContainer">
-        {["All","Arrays & Hashing",
-  "Two Pointers",
-  "Stack",
-  "Sliding Window",
-  "Linked List",
-  "Binary Search",
-  "Trees",
-  "Tries",
-  "Heap/Priority Queue",
-  "Backtracking"].map((type) => (
-    <label className="radioButton" key={type}>
-      <input 
-      type="radio"
-      name="problemPattern"
-      value={type}
-      onChange={(e) => setType(e.target.value)}
-      checked={selectedType === type}
-      />
-      {type}
-    </label>
-  ))}
+      {/* Multi-select Dropdown for Problem Types */}
+      <div className="multiSelectContainer">
+        <p className="filterHeading">Problem Types:</p>
+        <div
+          className="dropdownHeader"
+          onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+        >
+          <span>Select problem types...</span>
+          {isDropdownOpen ? (
+            <FaChevronUp className="dropdownIcon" />
+          ) : (
+            <FaChevronDown className="dropdownIcon" />
+          )}
+        </div>
+
+        <div className={`dropdownOptions ${isDropdownOpen ? 'open' : ''}`}>
+          {problemTypes.map((type) => (
+            <label className="checkboxOption" key={type}>
+              <input
+                type="checkbox"
+                checked={selectedTypes.includes(type.trim().toLowerCase())}
+                onChange={() => toggleProblemType(type)}
+              />
+              {type}
+            </label>
+          ))}
+        </div>
+
+        <div className="selectedTags">
+          {selectedTypes.map(type => (
+            <span key={type} className="selectedTag">
+              {type}
+              <button
+                type="button"
+                className="removeTag"
+                onClick={() => removeProblemType(type)}
+              >
+                ×
+              </button>
+            </span>
+          ))}
+        </div>
       </div>
       <hr className="horizontalLines" />
       <button className="createProblemButton" onClick={onAddProblem}>
