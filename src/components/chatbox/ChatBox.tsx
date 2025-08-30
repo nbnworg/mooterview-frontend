@@ -784,6 +784,8 @@ const ChatBox: React.FC<ChatBoxProps> = ({
   }, [onVerifyRef, handleVerifyCode]);
 
 
+
+
   return (
     <div className="chatbox">
       <div className="chatMessages">
@@ -836,4 +838,5 @@ const ChatBox: React.FC<ChatBoxProps> = ({
 };
 
 export default ChatBox;
+
 

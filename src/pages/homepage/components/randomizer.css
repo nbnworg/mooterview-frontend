@@ -1,0 +1,15 @@
+.parentDiv {
+    display: flex;
+    justify-content: center;
+}
+
+.randomize {
+    width: max-content;
+    padding: 0.5vw 1vw;
+    border-radius: 0.5vw;
+    border: none;
+    background-color: var(--secondary);
+    color: var(--background);
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
