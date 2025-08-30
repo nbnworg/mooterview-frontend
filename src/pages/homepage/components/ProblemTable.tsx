@@ -4,7 +4,7 @@ import ConfirmationModal from "../../../components/Confirmationmodal/Confirmatio
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-type ConfirmationModalData = {
+export type ConfirmationModalData = {
   text1: string;
   text2: string;
   btn1Text: string;
