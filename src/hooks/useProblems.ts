@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { getAllProblems } from "../utils/handlers/getAllProblems";
 import type { ProblemSummary } from "mooterview-client";
+import { updateUserById } from "../utils/handlers/updateUserInfoById";
 
 export const useProblems = () => {
   const [problems, setProblems] = useState<ProblemSummary[]>([]);
@@ -9,12 +10,15 @@ export const useProblems = () => {
 
   const CACHE_KEY = "cachedProblems";
   const CACHE_DURATION = 2 * 60 * 60 * 1000;
+  const userData = JSON.parse(localStorage.getItem("userData") || "{}");
+  const userId = userData.id;
 
   useEffect(() => {
     const fetchProblems = async () => {
       setLoading(true);
       setError(null);
       try {
+        updateUserById({ userId });
         const cached = localStorage.getItem(CACHE_KEY);
         const now = Date.now();
 
