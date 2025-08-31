@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { getAllProblems } from "../utils/handlers/getAllProblems";
 import type { ProblemSummary } from "mooterview-client";
 import { updateUserById } from "../utils/handlers/updateUserInfoById";
+import { getAllSessionByUserId } from "../utils/handlers/getAllSessionById";
 
 export const useProblems = () => {
   const [problems, setProblems] = useState<ProblemSummary[]>([]);
@@ -13,12 +14,47 @@ export const useProblems = () => {
   const userData = JSON.parse(localStorage.getItem("userData") || "{}");
   const userId = userData.id;
 
+
+  const checkAndUpdateStreak = async (userId: string) => {
+    try {
+      const { sessions } = await getAllSessionByUserId(userId);
+
+      if (!sessions || sessions.length === 0) {
+        console.log("No sessions found.");
+        return;
+      }
+
+      const latestSession = sessions.sort(
+        (a: any, b: any) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime()
+      )[0];
+
+      const today = new Date().toISOString().split("T")[0];
+      if (!latestSession?.startTime) {
+        console.log("Latest session has no startTime");
+        return;
+      }
+
+      const latestSessionDate = new Date(latestSession.startTime)
+        .toISOString()
+        .split("T")[0];
+
+      if (latestSessionDate === today) {
+        await updateUserById({ userId });
+      } else {
+        console.log("No sessions today!");
+      }
+    } catch (error) {
+      console.error("Error checking streak:", error);
+    }
+  };
+
+
   useEffect(() => {
     const fetchProblems = async () => {
       setLoading(true);
       setError(null);
       try {
-        updateUserById({ userId });
+        checkAndUpdateStreak(userId);
         const cached = localStorage.getItem(CACHE_KEY);
         const now = Date.now();
 

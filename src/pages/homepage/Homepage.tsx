@@ -20,29 +20,35 @@ export default function Homepage() {
     const solvedIds = useSolvedProblems();
     const progressData = useProgressData(problems, solvedIds);
 
-    const [searchTerm, setSearchTerm] = useState("");
-    const [selectedLevel, setSelectedLevel] = useState("All");
-    const [solved, setSolved] = useState("All");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedLevel, setSelectedLevel] = useState("All");
+  const [solved, setSolved] = useState("All");
+  const [selectedTypes, setSelectedTypes] = useState<string[]>([]);  
 
-    const navigate = useNavigate();
-    useEffect(() => {
-        localStorage.removeItem("mtv-sessionId");
-    }, []);
+  const navigate = useNavigate();
+  useEffect(() => {
+    localStorage.removeItem("mtv-sessionId");
+  }, []);
+  
 
-    const filteredProblems = problems?.filter((p) => {
-        const matchesLevel =
-            selectedLevel === "All" ||
-            p.level?.toLowerCase() === selectedLevel.toLowerCase();
-        const matchesSearch = p.title
-            ?.toLowerCase()
-            .includes(searchTerm.toLowerCase());
-        const isSolved = solvedIds.includes(String(p.problemId));
-        const matchesSolve =
-            solved === "All" ||
-            (solved === "Solved" && isSolved) ||
-            (solved === "UnSolved" && !isSolved);
-        return matchesLevel && matchesSearch && matchesSolve;
-    });
+  const filteredProblems = problems?.filter((p: any) => {
+    const matchesLevel =
+      selectedLevel === "All" ||
+      p.level?.toLowerCase() === selectedLevel.toLowerCase();
+    const matchesSearch = p.title
+      ?.toLowerCase()
+      .includes(searchTerm.toLowerCase());
+    const isSolved = solvedIds.includes(String(p.problemId));
+    const matchesSolve =
+      solved === "All" ||
+      (solved === "Solved" && isSolved) ||
+      (solved === "UnSolved" && !isSolved);
+    const matchType =
+      selectedTypes.length === 0 ||
+      selectedTypes.includes(p.problemPattern?.trim().toLowerCase());
+
+    return matchesLevel && matchesSearch && matchesSolve && matchType;
+  });
 
     return (
         <>
@@ -89,7 +95,9 @@ export default function Homepage() {
                     setSelectedLevel={setSelectedLevel}
                     solved={solved}
                     setSolved={setSolved}
-                    onAddProblem={() => navigate("/create-a-problem")}
+                    selectedTypes={selectedTypes}
+          setSelectedTypes={setSelectedTypes}
+          onAddProblem={() => navigate("/create-a-problem")}
                 />
             </div>
             <Footer />

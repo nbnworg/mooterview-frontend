@@ -82,11 +82,10 @@
 }
 
 .solution-code-list-item {
-  margin-bottom: 1.042vw;
   background-color: #282c34;
   border-radius: 0.417vw;
-  overflow: hidden;
-  position: relative;
+  padding: 0.781vw 1.042vw;
+  margin-bottom: 1.042vw;
 }
 
 .solution-code-block,
@@ -97,14 +96,20 @@
   font-size: 0.792vw;
   color: #abb2bf;
   overflow-x: auto;
-  white-space: no-wrap;
+  white-space: pre-wrap;
   word-wrap: break-word;
-  overflow: auto;
+  background-color: #000000;
+  border-radius: 0.417vw;
 }
 
 .myCode {
-  background-color: #282c34;
-  border-radius: 1.2vw;
+  padding: 0.781vw 1.042vw;
+  background-color: #000000;
+  border-radius: 0.417vw;
+  color: #abb2bf;
+  font-family: "Fira Code", "Cascadia Code", "Consolas", monospace;
+  font-size: 0.792vw;
+  overflow: auto;
 }
 
 .return-home-button {
@@ -165,4 +170,10 @@
 .radarGraphContainer {
   flex: 1;
   height: 20vw;
+}
+
+.solution-code-list-item .react-syntax-highlighter-code-block {
+  background: transparent !important;
+  padding: 0 !important;
+  margin: 0 !important;
 }
