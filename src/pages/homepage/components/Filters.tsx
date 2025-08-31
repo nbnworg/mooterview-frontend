@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { FaChevronDown, FaChevronUp } from "react-icons/fa";
 
 interface FiltersProps {
@@ -38,7 +38,7 @@ export default function Filters({
     "Backtracking"
   ];
 
-  
+
   const toggleProblemType = (type: string) => {
     const normalizedType = type.trim().toLowerCase();
     if (selectedTypes.includes(normalizedType)) {
@@ -47,6 +47,21 @@ export default function Filters({
       setSelectedTypes([...selectedTypes, normalizedType]);
     }
   };
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const removeProblemType = (type: string) => {
     setSelectedTypes(selectedTypes.filter(t => t !== type));
@@ -113,8 +128,7 @@ export default function Filters({
         </label>
       </div>
       <hr className="horizontalLines" />
-      {/* Multi-select Dropdown for Problem Types */}
-      <div className="multiSelectContainer">
+      <div className="multiSelectContainer" ref={dropdownRef}>
         <p className="filterHeading">Problem Types:</p>
         <div
           className="dropdownHeader"

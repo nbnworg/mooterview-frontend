@@ -30,7 +30,6 @@ export const useProblems = () => {
         }
 
         const freshProblems = await getAllProblems();
-        console.log("Problem", problems);
         localStorage.setItem(
           CACHE_KEY,
           JSON.stringify({ problems: freshProblems, timestamp: now })

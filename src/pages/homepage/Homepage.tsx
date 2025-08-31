@@ -26,8 +26,6 @@ export default function Homepage() {
   useEffect(() => {
     localStorage.removeItem("mtv-sessionId");
   }, []);
-  console.log("selectedTypes:------", selectedTypes);
-  console.log("All problems:::", problems); 
   
 
   const filteredProblems = problems?.filter((p: any) => {
