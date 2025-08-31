@@ -499,7 +499,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             gptMessages,
             problem,
             input,
-            approachAttemptCountRef,
             hasProvidedApproachRef,
             stageRef,
             approachTextRef,
@@ -507,7 +506,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             addBotMessage
           );
           break;
-        }
+        } 
 
         case "#PROBLEM_EXPLANATIONS": {
           addBotMessage("Okay, you can explain the approach now!");
@@ -609,7 +608,8 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           });
           localStorage.setItem("mtv-sessionId", sessionId);
           clearCachedReport();
-          updateChatsInSession([...messages]);
+          updateChatsInSession(updatedUserMessages);
+          
         }
       }
     } catch (err) {
@@ -646,60 +646,64 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     }
 
     if (!problem.title) {
-    console.error("Problem title is missing, cannot verify approach.");
-    await addBotMessage("An unexpected error occurred and I cannot verify your solution right now.");
-    return;
-  }
-
-  if (userApproach) {
-
-    try {
-      const alignment = await verifyApproach({
-        approach: userApproach,
-        code: currentCode,
-        problemTitle: problem.title,
-      });
-  if (alignment.alignment === "MISMATCH") {
-  await addBotMessage(alignment.feedback + "\nPlease correct your code to match your approach and verify again.");
-  return; 
-}
-
-// await addBotMessage(alignment.feedback || "Great, your code correctly implements the approach you described. Now, I'm checking it for correctness...");
-    } catch (error) {
-      console.error("Error verifying approach:", error);
+      console.error("Problem title is missing, cannot verify solution.");
       await addBotMessage(
-        "Sorry, I had an issue verifying your approach. Let's proceed with checking the code's correctness."
-      );
-    }
-  }
-
-    const testCases = await generateTestCasesWithAI(problem);
-    if (!testCases || testCases.length === 0) {
-      await addBotMessage(
-        "⚠️ AI couldn't generate test cases. Please try again later."
+        "An unexpected error occurred and I cannot verify your solution right now."
       );
       return;
     }
 
-    const rubricResult = await evaluateSolutionWithRubric(currentCode);
-    setrubricResult(rubricResult);
+    setLoading(true);
 
-    const testCaseText = testCases
-      .map(
-        (t, i) =>
-          `#${i + 1}: input=${JSON.stringify(
-            t.input
-          )}, expected=${JSON.stringify(t.expected)}`
-      )
-      .join("\n");
+    try {
+      let alignmentResult = null;
+      if (userApproach) {
+        try {
+          alignmentResult = await verifyApproach({
+            approach: userApproach,
+            code: currentCode,
+            problemTitle: problem.title,
+          });
+          if (alignmentResult.alignment === "MISMATCH") {
+            await addBotMessage(
+              alignmentResult.feedback +
+                "\nPlease correct your code to match your approach and verify again."
+            );
+            return; 
+          }
 
-    const context = `
-      Problem Title: ${problem.title}
-      Description: ${problem.problemStatement}
+        } catch (error) {
+          console.error("Error verifying approach:", error);
+          await addBotMessage(
+            "Sorry, I had an issue verifying your approach. Let's proceed with checking the code's correctness."
+          );
+        }
+      }
 
-      Candidate's solution code:
-      ${currentCode || "[No code provided]"}
+      const testCases = await generateTestCasesWithAI(problem);
+      if (!testCases || testCases.length === 0) {
+        await addBotMessage(
+          "⚠️ AI couldn't generate test cases. Please try again later."
+        );
+        return;
+      }
 
+      const rubricResult = await evaluateSolutionWithRubric(currentCode);
+      setrubricResult(rubricResult);
+
+      const testCaseText = testCases
+        .map(
+          (t, i) =>
+            `#${i + 1}: input=${JSON.stringify(
+              t.input
+            )}, expected=${JSON.stringify(t.expected)}`
+        )
+        .join("\n");
+
+      const context = `
+        Problem Title: ${problem.title}
+        Description: ${problem.problemDescription}
+        Candidate's solution code:\n${currentCode}
       Rubric Evaluation:
       - Correctness: ${rubricResult.rubricScores.correctness}
       - Edge Cases: ${rubricResult.rubricScores.edgeCases}
@@ -711,30 +715,47 @@ const ChatBox: React.FC<ChatBoxProps> = ({
       ${testCaseText}
       `.trim();
 
-    const response = await getPromptResponse({
-      actor: Actor.INTERVIEWER,
-      context,
-      promptKey: "verify-code",
-      modelName: "gpt-4o",
-    });
-
-    await addBotMessage(response);
-
-    if (response.trim().startsWith("Correct")) {
-      setIsSolutionVerifiedCorrect(true);
-      isSolutionVerifiedCorrectRef.current = true;
-      stageRef.current = "FOLLOW_UP";
-
-      const followUpResponse = await getPromptResponse({
+      const correctnessResponse = await getPromptResponse({
         actor: Actor.INTERVIEWER,
         context,
-        promptKey: "follow-up",
-        modelName: "gpt-3.5-turbo",
+        promptKey: "verify-code",
+        modelName: "gpt-4o",
       });
 
-      await addBotMessage(followUpResponse);
+      const isCorrect = correctnessResponse.trim().startsWith("Correct");
+
+      if (isCorrect) {
+        await addBotMessage(correctnessResponse);
+        setIsSolutionVerifiedCorrect(true);
+        isSolutionVerifiedCorrectRef.current = true;
+        stageRef.current = "FOLLOW_UP";
+
+        const followUpResponse = await getPromptResponse({
+          actor: Actor.INTERVIEWER,
+          context,
+          promptKey: "follow-up",
+          modelName: "gpt-3.5-turbo",
+        });
+        await addBotMessage(followUpResponse);
+      } else {
+        if (alignmentResult?.alignment === "MATCH") {
+          const combinedFeedback = `Your implementation faithfully reflects the described approach. However, your solution is incorrect. ${correctnessResponse}`;
+          await addBotMessage(combinedFeedback);
+        } else {
+          await addBotMessage(correctnessResponse);
+        }
+      }
+    } catch (error) {
+      console.error("An error occurred during the verification process:", error);
+      await addBotMessage(
+        "An unexpected error occurred while verifying your solution. Please try again."
+      );
+    } finally {
+      setLoading(false);
     }
   };
+
+
 
   return (
     <div className="chatbox">

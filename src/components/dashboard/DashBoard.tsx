@@ -77,6 +77,10 @@ const DashBoard = () => {
   const [typeToProblems, setTypeToProblems] = useState<{ [key: string]: string[] }>({});
 
   useEffect(() => {
+    localStorage.removeItem("mtv-sessionId");
+  }, []);
+  
+  useEffect(() => {
     const fetchAll = async () => {
       setPageLoading(true);
       setError(null);
