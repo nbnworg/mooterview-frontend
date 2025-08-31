@@ -20,13 +20,15 @@ export default function Homepage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedLevel, setSelectedLevel] = useState("All");
   const [solved, setSolved] = useState("All");
+  const [selectedTypes, setSelectedTypes] = useState<string[]>([]);  
 
   const navigate = useNavigate();
   useEffect(() => {
     localStorage.removeItem("mtv-sessionId");
   }, []);
+  
 
-  const filteredProblems = problems?.filter((p) => {
+  const filteredProblems = problems?.filter((p: any) => {
     const matchesLevel =
       selectedLevel === "All" ||
       p.level?.toLowerCase() === selectedLevel.toLowerCase();
@@ -38,7 +40,11 @@ export default function Homepage() {
       solved === "All" ||
       (solved === "Solved" && isSolved) ||
       (solved === "UnSolved" && !isSolved);
-    return matchesLevel && matchesSearch && matchesSolve;
+    const matchType =
+      selectedTypes.length === 0 ||
+      selectedTypes.includes(p.problemPattern?.trim().toLowerCase());
+
+    return matchesLevel && matchesSearch && matchesSolve && matchType;
   });
 
   return (
@@ -72,6 +78,8 @@ export default function Homepage() {
           setSelectedLevel={setSelectedLevel}
           solved={solved}
           setSolved={setSolved}
+          selectedTypes={selectedTypes}
+          setSelectedTypes={setSelectedTypes}
           onAddProblem={() => navigate("/create-a-problem")}
         />
       </div>

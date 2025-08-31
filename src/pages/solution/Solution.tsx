@@ -7,6 +7,9 @@ import { getSessionById } from "../../utils/handlers/getSessionById";
 import Navbar from "../../components/navbar/Navbar";
 import { FaRegFileAlt } from "react-icons/fa";
 import Loading from "../../components/Loader/Loading";
+import SyntaxHighlighter from 'react-syntax-highlighter';
+import { atomOneDark } from 'react-syntax-highlighter/dist/cjs/styles/hljs';
+
 import {
   Chart as ChartJS,
   RadialLinearScale,
@@ -192,7 +195,21 @@ const Solution = () => {
 
         <section className="solution-section solution-summary-section">
           <h2 className="solution-section-title">Your Solution</h2>
-          <pre className="myCode">{userSolution}</pre>
+          <div className="solution-code-list-item">
+            <SyntaxHighlighter
+              language="javascript"
+              style={atomOneDark}
+              customStyle={{
+                background: 'transparent',
+                padding: '0',
+                margin: '0',
+                fontSize: '0.792vw'
+              }}
+              wrapLongLines={true}
+            >
+              {userSolution}
+            </SyntaxHighlighter>
+          </div>
         </section>
 
         <section className="solution-section solution-alternatives-section">
@@ -204,14 +221,25 @@ const Solution = () => {
                   key={idx}
                   className="solution-list-item solution-code-list-item"
                 >
-                  <pre className="solution-code-block">
-                    <code className="solution-code-content">{item}</code>
-                  </pre>
+                  <SyntaxHighlighter
+                    language="python"
+                    style={atomOneDark}
+                    customStyle={{
+                      background: 'transparent',
+                      padding: '0',
+                      margin: '0',
+                      fontSize: '0.792vw'
+                    }}
+                    wrapLongLines={true}
+                  >
+                    {item}
+                  </SyntaxHighlighter>
                 </li>
               )
             )}
           </ul>
         </section>
+
       </div>
       {loading && (
         <Loading message="Loading Evaluation..." size="large" />

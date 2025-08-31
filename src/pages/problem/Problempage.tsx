@@ -25,7 +25,6 @@ const ProblemPage = () => {
 
   const verifySolutionRef = useRef<() => void | null>(null);
   const endSessionRef = useRef<() => void | null>(null);
-
   useEffect(() => {
     const handleUnload = (e: BeforeUnloadEvent) => {
       if (problem || timeLeft > 0 || code.trim() !== "") {
