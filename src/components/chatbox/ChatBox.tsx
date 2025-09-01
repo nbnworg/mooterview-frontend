@@ -183,121 +183,143 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     }
   };
 
-  const endSession = async (
-    calledAutomatically: boolean,
-    setConfirmationModal?: React.Dispatch<
-      React.SetStateAction<{
-        text1: string;
-        text2: string;
-        btn1Text: string;
-        btn2Text: string;
-        btn1Handler: () => void;
-        btn2Handler: () => void;
-      } | null>
-    >,
-    skipAutoAlert?: boolean
-  ) => {
-    const sessionId = localStorage.getItem("mtv-sessionId");
+const endSession = async (
+  calledAutomatically: boolean,
+  setConfirmationModal?: React.Dispatch<
+    React.SetStateAction<{
+      text1: string;
+      text2: string;
+      btn1Text: string;
+      btn2Text: string;
+      btn1Handler: () => void;
+      btn2Handler: () => void;
+    } | null>
+  >,
+  skipAutoAlert?: boolean
+) => {
+  const sessionId = localStorage.getItem("mtv-sessionId");
 
-    if (!sessionId) {
-      navigate("/home", { replace: true });
-      return;
-    }
+  if (!sessionId) {
+    navigate("/home", { replace: true });
+    return;
+  }
 
-    const wantsSolution = true;
 
-    if (!calledAutomatically) {
-      if (setConfirmationModal) {
-        setConfirmationModal({
-          text1: "Are you sure?",
-          text2: "This will end your session and take you to the evaluation.",
-          btn1Text: "Yes, End Session",
-          btn2Text: "Cancel",
-          btn1Handler: () => {
-            setConfirmationModal(null);
-            endSession(true, undefined, true);
-          },
-          btn2Handler: () => setConfirmationModal(null),
-        });
-      }
-      return;
-    } else if (!skipAutoAlert) {
-      if (setConfirmationModal) {
-        setConfirmationModal({
-          text1: "Your time is up!",
-          text2: "This will end your session and take you to the evaluation.",
-          btn1Text: "OK, Proceed",
-          btn2Text: "Cancel",
-          btn1Handler: async () => {
-            setConfirmationModal(null);
-
-            if (
-              stageRef.current === "CODING" ||
-              stageRef.current === "FOLLOW_UP" ||
-              stageRef.current === "SESSION_END"
-            ) {
-              await updateSessionById({
-                sessionId,
-                endTime: new Date().toISOString(),
-              });
-
-              const evaluation = await generateEvaluationSummary();
-
-              await updateSessionById({
-                sessionId,
-                notes: [
-                  { content: evaluation.summary },
-                  { content: codeRef.current.trim() || "No code provided" },
-                ],
-              });
-
-              navigate(`/solution/${encodeURIComponent(problem.title ?? "")}`, {
-                state: { evaluation, sessionId, rubricResult },
-                replace: true,
-              });
-            } else {
-              navigate("/home", { replace: true });
-            }
-          },
-          btn2Handler: () => setConfirmationModal(null),
-        });
-      }
-    }
-
+  const getCleanedEvaluation = async () => {
     try {
-      setLoadingSessionEnd(true);
+      const evaluationResponse = await generateEvaluationSummary();
+      
+      const evaluationString = typeof evaluationResponse === 'string' 
+        ? evaluationResponse 
+        : JSON.stringify(evaluationResponse);
+
+      const cleanedString = evaluationString
+        .replace(/^```json\s*/, "")
+        .replace(/```$/, "")
+        .trim();
+
+      const parsedEvaluation = JSON.parse(cleanedString);
+      return parsedEvaluation;
+
+    } catch (error) {
+      console.error("Failed to parse evaluation summary. Proceeding without it.", error);
+      return { summary: "Could not generate an AI evaluation for this session." };
+    }
+  };
+
+  const wantsSolution = true;
+
+  if (!calledAutomatically) {
+    if (setConfirmationModal) {
+      setConfirmationModal({
+        text1: "Are you sure?",
+        text2: "This will end your session and take you to the evaluation.",
+        btn1Text: "Yes, End Session",
+        btn2Text: "Cancel",
+        btn1Handler: () => {
+          setConfirmationModal(null);
+          endSession(true, undefined, true); 
+        },
+        btn2Handler: () => setConfirmationModal(null),
+      });
+    }
+    return;
+  } else if (!skipAutoAlert) {
+    if (setConfirmationModal) {
+      setConfirmationModal({
+        text1: "Your time is up!",
+        text2: "This will end your session and take you to the evaluation.",
+        btn1Text: "OK, Proceed",
+        btn2Text: "Cancel",
+        btn1Handler: async () => {
+          setConfirmationModal(null);
+
+          if (
+            stageRef.current === "CODING" ||
+            stageRef.current === "FOLLOW_UP" ||
+            stageRef.current === "SESSION_END"
+          ) {
+            setLoadingSessionEnd(true);
+            const evaluation = await getCleanedEvaluation(); 
+
+            await updateSessionById({
+              sessionId,
+              endTime: new Date().toISOString(),
+              notes: [
+                { content: evaluation.summary },
+                { content: codeRef.current.trim() || "No code provided" },
+              ],
+            });
+
+            setLoadingSessionEnd(false);
+            navigate(`/solution/${encodeURIComponent(problem.title ?? "")}`, {
+              state: { evaluation, sessionId, rubricResult },
+              replace: true,
+            });
+          } else {
+            navigate("/home", { replace: true });
+          }
+        },
+        btn2Handler: () => setConfirmationModal(null),
+      });
+    }
+    return; 
+  }
+
+  try {
+    setLoadingSessionEnd(true);
+    
+    if (wantsSolution) {
+      const evaluation = await getCleanedEvaluation();
+
+      await updateSessionById({
+        sessionId,
+        endTime: new Date().toISOString(),
+        notes: [
+          { content: evaluation.summary },
+          {
+            content: codeRef.current.trim() || "No code provided",
+          },
+        ],
+      });
+
+      navigate(`/solution/${encodeURIComponent(problem.title ?? "")}`, {
+        state: { evaluation, sessionId, rubricResult },
+        replace: true,
+      });
+    } else {
       await updateSessionById({
         sessionId,
         endTime: new Date().toISOString(),
       });
-
-      if (wantsSolution) {
-        const evaluation = await generateEvaluationSummary();
-
-        await updateSessionById({
-          sessionId,
-          notes: [
-            { content: evaluation.summary },
-            {
-              content: codeRef.current.trim() || "No code provided",
-            },
-          ],
-        });
-
-        navigate(`/solution/${encodeURIComponent(problem.title ?? "")}`, {
-          state: { evaluation, sessionId, rubricResult },
-          replace: true,
-        });
-      } else {
-        navigate("/home", { replace: true });
-      }
-    } catch (err) {
-      console.error("Failed to end session", err);
-    } finally {
-      setLoadingSessionEnd(false);
+      navigate("/home", { replace: true });
     }
-  };
-
+  } catch (err) {
+    console.error("Failed to end session", err);
+  } finally {
+    setLoadingSessionEnd(false);
+  }
+};
   useEffect(() => {
     const explainProblem = async () => {
       if (hasExplainedRef.current) return;
