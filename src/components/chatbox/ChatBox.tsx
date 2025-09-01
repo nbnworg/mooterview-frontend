@@ -30,7 +30,6 @@ import {
   handleOffTopic,
   handleDefaultCase,
 } from "./caseHandler";
-import { updateUserById } from "../../utils/handlers/updateUserInfoById";
 
 interface ChatBoxProps {
   problem: Problem;
@@ -604,7 +603,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           localStorage.setItem("mtv-sessionId", sessionId);
           clearCachedReport();
           updateChatsInSession(updatedUserMessages);
-          updateUserById({ userId });
         }
       }
     } catch (err) {
