@@ -119,7 +119,10 @@ const ChatBox: React.FC<ChatBoxProps> = ({
 
   useEffect(() => {
     if (onEndRef) {
-      onEndRef.current = () => endSession(true);
+      onEndRef.current = () => {
+        endSession(true, undefined, false);
+        setLoading(true);
+      };
     }
   }, [code, problem]);
 
@@ -200,7 +203,10 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     const sessionId = localStorage.getItem("mtv-sessionId");
 
     if (!sessionId) {
-      navigate("/home", { replace: true });
+      setLoadingSessionEnd(true);
+      setTimeout(() => {
+        navigate("/home");
+      }, 2000);
       return;
     }
 
@@ -210,7 +216,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
       if (setConfirmationModal) {
         setConfirmationModal({
           text1: "Are you sure?",
-          text2: "This will end your session and take you to the evaluation.",
+          text2: `This will end your session and ${(!sessionId) ? `take you to home.` : `take you to the evaluation.`}`,
           btn1Text: "Yes, End Session",
           btn2Text: "Cancel",
           btn1Handler: () => {
@@ -225,12 +231,11 @@ const ChatBox: React.FC<ChatBoxProps> = ({
       if (setConfirmationModal) {
         setConfirmationModal({
           text1: "Your time is up!",
-          text2: "This will end your session and take you to the evaluation.",
+          text2: `This will end your session and ${(!sessionId) ? `take you to home.` : `take you to the evaluation.`}`,
           btn1Text: "OK, Proceed",
           btn2Text: "Cancel",
           btn1Handler: async () => {
             setConfirmationModal(null);
-
             if (
               stageRef.current === "CODING" ||
               stageRef.current === "FOLLOW_UP" ||
@@ -241,8 +246,8 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                 endTime: new Date().toISOString(),
               });
 
+              setLoadingSessionEnd(true);
               const evaluation = await generateEvaluationSummary();
-
               await updateSessionById({
                 sessionId,
                 notes: [
@@ -261,9 +266,10 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           },
           btn2Handler: () => setConfirmationModal(null),
         });
+        return;
       }
     }
-
+    
     try {
       setLoadingSessionEnd(true);
       await updateSessionById({
@@ -575,8 +581,8 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           stageRef.current = "SESSION_END";
           setIsInputDisabled(true);
           setTimeout(() => {
-            endSession(true, undefined, true);
-          }, 1500);
+            endSession(false, setConfirmationModal, true);
+          }, 2000);
           break;
         }
 
@@ -782,7 +788,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           </button>
           <button
             className="endSessionButton"
-            onClick={() => endSession(false, setConfirmationModal)}
+            onClick={() => endSession(false, setConfirmationModal, true)}
           >
             <div className="buttonIcon">
               <GoMoveToEnd />
