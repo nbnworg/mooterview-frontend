@@ -13,6 +13,7 @@ import { generateTestCasesWithAI } from "../../utils/generateTestCasesWithAI";
 import ConfirmationModal from "../Confirmationmodal/Confirmationmodal";
 import { clearCachedReport } from "../../utils/localStorageReport";
 import { verifyApproach } from "../../utils/handlers/verifyApproach";
+import { getTokenData } from "../../utils/constants";
 import { IoSend } from "react-icons/io5";
 import { GoMoveToEnd } from "react-icons/go";
 import Loading from "../Loader/Loading";
@@ -331,12 +332,11 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           phaseRef.current = "CODING";
         }
 
-        const commonContext = `Problem: ${problem.title}\n\n${
-          problem.problemDescription
-        }
+        const commonContext = `Problem: ${problem.title}\n\n${problem.problemDescription
+          }
                     Elapsed time: ${Math.floor(
-                      elapsed / 60
-                    )} minutes\nUser's last message: ${input}
+            elapsed / 60
+          )} minutes\nUser's last message: ${input}
                     Current stage: ${stageRef.current}`;
         const prevAnalysisCode = intitalCodeContextRef.current;
 
@@ -500,7 +500,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             addBotMessage
           );
           break;
-        } 
+        }
 
         case "#PROBLEM_EXPLANATIONS": {
           addBotMessage("Okay, you can explain the approach now!");
@@ -603,7 +603,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           localStorage.setItem("mtv-sessionId", sessionId);
           clearCachedReport();
           updateChatsInSession(updatedUserMessages);
-          
+
         }
       }
     } catch (err) {
@@ -640,32 +640,36 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     }
 
     if (!problem.title) {
-    console.error("Problem title is missing, cannot verify approach.");
-    await addBotMessage("An unexpected error occurred and I cannot verify your solution right now.");
-    return;
-  }
-
-  if (userApproach) {
-
-    try {
-      const alignment = await verifyApproach({
-        approach: userApproach,
-        code: currentCode,
-        problemTitle: problem.title,
-      });
-  if (alignment.alignment === "MISMATCH") {
-  await addBotMessage(alignment.feedback + "\nPlease correct your code to match your approach and verify again.");
-  return; 
-}
-
-await addBotMessage(alignment.feedback || "Great, your code correctly implements the approach you described. Now, I'm checking it for correctness...");
-    } catch (error) {
-      console.error("Error verifying approach:", error);
-      await addBotMessage(
-        "Sorry, I had an issue verifying your approach. Let's proceed with checking the code's correctness."
-      );
+      console.error("Problem title is missing, cannot verify approach.");
+      await addBotMessage("An unexpected error occurred and I cannot verify your solution right now.");
+      return;
     }
-  }
+
+    if (userApproach) {
+
+      try {
+        const tokenData = getTokenData();
+        if (!tokenData) throw new Error("Token not found");
+        const userId = tokenData.id;
+        const alignment = await verifyApproach({
+          approach: userApproach,
+          code: currentCode,
+          problemTitle: problem.title,
+          userId
+        });
+        if (alignment.alignment === "MISMATCH") {
+          await addBotMessage(alignment.feedback + "\nPlease correct your code to match your approach and verify again.");
+          return;
+        }
+
+        await addBotMessage(alignment.feedback || "Great, your code correctly implements the approach you described. Now, I'm checking it for correctness...");
+      } catch (error) {
+        console.error("Error verifying approach:", error);
+        await addBotMessage(
+          "Sorry, I had an issue verifying your approach. Let's proceed with checking the code's correctness."
+        );
+      }
+    }
 
     const testCases = await generateTestCasesWithAI(problem);
     if (!testCases || testCases.length === 0) {

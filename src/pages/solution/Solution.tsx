@@ -215,8 +215,8 @@ const Solution = () => {
         <section className="solution-section solution-alternatives-section">
           <h2 className="solution-section-title">Alternative Solutions</h2>
           <ul className="solution-list solution-code-list">
-            {evaluation.alternativeSolutions.map(
-              (item: string, idx: number) => (
+            {evaluation?.alternativeSolutions?.length ? (
+              evaluation.alternativeSolutions.map((item: string, idx: number) => (
                 <li
                   key={idx}
                   className="solution-list-item solution-code-list-item"
@@ -225,17 +225,19 @@ const Solution = () => {
                     language="python"
                     style={atomOneDark}
                     customStyle={{
-                      background: 'transparent',
-                      padding: '0',
-                      margin: '0',
-                      fontSize: '0.792vw'
+                      background: "transparent",
+                      padding: "0",
+                      margin: "0",
+                      fontSize: "0.792vw",
                     }}
                     wrapLongLines={true}
                   >
                     {item}
                   </SyntaxHighlighter>
                 </li>
-              )
+              ))
+            ) : (
+              <p className="solution-no-data-text">No alternative solutions available.</p>
             )}
           </ul>
         </section>
