@@ -120,7 +120,10 @@ const ChatBox: React.FC<ChatBoxProps> = ({
 
   useEffect(() => {
     if (onEndRef) {
-      onEndRef.current = () => endSession(true);
+      onEndRef.current = () => {
+        endSession(true, undefined, false);
+        setLoading(true);
+      };
     }
   }, [code, problem]);
 
@@ -201,7 +204,10 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     const sessionId = localStorage.getItem("mtv-sessionId");
 
     if (!sessionId) {
-      navigate("/home", { replace: true });
+      setLoadingSessionEnd(true);
+      setTimeout(() => {
+        navigate("/home");
+      }, 2000);
       return;
     }
 
@@ -211,7 +217,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
       if (setConfirmationModal) {
         setConfirmationModal({
           text1: "Are you sure?",
-          text2: "This will end your session and take you to the evaluation.",
+          text2: `This will end your session and ${(!sessionId) ? `take you to home.` : `take you to the evaluation.`}`,
           btn1Text: "Yes, End Session",
           btn2Text: "Cancel",
           btn1Handler: () => {
@@ -226,12 +232,11 @@ const ChatBox: React.FC<ChatBoxProps> = ({
       if (setConfirmationModal) {
         setConfirmationModal({
           text1: "Your time is up!",
-          text2: "This will end your session and take you to the evaluation.",
+          text2: `This will end your session and ${(!sessionId) ? `take you to home.` : `take you to the evaluation.`}`,
           btn1Text: "OK, Proceed",
           btn2Text: "Cancel",
           btn1Handler: async () => {
             setConfirmationModal(null);
-
             if (
               stageRef.current === "CODING" ||
               stageRef.current === "FOLLOW_UP" ||
@@ -242,8 +247,8 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                 endTime: new Date().toISOString(),
               });
 
+              setLoadingSessionEnd(true);
               const evaluation = await generateEvaluationSummary();
-
               await updateSessionById({
                 sessionId,
                 notes: [
@@ -262,9 +267,10 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           },
           btn2Handler: () => setConfirmationModal(null),
         });
+        return;
       }
     }
-
+    
     try {
       setLoadingSessionEnd(true);
       await updateSessionById({
@@ -575,8 +581,8 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           stageRef.current = "SESSION_END";
           setIsInputDisabled(true);
           setTimeout(() => {
-            endSession(true, undefined, true);
-          }, 1500);
+            endSession(false, setConfirmationModal, true);
+          }, 2000);
           break;
         }
 
@@ -640,64 +646,65 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     }
 
     if (!problem.title) {
-      console.error("Problem title is missing, cannot verify approach.");
-      await addBotMessage("An unexpected error occurred and I cannot verify your solution right now.");
-      return;
-    }
-
-    if (userApproach) {
-
-      try {
-        const tokenData = getTokenData();
-        if (!tokenData) throw new Error("Token not found");
-        const userId = tokenData.id;
-        const alignment = await verifyApproach({
-          approach: userApproach,
-          code: currentCode,
-          problemTitle: problem.title,
-          userId
-        });
-        if (alignment.alignment === "MISMATCH") {
-          await addBotMessage(alignment.feedback + "\nPlease correct your code to match your approach and verify again.");
-          return;
-        }
-
-        await addBotMessage(alignment.feedback || "Great, your code correctly implements the approach you described. Now, I'm checking it for correctness...");
-      } catch (error) {
-        console.error("Error verifying approach:", error);
-        await addBotMessage(
-          "Sorry, I had an issue verifying your approach. Let's proceed with checking the code's correctness."
-        );
-      }
-    }
-
-    const testCases = await generateTestCasesWithAI(problem);
-    if (!testCases || testCases.length === 0) {
+      console.error("Problem title is missing, cannot verify solution.");
       await addBotMessage(
-        "⚠️ AI couldn't generate test cases. Please try again later."
+        "An unexpected error occurred and I cannot verify your solution right now."
       );
       return;
     }
 
-    const rubricResult = await evaluateSolutionWithRubric(currentCode);
-    setrubricResult(rubricResult);
+    setLoading(true);
 
-    const testCaseText = testCases
-      .map(
-        (t, i) =>
-          `#${i + 1}: input=${JSON.stringify(
-            t.input
-          )}, expected=${JSON.stringify(t.expected)}`
-      )
-      .join("\n");
+    try {
+      let alignmentResult = null;
+      if (userApproach) {
+        try {
+          alignmentResult = await verifyApproach({
+            approach: userApproach,
+            code: currentCode,
+            problemTitle: problem.title,
+            userId: getTokenData()?.id || "",
+          });
+          if (alignmentResult.alignment === "MISMATCH") {
+            await addBotMessage(
+              alignmentResult.feedback +
+                "\nPlease correct your code to match your approach and verify again."
+            );
+            return; 
+          }
 
-    const context = `
-      Problem Title: ${problem.title}
-      Description: ${problem.problemStatement}
+        } catch (error) {
+          console.error("Error verifying approach:", error);
+          await addBotMessage(
+            "Sorry, I had an issue verifying your approach. Let's proceed with checking the code's correctness."
+          );
+        }
+      }
 
-      Candidate's solution code:
-      ${currentCode || "[No code provided]"}
+      const testCases = await generateTestCasesWithAI(problem);
+      if (!testCases || testCases.length === 0) {
+        await addBotMessage(
+          "⚠️ AI couldn't generate test cases. Please try again later."
+        );
+        return;
+      }
 
+      const rubricResult = await evaluateSolutionWithRubric(currentCode);
+      setrubricResult(rubricResult);
+
+      const testCaseText = testCases
+        .map(
+          (t, i) =>
+            `#${i + 1}: input=${JSON.stringify(
+              t.input
+            )}, expected=${JSON.stringify(t.expected)}`
+        )
+        .join("\n");
+
+      const context = `
+        Problem Title: ${problem.title}
+        Description: ${problem.problemDescription}
+        Candidate's solution code:\n${currentCode}
       Rubric Evaluation:
       - Correctness: ${rubricResult.rubricScores.correctness}
       - Edge Cases: ${rubricResult.rubricScores.edgeCases}
@@ -709,30 +716,47 @@ const ChatBox: React.FC<ChatBoxProps> = ({
       ${testCaseText}
       `.trim();
 
-    const response = await getPromptResponse({
-      actor: Actor.INTERVIEWER,
-      context,
-      promptKey: "verify-code",
-      modelName: "gpt-4o",
-    });
-
-    await addBotMessage(response);
-
-    if (response.trim().startsWith("Correct")) {
-      setIsSolutionVerifiedCorrect(true);
-      isSolutionVerifiedCorrectRef.current = true;
-      stageRef.current = "FOLLOW_UP";
-
-      const followUpResponse = await getPromptResponse({
+      const correctnessResponse = await getPromptResponse({
         actor: Actor.INTERVIEWER,
         context,
-        promptKey: "follow-up",
-        modelName: "gpt-3.5-turbo",
+        promptKey: "verify-code",
+        modelName: "gpt-4o",
       });
 
-      await addBotMessage(followUpResponse);
+      const isCorrect = correctnessResponse.trim().startsWith("Correct");
+
+      if (isCorrect) {
+        await addBotMessage(correctnessResponse);
+        setIsSolutionVerifiedCorrect(true);
+        isSolutionVerifiedCorrectRef.current = true;
+        stageRef.current = "FOLLOW_UP";
+
+        const followUpResponse = await getPromptResponse({
+          actor: Actor.INTERVIEWER,
+          context,
+          promptKey: "follow-up",
+          modelName: "gpt-3.5-turbo",
+        });
+        await addBotMessage(followUpResponse);
+      } else {
+        if (alignmentResult?.alignment === "MATCH") {
+          const combinedFeedback = `Your implementation faithfully reflects the described approach. However, your solution is incorrect. ${correctnessResponse}`;
+          await addBotMessage(combinedFeedback);
+        } else {
+          await addBotMessage(correctnessResponse);
+        }
+      }
+    } catch (error) {
+      console.error("An error occurred during the verification process:", error);
+      await addBotMessage(
+        "An unexpected error occurred while verifying your solution. Please try again."
+      );
+    } finally {
+      setLoading(false);
     }
   };
+
+
 
   return (
     <div className="chatbox">
@@ -765,7 +789,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           </button>
           <button
             className="endSessionButton"
-            onClick={() => endSession(false, setConfirmationModal)}
+            onClick={() => endSession(false, setConfirmationModal, true)}
           >
             <div className="buttonIcon">
               <GoMoveToEnd />
