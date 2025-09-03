@@ -50,7 +50,7 @@ const Navbar = () => {
                                 alt="Streak image"
                                 className="streakImageNavbar"
                             />
-                            <h3>{streak?.currentStreak || 1}</h3>
+                            <h3>{streak?.currentStreak || 0}</h3>
                         </div>
                     )}
 
