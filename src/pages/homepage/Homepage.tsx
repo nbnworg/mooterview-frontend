@@ -49,6 +49,8 @@ export default function Homepage() {
 
     return matchesLevel && matchesSearch && matchesSolve && matchType;
   });
+  console.log(streak);
+  
 
     return (
         <>
@@ -62,7 +64,7 @@ export default function Homepage() {
                             src={streakImage}
                             alt="User's streak fire"
                         />
-                        <h1>{streak?.currentStreak} || 0</h1>
+                        <h1>{streak?.currentStreak || 1}</h1>
                     </div>
                     <Randomizer problems={problems} />
                 </div>

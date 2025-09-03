@@ -41,7 +41,7 @@ export const useProblems = () => {
       if (latestSessionDate === today) {
         await updateUserById({ userId });
       } else {
-        console.log("No sessions today!");
+        await updateUserById({ userId });
       }
     } catch (error) {
       console.error("Error checking streak:", error);
