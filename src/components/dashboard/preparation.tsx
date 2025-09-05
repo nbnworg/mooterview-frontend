@@ -27,7 +27,11 @@ const Preparation: React.FC<PreparationProps> = ({ sessions }) => {
         setLoading(true);
         setError(null);
 
-        if (!sessions.length) return;
+        if (!sessions.length) {
+          setLoading(false); 
+          return;
+        }
+        
         const sorted = sessions
           .filter((s) => s.startTime)
           .sort(
@@ -40,11 +44,9 @@ const Preparation: React.FC<PreparationProps> = ({ sessions }) => {
         const cached = getCachedReport();
         if (cached && cached.latestSessionId === latestSessionId) {
           setGptSummary(cached.report);
-
+          setLoading(false); 
           return;
         }
-        setLoading(true);
-        setError(null);
 
         const extracted = sorted.slice(0, 5).map((session) => ({
           chatsQueue: session.chatsQueue || [],
@@ -56,9 +58,8 @@ const Preparation: React.FC<PreparationProps> = ({ sessions }) => {
         const sessionContext = extracted
           .map((session, i) => {
             const chatMessages =
-              session.chatsQueue ||
-              []
-                .map((chat: any) => `• ${chat.role}: ${chat.content}`)
+              (session.chatsQueue || [])
+                .map((chat: any) => `• ${chat.actor}: ${chat.message}`)
                 .join("\n");
 
             return `Session ${i + 1}:
@@ -78,14 +79,20 @@ ${chatMessages}`;
         const context = `${sessionContext}`;
         const promptKey = "performance-evaluation";
 
-        const gptResponse = await getPromptResponse({
+        const gptResponseString = await getPromptResponse({
           actor: "INTERVIEWER",
           context,
           promptKey,
-          modelName: "gpt-4o"
+          modelName: "gpt-4o",
         });
 
-        const parsed = JSON.parse(gptResponse);
+        const cleanedString = gptResponseString
+          .replace(/^```json\s*/, "")
+          .replace(/```$/, "")
+          .trim();
+
+        const parsed = JSON.parse(cleanedString);
+
         const report = {
           headline: parsed.headline || "",
           summary: parsed.summary || "",
@@ -95,8 +102,8 @@ ${chatMessages}`;
         saveReportToCache(latestSessionId, report);
         setGptSummary(report);
       } catch (err) {
-        setError("Failed to fetch sessions.");
-        console.error(err);
+        setError("Failed to fetch or parse the interview report.");
+        console.error("Error in fetchSessionsAndCallGPT:", err);
       } finally {
         setLoading(false);
       }
@@ -111,12 +118,12 @@ ${chatMessages}`;
         <strong>Interview score: {gptSummary.overallReadiness}</strong>
       </h3>
 
-      {loading && <p> Loading...</p>}
+      {loading && <p>Loading report...</p>}
       {error && <p style={{ color: "red" }}>{error}</p>}
 
-      {gptSummary.summary && (
+      {!loading && !error && gptSummary.summary && (
         <div className="preparedness">
-          <h4> {gptSummary.headline}.</h4>
+          <h4>{gptSummary.headline}</h4>
           <p style={{ whiteSpace: "pre-wrap" }}>{gptSummary.summary}</p>
         </div>
       )}
