@@ -216,7 +216,9 @@ const ChatBox: React.FC<ChatBoxProps> = ({
       if (setConfirmationModal) {
         setConfirmationModal({
           text1: "Are you sure?",
-          text2: `This will end your session and ${(!sessionId) ? `take you to home.` : `take you to the evaluation.`}`,
+          text2: `This will end your session and ${
+            !sessionId ? `take you to home.` : `take you to the evaluation.`
+          }`,
           btn1Text: "Yes, End Session",
           btn2Text: "Cancel",
           btn1Handler: () => {
@@ -231,7 +233,9 @@ const ChatBox: React.FC<ChatBoxProps> = ({
       if (setConfirmationModal) {
         setConfirmationModal({
           text1: "Your time is up!",
-          text2: `This will end your session and ${(!sessionId) ? `take you to home.` : `take you to the evaluation.`}`,
+          text2: `This will end your session and ${
+            !sessionId ? `take you to home.` : `take you to the evaluation.`
+          }`,
           btn1Text: "OK, Proceed",
           btn2Text: "Cancel",
           btn1Handler: async () => {
@@ -269,7 +273,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         return;
       }
     }
-    
+
     try {
       setLoadingSessionEnd(true);
       await updateSessionById({
@@ -506,7 +510,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             addBotMessage
           );
           break;
-        } 
+        }
 
         case "#PROBLEM_EXPLANATIONS": {
           addBotMessage("Okay, you can explain the approach now!");
@@ -609,7 +613,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           localStorage.setItem("mtv-sessionId", sessionId);
           clearCachedReport();
           updateChatsInSession(updatedUserMessages);
-          
         }
       }
     } catch (err) {
@@ -636,7 +639,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
   const handleVerifyCode = async () => {
     const currentCode = codeRef.current;
     const userApproach = approachTextRef.current;
-
 
     if (!currentCode) {
       await addBotMessage(
@@ -669,9 +671,8 @@ const ChatBox: React.FC<ChatBoxProps> = ({
               alignmentResult.feedback +
                 "\nPlease correct your code to match your approach and verify again."
             );
-            return; 
+            return;
           }
-
         } catch (error) {
           console.error("Error verifying approach:", error);
           await addBotMessage(
@@ -688,7 +689,10 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         return;
       }
 
-      const rubricResult = await evaluateSolutionWithRubric(currentCode);
+      const rubricResult = await evaluateSolutionWithRubric(
+        currentCode,
+        testCases
+      );
       setrubricResult(rubricResult);
 
       const testCaseText = testCases
@@ -746,7 +750,10 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         }
       }
     } catch (error) {
-      console.error("An error occurred during the verification process:", error);
+      console.error(
+        "An error occurred during the verification process:",
+        error
+      );
       await addBotMessage(
         "An unexpected error occurred while verifying your solution. Please try again."
       );
@@ -754,8 +761,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
       setLoading(false);
     }
   };
-
-
 
   return (
     <div className="chatbox">
