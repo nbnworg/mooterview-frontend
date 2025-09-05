@@ -36,7 +36,11 @@ export default function Filters({
     "Tries",
     "Heap / Priority Queue",
     "Backtracking",
-    "Dynamic Programming"
+    "Dynamic Programming",
+    "Graphs",
+    "Greedy",
+    "Math & Geometry",
+    "Bit Manipulation"
   ];
 
 
