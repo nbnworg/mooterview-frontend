@@ -61,8 +61,6 @@ print(result)
 
     const completedCode = code + "\n" + harness;
 
-    console.log("=== Final code sent to Judge0 ===\n", completedCode);
-
     const submissionRes = await axios.post(
       `${JUDGE0_URL}/submissions/?base64_encoded=false&wait=false`,
       {
@@ -110,7 +108,6 @@ export const evaluateSolutionWithRubric = async (
   for (const t of testCases) {
     const stdin = JSON.stringify(t.input);
     const output = await executeCode(code, stdin);
-    console.log("Input: ", stdin, " ----> ", "Output: ", output);
     const expectedStr = String(t.expected);
     if (output === expectedStr) {
       passed++;
