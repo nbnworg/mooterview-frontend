@@ -524,10 +524,9 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         case "#APPROACH_PROVIDED": {
           await handleApproachProvided(
             stageRef.current,
-            contextForGpt,
+            gptMessages,
             problem,
             input,
-            approachAttemptCountRef,
             hasProvidedApproachRef,
             stageRef,
             approachTextRef,

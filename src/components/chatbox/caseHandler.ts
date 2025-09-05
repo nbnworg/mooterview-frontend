@@ -160,10 +160,9 @@ export const handleRequestExampleCase = async (
 // #APPROACH_PROVIDED CASE
 export const handleApproachProvided = async (
   currentStage: Stage,
-  context: string,
+  messages: any[],
   problem: Problem,
   input: string,
-  approachAttemptCountRef: React.MutableRefObject<number>,
   hasProvidedApproachRef: React.MutableRefObject<boolean>,
   stageRef: React.MutableRefObject<Stage>,
   approachTextRef: React.MutableRefObject<string>,
@@ -171,18 +170,27 @@ export const handleApproachProvided = async (
   addBotMessage: (text: string) => Promise<void>
 ) => {
   if (currentStage === "WAIT_FOR_APPROACH" && !hasProvidedApproachRef.current) {
-    const ack = await getPromptResponse({
+    const evaluation = await getPromptResponse({
       actor: Actor.INTERVIEWER,
-      context: `User has shared an approach. Evaluate it and respond with one of "#CORRECT" or "#WRONG" followed by your message.
-                ${context}
-                User approach: ${input}
-                Problem: ${problem.title}
-                Description: ${problem.problemDescription}`,
+      context: `User has shared an approach. Evaluate it and respond with one of "#CORRECT", "#PARTIAL", or "#WRONG" followed by your message.
+          Chat transcript: ${JSON.stringify(messages, null, 2)}
+          User approach: ${input}
+          Problem: ${problem.title}
+          Description: ${problem.problemDescription}`,
       promptKey: "ack-approach",
-      modelName: "gpt-4o",
+      modelName: "gpt-4o"
     });
 
-    if (ack.includes("#CORRECT")) {
+    const tagMatch = evaluation.match(/^(#CORRECT|#PARTIAL|#WRONG)/);
+    const tag = tagMatch ? tagMatch[0] : "#WRONG";
+
+    const isSufficient = evaluation.includes("[SUFFICIENT]");
+    const message = evaluation
+      .replace(/^(#CORRECT|#PARTIAL|#WRONG)[:\s]*/, '')
+      .replace(/\[SUFFICIENT\]|\[INSUFFICIENT\]/g, '')
+      .trim();
+
+    if (tag === "#CORRECT") {
       await addBotMessage(
         "Alright, you can start coding now.\nIf you get stuck at any point, feel free to ask for help. Once you've completed your code, click on 'Verify Code' button to check your solution."
       );
@@ -192,36 +200,40 @@ export const handleApproachProvided = async (
       if (onApproachCorrectChange) {
         onApproachCorrectChange(true);
       }
-    } else {
-      approachAttemptCountRef.current += 1;
-
-      if (approachAttemptCountRef.current >= 2) {
+    }
+     else if (tag === "#PARTIAL") {
+      if (isSufficient) {
         await addBotMessage(
-          "That's okay, you can start coding now and we'll work through it together."
+          `This is a good starting point. You can begin coding and we'll refine as you implement.`
         );
+        approachTextRef.current = input;
         stageRef.current = "CODING";
         hasProvidedApproachRef.current = true;
         if (onApproachCorrectChange) {
           onApproachCorrectChange(true);
         }
       } else {
-        const response = await getPromptResponse({
-          actor: Actor.INTERVIEWER,
-          context: `User has given an incorrect approach. Ask them to try again.
-                    ${context}
-                    User's last message: ${input}`,
-          promptKey: "repeat-ask",
-          modelName: "gpt-3.5-turbo",
-        });
-        await addBotMessage(response);
+        await addBotMessage(
+          `${message}\n\nCould you elaborate more on your approach?`
+        );
       }
+    } else {
+      const response = await getPromptResponse({
+        actor: Actor.INTERVIEWER,
+        context: `User has given an incorrect approach. Ask them to try again.
+                    Chat transcript: ${JSON.stringify(messages, null, 2)}
+                    User's last message: ${input}`,
+        promptKey: "repeat-ask",
+        modelName: "gpt-3.5-turbo",
+      });
+      await addBotMessage(response);
     }
   } else {
     const response = await getPromptResponse({
       actor: Actor.INTERVIEWER,
       context: `User is asking a follow-up question. Provide helpful guidance.
                 Current stage: ${currentStage}
-                ${context}
+                Chat transcript: ${JSON.stringify(messages, null, 2)}
                 Problem: ${problem.title}
                 Description: ${problem.problemDescription}
                 User's last message: ${input}`,
@@ -231,7 +243,6 @@ export const handleApproachProvided = async (
     await addBotMessage(response);
   }
 };
-
 // #PROBLEM_EXPLANATION
 export const handleProblemExplanationCase = async (
   currentStage: Stage,
