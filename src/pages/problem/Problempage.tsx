@@ -37,6 +37,8 @@ const ProblemPage = () => {
     window.addEventListener("beforeunload", handleUnload);
     return () => window.removeEventListener("beforeunload", handleUnload);
   }, [problem, timeLeft, code]);
+  console.log("problemId",problem);
+  
 
   useEffect(() => {
     if (timeLeft === 0) {
