@@ -183,143 +183,147 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     }
   };
 
-const endSession = async (
-  calledAutomatically: boolean,
-  setConfirmationModal?: React.Dispatch<
-    React.SetStateAction<{
-      text1: string;
-      text2: string;
-      btn1Text: string;
-      btn2Text: string;
-      btn1Handler: () => void;
-      btn2Handler: () => void;
-    } | null>
-  >,
-  skipAutoAlert?: boolean
-) => {
-  const sessionId = localStorage.getItem("mtv-sessionId");
+  const endSession = async (
+    calledAutomatically: boolean,
+    setConfirmationModal?: React.Dispatch<
+      React.SetStateAction<{
+        text1: string;
+        text2: string;
+        btn1Text: string;
+        btn2Text: string;
+        btn1Handler: () => void;
+        btn2Handler: () => void;
+      } | null>
+    >,
+    skipAutoAlert?: boolean
+  ) => {
+    const sessionId = localStorage.getItem("mtv-sessionId");
 
-  if (!sessionId) {
-    navigate("/home", { replace: true });
-    return;
-  }
+    if (!sessionId) {
+      navigate("/home", { replace: true });
+      return;
+    }
 
+    const getCleanedEvaluation = async () => {
+      try {
+        const evaluationResponse = await generateEvaluationSummary();
 
-  const getCleanedEvaluation = async () => {
+        const evaluationString =
+          typeof evaluationResponse === "string"
+            ? evaluationResponse
+            : JSON.stringify(evaluationResponse);
+
+        const cleanedString = evaluationString
+          .replace(/^```json\s*/, "")
+          .replace(/```$/, "")
+          .trim();
+
+        const parsedEvaluation = JSON.parse(cleanedString);
+        return parsedEvaluation;
+      } catch (error) {
+        console.error(
+          "Failed to parse evaluation summary. Proceeding without it.",
+          error
+        );
+        return {
+          summary: "Could not generate an AI evaluation for this session.",
+        };
+      }
+    };
+
+    const wantsSolution = true;
+
+    if (!calledAutomatically) {
+      if (setConfirmationModal) {
+        setConfirmationModal({
+          text1: "Are you sure?",
+          text2: "This will end your session and take you to the evaluation.",
+          btn1Text: "Yes, End Session",
+          btn2Text: "Cancel",
+          btn1Handler: () => {
+            setConfirmationModal(null);
+            endSession(true, undefined, true);
+          },
+          btn2Handler: () => setConfirmationModal(null),
+        });
+      }
+      return;
+    } else if (!skipAutoAlert) {
+      if (setConfirmationModal) {
+        setConfirmationModal({
+          text1: "Your time is up!",
+          text2: "This will end your session and take you to the evaluation.",
+          btn1Text: "OK, Proceed",
+          btn2Text: "Cancel",
+          btn1Handler: async () => {
+            setConfirmationModal(null);
+
+            if (
+              stageRef.current === "CODING" ||
+              stageRef.current === "FOLLOW_UP" ||
+              stageRef.current === "SESSION_END"
+            ) {
+              setLoadingSessionEnd(true);
+              const evaluation = await getCleanedEvaluation();
+
+              await updateSessionById({
+                sessionId,
+                endTime: new Date().toISOString(),
+                notes: [
+                  { content: evaluation.summary },
+                  { content: codeRef.current.trim() || "No code provided" },
+                ],
+              });
+
+              setLoadingSessionEnd(false);
+              navigate(`/solution/${encodeURIComponent(problem.title ?? "")}`, {
+                state: { evaluation, sessionId, rubricResult },
+                replace: true,
+              });
+            } else {
+              navigate("/home", { replace: true });
+            }
+          },
+          btn2Handler: () => setConfirmationModal(null),
+        });
+      }
+      return;
+    }
+
     try {
-      const evaluationResponse = await generateEvaluationSummary();
-      
-      const evaluationString = typeof evaluationResponse === 'string' 
-        ? evaluationResponse 
-        : JSON.stringify(evaluationResponse);
+      setLoadingSessionEnd(true);
 
-      const cleanedString = evaluationString
-        .replace(/^```json\s*/, "")
-        .replace(/```$/, "")
-        .trim();
+      if (wantsSolution) {
+        const evaluation = await getCleanedEvaluation();
 
-      const parsedEvaluation = JSON.parse(cleanedString);
-      return parsedEvaluation;
+        await updateSessionById({
+          sessionId,
+          endTime: new Date().toISOString(),
+          notes: [
+            { content: evaluation.summary },
+            {
+              content: codeRef.current.trim() || "No code provided",
+            },
+          ],
+        });
 
-    } catch (error) {
-      console.error("Failed to parse evaluation summary. Proceeding without it.", error);
-      return { summary: "Could not generate an AI evaluation for this session." };
+        navigate(`/solution/${encodeURIComponent(problem.title ?? "")}`, {
+          state: { evaluation, sessionId, rubricResult },
+          replace: true,
+        });
+      } else {
+        await updateSessionById({
+          sessionId,
+          endTime: new Date().toISOString(),
+        });
+        navigate("/home", { replace: true });
+      }
+    } catch (err) {
+      console.error("Failed to end session", err);
+    } finally {
+      setLoadingSessionEnd(false);
     }
   };
-
-  const wantsSolution = true;
-
-  if (!calledAutomatically) {
-    if (setConfirmationModal) {
-      setConfirmationModal({
-        text1: "Are you sure?",
-        text2: "This will end your session and take you to the evaluation.",
-        btn1Text: "Yes, End Session",
-        btn2Text: "Cancel",
-        btn1Handler: () => {
-          setConfirmationModal(null);
-          endSession(true, undefined, true); 
-        },
-        btn2Handler: () => setConfirmationModal(null),
-      });
-    }
-    return;
-  } else if (!skipAutoAlert) {
-    if (setConfirmationModal) {
-      setConfirmationModal({
-        text1: "Your time is up!",
-        text2: "This will end your session and take you to the evaluation.",
-        btn1Text: "OK, Proceed",
-        btn2Text: "Cancel",
-        btn1Handler: async () => {
-          setConfirmationModal(null);
-
-          if (
-            stageRef.current === "CODING" ||
-            stageRef.current === "FOLLOW_UP" ||
-            stageRef.current === "SESSION_END"
-          ) {
-            setLoadingSessionEnd(true);
-            const evaluation = await getCleanedEvaluation(); 
-
-            await updateSessionById({
-              sessionId,
-              endTime: new Date().toISOString(),
-              notes: [
-                { content: evaluation.summary },
-                { content: codeRef.current.trim() || "No code provided" },
-              ],
-            });
-
-            setLoadingSessionEnd(false);
-            navigate(`/solution/${encodeURIComponent(problem.title ?? "")}`, {
-              state: { evaluation, sessionId, rubricResult },
-              replace: true,
-            });
-          } else {
-            navigate("/home", { replace: true });
-          }
-        },
-        btn2Handler: () => setConfirmationModal(null),
-      });
-    }
-    return; 
-  }
-
-  try {
-    setLoadingSessionEnd(true);
-    
-    if (wantsSolution) {
-      const evaluation = await getCleanedEvaluation();
-
-      await updateSessionById({
-        sessionId,
-        endTime: new Date().toISOString(),
-        notes: [
-          { content: evaluation.summary },
-          {
-            content: codeRef.current.trim() || "No code provided",
-          },
-        ],
-      });
-
-      navigate(`/solution/${encodeURIComponent(problem.title ?? "")}`, {
-        state: { evaluation, sessionId, rubricResult },
-        replace: true,
-      });
-    } else {
-      await updateSessionById({
-        sessionId,
-        endTime: new Date().toISOString(),
-      });
-      navigate("/home", { replace: true });
-    }
-  } catch (err) {
-    console.error("Failed to end session", err);
-  } finally {
-    setLoadingSessionEnd(false);
-  }
-};
   useEffect(() => {
     const explainProblem = async () => {
       if (hasExplainedRef.current) return;
@@ -522,7 +526,7 @@ const endSession = async (
             addBotMessage
           );
           break;
-        } 
+        }
 
         case "#PROBLEM_EXPLANATIONS": {
           addBotMessage("Okay, you can explain the approach now!");
@@ -625,7 +629,6 @@ const endSession = async (
           localStorage.setItem("mtv-sessionId", sessionId);
           clearCachedReport();
           updateChatsInSession(updatedUserMessages);
-          
         }
       }
     } catch (err) {
@@ -652,7 +655,6 @@ const endSession = async (
   const handleVerifyCode = async () => {
     const currentCode = codeRef.current;
     const userApproach = approachTextRef.current;
-
 
     if (!currentCode) {
       await addBotMessage(
@@ -685,9 +687,8 @@ const endSession = async (
               alignmentResult.feedback +
                 "\nPlease correct your code to match your approach and verify again."
             );
-            return; 
+            return;
           }
-
         } catch (error) {
           console.error("Error verifying approach:", error);
           await addBotMessage(
@@ -762,7 +763,10 @@ const endSession = async (
         }
       }
     } catch (error) {
-      console.error("An error occurred during the verification process:", error);
+      console.error(
+        "An error occurred during the verification process:",
+        error
+      );
       await addBotMessage(
         "An unexpected error occurred while verifying your solution. Please try again."
       );
@@ -770,8 +774,6 @@ const endSession = async (
       setLoading(false);
     }
   };
-
-
 
   return (
     <div className="chatbox">

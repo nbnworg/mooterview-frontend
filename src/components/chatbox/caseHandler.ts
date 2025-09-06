@@ -187,7 +187,7 @@ export const handleApproachProvided = async (
           Problem: ${problem.title}
           Description: ${problem.problemDescription}`,
       promptKey: "ack-approach",
-      modelName: "gpt-4o"
+      modelName: "gpt-4o",
     });
 
     const tagMatch = evaluation.match(/^(#CORRECT|#PARTIAL|#WRONG)/);
@@ -195,8 +195,8 @@ export const handleApproachProvided = async (
 
     const isSufficient = evaluation.includes("[SUFFICIENT]");
     const message = evaluation
-      .replace(/^(#CORRECT|#PARTIAL|#WRONG)[:\s]*/, '')
-      .replace(/\[SUFFICIENT\]|\[INSUFFICIENT\]/g, '')
+      .replace(/^(#CORRECT|#PARTIAL|#WRONG)[:\s]*/, "")
+      .replace(/\[SUFFICIENT\]|\[INSUFFICIENT\]/g, "")
       .trim();
 
     if (tag === "#CORRECT") {
@@ -265,10 +265,10 @@ export const handleProblemExplanationCase = async (
     context: `User has ask explanation about the problem.Explain the problem.
                         Current stage: ${currentStage}
                          Chat transcript: ${JSON.stringify(
-      messages.slice(-3),
-      null,
-      2
-    )}
+                           messages.slice(-3),
+                           null,
+                           2
+                         )}
                         Problem: ${problem.title}
                         Description: ${problem.problemDescription}\n
                         User's last message: ${input}`,
@@ -345,10 +345,10 @@ export const handleCodingHelp = async (
 ) => {
   const context = `User needs help with coding/debugging. Provide specific assistance.
                   Chat transcript: ${JSON.stringify(
-    messages.slice(-5),
-    null,
-    2
-  )}
+                    messages.slice(-5),
+                    null,
+                    2
+                  )}
                   Problem: ${problem.title}
                   Description: ${problem.problemDescription}
                   Current code: ${currentCode || "No code written yet"}
@@ -437,10 +437,10 @@ export const handleDefaultCase = async (
     const fallbackContext = `User's message does not match predefined classifications
                             in this ${currentStage} phase. Maintain the current context.
                             Recent chat history: ${JSON.stringify(
-      messages.slice(-3),
-      null,
-      2
-    )}
+                              messages.slice(-3),
+                              null,
+                              2
+                            )}
                             Problem: ${problem.title}
                             Description: ${problem.problemDescription}
                             Current code: ${currentCode || "N/A"}`;
