@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import "./Chatbox.css";
 import { getPromptResponse } from "../../utils/handlers/getPromptResponse";
 import { updateSessionById } from "../../utils/handlers/updateSessionById";
@@ -30,8 +30,6 @@ import {
   handleOffTopic,
   handleDefaultCase,
 } from "./caseHandler";
-import axios from "axios";
-import { BASE_URL, getTokenData } from "../../utils/constants";
 
 interface ChatBoxProps {
   problem: Problem;
@@ -103,35 +101,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     btn2Handler: () => void;
   } | null>(null);
 
-  const [summary, setSummary] = useState<string>("");
-  const messagesSinceLastSummary = useRef(0);
-
-  const handleSummarization = async () => {
-    if (gptMessages.length < 6) return;
-
-    try {
-      const tokenData = getTokenData();
-      if (!tokenData) throw new Error("No token found");
-
-      const response = await axios.post(
-        `${BASE_URL}/prompt/summarize`,
-        {
-          chatHistory: gptMessages,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${tokenData.accessToken}`,
-          },
-        }
-      );
-      setSummary(response.data.summary);
-      messagesSinceLastSummary.current = 0;
-    } catch (error) {
-      console.error("Failed to summarize chat history:", error);
-    }
-  };
-
-
   useEffect(() => {
     elapsedTimeRef.current = elapsedTime;
   }, [elapsedTime]);
@@ -148,7 +117,26 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     messagesRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const updateChatsInSession = useCallback(async (newChats: any[]) => {
+  useEffect(() => {
+    if (onEndRef) {
+      onEndRef.current = () => endSession(true);
+    }
+  }, [code, problem]);
+
+  const addBotMessage = async (text: string, isOffTopic: boolean = false) => {
+    const newMessage = { actor: Actor.INTERVIEWER, message: text };
+    await updateChatsInSession([newMessage]);
+
+    setMessages((prevMessages) => {
+      const updated = [...prevMessages, newMessage];
+      return updated;
+    });
+    if (!isOffTopic) {
+      setGptMessages((prev) => [...prev, newMessage]);
+    }
+  };
+
+  const updateChatsInSession = async (newChats: any[]) => {
     const sessionId = localStorage.getItem("mtv-sessionId");
     if (!sessionId) return;
 
@@ -160,22 +148,9 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     } catch (err) {
       console.error("Failed to update chatsQueue", err);
     }
-  }, []);
+  };
 
-  const addBotMessage = useCallback(async (text: string, isOffTopic: boolean = false) => {
-    const newMessage = { actor: Actor.INTERVIEWER, message: text };
-    await updateChatsInSession([newMessage]);
-
-    setMessages((prevMessages) => {
-      const updated = [...prevMessages, newMessage];
-      return updated;
-    });
-    if (!isOffTopic) {
-      setGptMessages((prev) => [...prev, newMessage]);
-    }
-  }, [updateChatsInSession]);
-
-  const generateEvaluationSummary = useCallback(async (): Promise<{
+  const generateEvaluationSummary = async (): Promise<{
     summary: string;
     alternativeSolutions: string[];
   }> => {
@@ -206,121 +181,145 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         alternativeSolutions: [],
       };
     }
-  }, [messages, problem.title, problem.problemDescription]);
+  };
 
-  const endSession = useCallback(async (
-    calledAutomatically: boolean,
-    setConfirmationModalLocal?: typeof setConfirmationModal,
-    skipAutoAlert?: boolean
-  ) => {
-    const currentSessionId = localStorage.getItem("mtv-sessionId");
+const endSession = async (
+  calledAutomatically: boolean,
+  setConfirmationModal?: React.Dispatch<
+    React.SetStateAction<{
+      text1: string;
+      text2: string;
+      btn1Text: string;
+      btn2Text: string;
+      btn1Handler: () => void;
+      btn2Handler: () => void;
+    } | null>
+  >,
+  skipAutoAlert?: boolean
+) => {
+  const sessionId = localStorage.getItem("mtv-sessionId");
 
-    if (!currentSessionId) {
-      navigate("/home", { replace: true });
-      return;
-    }
+  if (!sessionId) {
+    navigate("/home", { replace: true });
+    return;
+  }
 
-    const wantsSolution = true;
 
-    if (!calledAutomatically) {
-      if (setConfirmationModalLocal) {
-        setConfirmationModalLocal({
-          text1: "Are you sure?",
-          text2: "This will end your session and take you to the evaluation.",
-          btn1Text: "Yes, End Session",
-          btn2Text: "Cancel",
-          btn1Handler: () => {
-            setConfirmationModalLocal(null);
-            endSession(true, undefined, true);
-          },
-          btn2Handler: () => setConfirmationModalLocal(null),
-        });
-      }
-      return;
-    } else if (!skipAutoAlert) {
-      if (setConfirmationModalLocal) {
-        setConfirmationModalLocal({
-          text1: "Your time is up!",
-          text2: "This will end your session and take you to the evaluation.",
-          btn1Text: "OK, Proceed",
-          btn2Text: "Cancel",
-          btn1Handler: async () => {
-            setConfirmationModalLocal(null);
-
-            if (
-              stageRef.current === "CODING" ||
-              stageRef.current === "FOLLOW_UP" ||
-              stageRef.current === "SESSION_END"
-            ) {
-              await updateSessionById({
-                sessionId: currentSessionId,
-                endTime: new Date().toISOString(),
-              });
-
-              const evaluation = await generateEvaluationSummary();
-
-              await updateSessionById({
-                sessionId: currentSessionId,
-                notes: [
-                  { content: evaluation.summary },
-                  { content: codeRef.current.trim() || "No code provided" },
-                ],
-              });
-
-              navigate(`/solution/${encodeURIComponent(problem.title ?? "")}`, {
-                state: { evaluation, sessionId: currentSessionId, rubricResult },
-                replace: true,
-              });
-            } else {
-              navigate("/home", { replace: true });
-            }
-          },
-          btn2Handler: () => setConfirmationModalLocal(null),
-        });
-      }
-    }
-
+  const getCleanedEvaluation = async () => {
     try {
-      setLoadingSessionEnd(true);
+      const evaluationResponse = await generateEvaluationSummary();
+      
+      const evaluationString = typeof evaluationResponse === 'string' 
+        ? evaluationResponse 
+        : JSON.stringify(evaluationResponse);
+
+      const cleanedString = evaluationString
+        .replace(/^```json\s*/, "")
+        .replace(/```$/, "")
+        .trim();
+
+      const parsedEvaluation = JSON.parse(cleanedString);
+      return parsedEvaluation;
+
+    } catch (error) {
+      console.error("Failed to parse evaluation summary. Proceeding without it.", error);
+      return { summary: "Could not generate an AI evaluation for this session." };
+    }
+  };
+
+  const wantsSolution = true;
+
+  if (!calledAutomatically) {
+    if (setConfirmationModal) {
+      setConfirmationModal({
+        text1: "Are you sure?",
+        text2: "This will end your session and take you to the evaluation.",
+        btn1Text: "Yes, End Session",
+        btn2Text: "Cancel",
+        btn1Handler: () => {
+          setConfirmationModal(null);
+          endSession(true, undefined, true); 
+        },
+        btn2Handler: () => setConfirmationModal(null),
+      });
+    }
+    return;
+  } else if (!skipAutoAlert) {
+    if (setConfirmationModal) {
+      setConfirmationModal({
+        text1: "Your time is up!",
+        text2: "This will end your session and take you to the evaluation.",
+        btn1Text: "OK, Proceed",
+        btn2Text: "Cancel",
+        btn1Handler: async () => {
+          setConfirmationModal(null);
+
+          if (
+            stageRef.current === "CODING" ||
+            stageRef.current === "FOLLOW_UP" ||
+            stageRef.current === "SESSION_END"
+          ) {
+            setLoadingSessionEnd(true);
+            const evaluation = await getCleanedEvaluation(); 
+
+            await updateSessionById({
+              sessionId,
+              endTime: new Date().toISOString(),
+              notes: [
+                { content: evaluation.summary },
+                { content: codeRef.current.trim() || "No code provided" },
+              ],
+            });
+
+            setLoadingSessionEnd(false);
+            navigate(`/solution/${encodeURIComponent(problem.title ?? "")}`, {
+              state: { evaluation, sessionId, rubricResult },
+              replace: true,
+            });
+          } else {
+            navigate("/home", { replace: true });
+          }
+        },
+        btn2Handler: () => setConfirmationModal(null),
+      });
+    }
+    return; 
+  }
+
+  try {
+    setLoadingSessionEnd(true);
+    
+    if (wantsSolution) {
+      const evaluation = await getCleanedEvaluation();
+
       await updateSessionById({
-        sessionId: currentSessionId,
+        sessionId,
         endTime: new Date().toISOString(),
+        notes: [
+          { content: evaluation.summary },
+          {
+            content: codeRef.current.trim() || "No code provided",
+          },
+        ],
       });
 
-      if (wantsSolution) {
-        const evaluation = await generateEvaluationSummary();
-
-        await updateSessionById({
-          sessionId: currentSessionId,
-          notes: [
-            { content: evaluation.summary },
-            {
-              content: codeRef.current.trim() || "No code provided",
-            },
-          ],
-        });
-
-        navigate(`/solution/${encodeURIComponent(problem.title ?? "")}`, {
-          state: { evaluation, sessionId: currentSessionId, rubricResult },
-          replace: true,
-        });
-      } else {
-        navigate("/home", { replace: true });
-      }
-    } catch (err) {
-      console.error("Failed to end session", err);
-    } finally {
-      setLoadingSessionEnd(false);
+      navigate(`/solution/${encodeURIComponent(problem.title ?? "")}`, {
+        state: { evaluation, sessionId, rubricResult },
+        replace: true,
+      });
+    } else {
+      await updateSessionById({
+        sessionId,
+        endTime: new Date().toISOString(),
+      });
+      navigate("/home", { replace: true });
     }
-  }, [navigate, generateEvaluationSummary, problem.title, rubricResult]);
-
-  useEffect(() => {
-    if (onEndRef) {
-      onEndRef.current = () => endSession(true, setConfirmationModal);
-    }
-  }, [endSession, onEndRef]);
-
-
+  } catch (err) {
+    console.error("Failed to end session", err);
+  } finally {
+    setLoadingSessionEnd(false);
+  }
+};
   useEffect(() => {
     const explainProblem = async () => {
       if (hasExplainedRef.current) return;
@@ -338,7 +337,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     };
 
     explainProblem();
-  }, [problem, addBotMessage]);
+  }, [problem]);
 
   useEffect(() => {
     const interval = setInterval(async () => {
@@ -426,8 +425,9 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     }, 10000);
 
     return () => clearInterval(interval);
-  }, [problem.title, problem.problemDescription, input, messages, addBotMessage]);
+  }, [problem]);
 
+  // let followUp;
   const questionCounterValueRef = useRef<{ number: number } | null>(null);
   const handleFollowUp = useRef(0);
   const handleSubmit = async (e: React.FormEvent) => {
@@ -437,25 +437,10 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     const userMsg = { actor: Actor.USER, message: input };
     const updatedUserMessages = [...messages, userMsg];
     setMessages(updatedUserMessages);
-    setGptMessages((prev) => [...prev, userMsg]);
     setInput("");
     setLoading(true);
 
     await updateChatsInSession([userMsg]);
-
-    messagesSinceLastSummary.current += 1;
-    if (messagesSinceLastSummary.current >= 6) {
-      await handleSummarization();
-    }
-
-    const recentMessages = gptMessages.slice(-4);
-    const contextForGpt = `
-      CONVERSATION SUMMARY:
-      ${summary || "The conversation has just begun."}
-
-      RECENT CHAT HISTORY:
-      ${JSON.stringify(recentMessages, null, 2)}
-    `;
 
     const currentStage = stageRef.current;
     const codeSnapshot = codeRef.current?.trim() || "";
@@ -466,12 +451,15 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         currentStage,
         updatedUserMessages
       );
-      
+      if (classification !== "#OFF_TOPIC") {
+        setGptMessages((prev) => [...prev, userMsg]);
+      }
+
       switch (classification) {
         case "#UNDERSTOOD_CONFIRMATION": {
           await handleUnderstoodConfirmation(
             stageRef.current,
-            contextForGpt,
+            gptMessages,
             problem,
             input,
             stageRef,
@@ -483,7 +471,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         }
         case "#CONFUSED": {
           const clarification = await handleConfusedCase(
-            contextForGpt,
+            gptMessages,
             problem,
             input
           );
@@ -493,7 +481,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
 
         case "#RIGHT_ANSWER": {
           await handleRightAnswerCase(
-            contextForGpt,
+            gptMessages,
             problem,
             codeSnapshot,
             input,
@@ -506,13 +494,13 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         }
 
         case "#WRONG_ANSWER": {
-          await handleWrongCase(contextForGpt, problem, input, addBotMessage);
+          await handleWrongCase(gptMessages, problem, input, addBotMessage);
           break;
         }
 
         case "#REQUESTED_EXAMPLE": {
           await handleRequestExampleCase(
-            contextForGpt,
+            gptMessages,
             problem,
             input,
             currentStage,
@@ -544,7 +532,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         case "#PROBLEM_EXPLANATION": {
           await handleProblemExplanationCase(
             stageRef.current,
-            contextForGpt,
+            gptMessages,
             problem,
             addBotMessage,
             input
@@ -560,7 +548,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         case "#CODING_QUESTION": {
           await handleCodingQuestion({
             currentStage: stageRef.current,
-            context: contextForGpt,
+            gptMessages,
             problem,
             input,
             currentCode: codeRef.current,
@@ -572,7 +560,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
 
         case "#CODING_HELP": {
           await handleCodingHelp(
-            contextForGpt,
+            gptMessages,
             problem,
             codeRef.current,
             input,
@@ -584,7 +572,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         case "#GENERAL_ACKNOWLEDGMENT": {
           await handleGenralAcknowledgement(
             stageRef.current,
-            contextForGpt,
+            gptMessages,
             problem,
             addBotMessage,
             input
@@ -595,7 +583,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         case "#OFF_TOPIC": {
           await handleOffTopic(
             stageRef.current,
-            contextForGpt,
+            gptMessages,
             problem,
             addBotMessage
           );
@@ -617,7 +605,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         default: {
           await handleDefaultCase(
             stageRef.current,
-            contextForGpt,
+            gptMessages,
             problem,
             codeRef.current,
             input,
@@ -629,14 +617,15 @@ const ChatBox: React.FC<ChatBoxProps> = ({
 
       if (stageRef.current === "CODING") {
         if (!sessionId) {
-          const newSessionId = await createSession({
+          const sessionId = await createSession({
             userId,
             problemId: problem.problemId || "",
             problemPattern: (problem as any).problemPattern || "",
           });
-          localStorage.setItem("mtv-sessionId", newSessionId);
+          localStorage.setItem("mtv-sessionId", sessionId);
           clearCachedReport();
-          updateChatsInSession([...messages]);
+          updateChatsInSession(updatedUserMessages);
+          
         }
       }
     } catch (err) {
@@ -654,7 +643,13 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     setLoading(false);
   };
 
-  const handleVerifyCode = useCallback(async () => {
+  useEffect(() => {
+    if (onVerifyRef) {
+      onVerifyRef.current = handleVerifyCode;
+    }
+  }, [code, problem]);
+
+  const handleVerifyCode = async () => {
     const currentCode = codeRef.current;
     const userApproach = approachTextRef.current;
 
@@ -774,14 +769,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     } finally {
       setLoading(false);
     }
-  }, [addBotMessage, problem]);
-
-  useEffect(() => {
-    if (onVerifyRef) {
-      onVerifyRef.current = handleVerifyCode;
-    }
-  }, [onVerifyRef, handleVerifyCode]);
-
+  };
 
 
 
@@ -837,5 +825,3 @@ const ChatBox: React.FC<ChatBoxProps> = ({
 };
 
 export default ChatBox;
-
-
