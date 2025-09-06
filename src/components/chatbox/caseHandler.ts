@@ -13,7 +13,7 @@ type Stage =
 // #UNDERSTOOD_CONFIRMATION CASE
 export const handleUnderstoodConfirmation = async (
   currentStage: Stage,
-  context: string,
+  chatMessages: any[],
   problemData: Problem,
   userInput: string,
   stageRef: React.MutableRefObject<Stage>,
@@ -28,7 +28,7 @@ export const handleUnderstoodConfirmation = async (
     const followup = await getPromptResponse({
       actor: Actor.INTERVIEWER,
       context: `User confirmed understanding. Ask them to explain their approach.
-                 ${context}
+                 Chat transcript: ${JSON.stringify(chatMessages, null, 2)}\n 
                  Problem: ${problemData.title}
                  Description: ${problemData.problemDescription}
                  User's last message: ${userInput}`,
@@ -45,19 +45,19 @@ export const handleUnderstoodConfirmation = async (
 
 // #CONFUSED CASE
 export const handleConfusedCase = async (
-  context: string,
+  chatMessages: any[],
   problemData: Problem,
   userInput: string
 ): Promise<string> => {
-  const finalContext = `User seems confused. Provide a short clarification of the user question and re-ask if they understood.
-                  ${context}
+  const context = `User seems confused. Provide a short clarification of the user question and re-ask if they understood.
+                  Chat transcript: ${JSON.stringify(chatMessages, null, 2)}
                   Problem: ${problemData.title}
                   Description: ${problemData.problemDescription}
                   User's last message: ${userInput}`;
 
   return await getPromptResponse({
     actor: Actor.INTERVIEWER,
-    context: finalContext,
+    context,
     promptKey: "clarify-problem",
     modelName: "gpt-4o",
   });
@@ -65,7 +65,7 @@ export const handleConfusedCase = async (
 
 // RIGHT_ANSWER CASE
 export const handleRightAnswerCase = async (
-  context: string,
+  messages: any[],
   problem: Problem,
   codeSnapshot: string,
   input: string,
@@ -77,7 +77,7 @@ export const handleRightAnswerCase = async (
   if (handleFollowUpRef.current === 0) {
     const followUp = await getPromptResponse({
       actor: Actor.SYSTEM,
-      context: `${context}
+      context: `Chat transcript: ${JSON.stringify(messages, null, 2)}
                 Problem: ${problem.title}
                 Description: ${problem.problemDescription}
                 Code: ${codeSnapshot}
@@ -98,7 +98,7 @@ export const handleRightAnswerCase = async (
   ) {
     const response = await getPromptResponse({
       actor: Actor.AI,
-      context: `${context}
+      context: `Chat transcript: ${JSON.stringify(messages, null, 2)}
                 Problem: ${problem.title}
                 Description: ${problem.problemDescription}
                 Code: ${codeSnapshot}
@@ -117,17 +117,17 @@ export const handleRightAnswerCase = async (
 
 // #WRONG_ANSWER CASE
 export const handleWrongCase = async (
-  context: string,
+  messages: any[],
   problem: Problem,
   input: string,
   addBotMessage: (text: string) => Promise<void>
 ) => {
   const response = await getPromptResponse({
     actor: Actor.INTERVIEWER,
-    context: `${context}\n
-              Problem: ${problem.title}
-              Description: ${problem.problemDescription}\n
-              User's last message: ${input}`,
+    context: `Chat transcript: ${JSON.stringify(messages, null, 2)}\n
+                        Problem: ${problem.title}
+                        Description: ${problem.problemDescription}\n
+                        User's last message: ${input}`,
     promptKey: "ack-followup",
     modelName: "gpt-4o",
   });
@@ -136,7 +136,7 @@ export const handleWrongCase = async (
 
 // #REQUESTED_EXAMPLE CASE
 export const handleRequestExampleCase = async (
-  context: string,
+  messages: any[],
   problem: Problem,
   input: string,
   currentStage: Stage,
@@ -144,13 +144,22 @@ export const handleRequestExampleCase = async (
 ) => {
   const exampleResponse = await getPromptResponse({
     actor: Actor.INTERVIEWER,
-    context: `User asked for an example or to rephrase the question.\n
-              ${context}\n 
-              Problem: ${problem.title}
-              Description: ${problem.problemDescription}
-              Current stage: ${currentStage}
-              User's last message: ${input}
-              `,
+    context: `User asked for an example or to rephrase the question. 
+                  IMPORTANT: 
+                  - If the candidate explicitly asks for an example , provide one (stage rules apply). 
+                  - Otherwise, respond directly to their clarifying question according to the current stage. 
+                 - If the candidate’s last or starting  message  contains a clarifying question, 
+you must briefly answer it (1 sentence max) in addition to following the stage rules.\n
+                            Chat transcript : ${JSON.stringify(
+                              messages.slice(-2),
+                              null,
+                              2
+                            )}
+                            Problem: ${problem.title}
+                            Description: ${problem.problemDescription}
+                            Current stage: ${currentStage}
+                            User's last message: ${input}
+                            `,
     promptKey: "provide-example",
     modelName: "gpt-3.5-turbo",
   });
@@ -200,8 +209,7 @@ export const handleApproachProvided = async (
       if (onApproachCorrectChange) {
         onApproachCorrectChange(true);
       }
-    }
-     else if (tag === "#PARTIAL") {
+    } else if (tag === "#PARTIAL") {
       if (isSufficient) {
         await addBotMessage(
           `This is a good starting point. You can begin coding and we'll refine as you implement.`
@@ -243,10 +251,11 @@ export const handleApproachProvided = async (
     await addBotMessage(response);
   }
 };
+
 // #PROBLEM_EXPLANATION
 export const handleProblemExplanationCase = async (
   currentStage: Stage,
-  context: string,
+  messages: any[],
   problem: Problem,
   addBotMessage: (text: string) => Promise<void>,
   input: string
@@ -254,11 +263,15 @@ export const handleProblemExplanationCase = async (
   const responses = await getPromptResponse({
     actor: Actor.INTERVIEWER,
     context: `User has ask explanation about the problem.Explain the problem.
-              Current stage: ${currentStage}
-              ${context}
-              Problem: ${problem.title}
-              Description: ${problem.problemDescription}\n
-              User's last message: ${input}`,
+                        Current stage: ${currentStage}
+                         Chat transcript: ${JSON.stringify(
+      messages.slice(-3),
+      null,
+      2
+    )}
+                        Problem: ${problem.title}
+                        Description: ${problem.problemDescription}\n
+                        User's last message: ${input}`,
     promptKey: "general-problem",
     modelName: "gpt-3.5-turbo",
   });
@@ -267,7 +280,7 @@ export const handleProblemExplanationCase = async (
 
 interface CodingQuestionParams {
   currentStage: Stage;
-  context: string;
+  gptMessages: any[];
   problem: Problem;
   input: string;
   currentCode: string;
@@ -279,7 +292,7 @@ interface CodingQuestionParams {
 export const handleCodingQuestion = async (params: CodingQuestionParams) => {
   const {
     currentStage,
-    context,
+    gptMessages,
     problem,
     input,
     currentCode,
@@ -288,21 +301,25 @@ export const handleCodingQuestion = async (params: CodingQuestionParams) => {
   } = params;
 
   if (currentStage === "WAIT_FOR_APPROACH" && !hasProvidedApproachRef.current) {
-    const finalContext = `${context}
+    const context = `Chat transcript: ${JSON.stringify(
+      gptMessages.slice(-3),
+      null,
+      2
+    )}
                     Problem: ${problem.title}
                     Description: ${problem.problemDescription}
                     User's last message: ${input}`;
 
     const clarificationPrompt = await getPromptResponse({
       actor: Actor.INTERVIEWER,
-      context: finalContext,
+      context,
       promptKey: "ask-approach-before-coding",
       modelName: "gpt-3.5-turbo",
     });
     await addBotMessage(clarificationPrompt);
   } else {
-    const finalContext = `User is asking a coding question. Provide helpful guidance.
-                    ${context}
+    const context = `User is asking a coding question. Provide helpful guidance.
+                    Chat transcript: ${JSON.stringify(gptMessages, null, 2)}
                     Problem: ${problem.title}
                     Description: ${problem.problemDescription}
                     Current code: ${currentCode || "No code written yet"}
@@ -310,7 +327,7 @@ export const handleCodingQuestion = async (params: CodingQuestionParams) => {
 
     const response = await getPromptResponse({
       actor: Actor.INTERVIEWER,
-      context: finalContext,
+      context,
       promptKey: "coding-start-guidance",
       modelName: "gpt-3.5-turbo",
     });
@@ -320,14 +337,18 @@ export const handleCodingQuestion = async (params: CodingQuestionParams) => {
 
 // CODING_HELP CASE
 export const handleCodingHelp = async (
-  context: string,
+  messages: any[],
   problem: Problem,
   currentCode: string,
   input: string,
   addBotMessage: (text: string) => Promise<void>
 ) => {
-  const finalContext = `User needs help with coding/debugging. Provide specific assistance.
-                  ${context}
+  const context = `User needs help with coding/debugging. Provide specific assistance.
+                  Chat transcript: ${JSON.stringify(
+    messages.slice(-5),
+    null,
+    2
+  )}
                   Problem: ${problem.title}
                   Description: ${problem.problemDescription}
                   Current code: ${currentCode || "No code written yet"}
@@ -335,7 +356,7 @@ export const handleCodingHelp = async (
 
   const response = await getPromptResponse({
     actor: Actor.INTERVIEWER,
-    context: finalContext,
+    context,
     promptKey: "coding-debug-help",
     modelName: "gpt-4o",
   });
@@ -346,7 +367,7 @@ export const handleCodingHelp = async (
 // #GENERAL_ACKNOWLEDGMENT
 export const handleGenralAcknowledgement = async (
   currentStage: Stage,
-  context: string,
+  messages: any[],
   problem: Problem,
   addBotMessage: (text: string) => Promise<void>,
   input: string
@@ -354,11 +375,11 @@ export const handleGenralAcknowledgement = async (
   const response = await getPromptResponse({
     actor: Actor.INTERVIEWER,
     context: `User acknowledged something. Provide encouragement and next steps.
-              Current stage: ${currentStage}
-              ${context}
-              Problem: ${problem.title}
-              Description: ${problem.problemDescription}\n
-              User's last message: ${input}`,
+                        Current stage: ${currentStage}
+                        Chat transcript: ${JSON.stringify(messages, null, 2)}
+                        Problem: ${problem.title}
+                        Description: ${problem.problemDescription}\n
+                        User's last message: ${input}`,
     promptKey: "general-encouragement",
     modelName: "gpt-3.5-turbo",
   });
@@ -367,7 +388,7 @@ export const handleGenralAcknowledgement = async (
 // #OFF_TOPIC CASE
 export const handleOffTopic = async (
   currentStage: Stage,
-  context: string,
+  messages: any[],
   problem: Problem,
   addBotMessage: (text: string, texts: boolean) => Promise<void>
 ) => {
@@ -375,8 +396,8 @@ export const handleOffTopic = async (
     actor: Actor.INTERVIEWER,
     context: `The user went off-topic, but you must keep the interview on track.
               Maintain the current stage and context.
-              Here is the relevant context so far:
-              ${context}
+              Here is the full chat so far:
+              ${JSON.stringify(messages.slice(-3), null, 2)}
               Problem: ${problem.title}
               Description: ${problem.problemDescription}
               Current stage: ${currentStage}
@@ -391,7 +412,7 @@ export const handleOffTopic = async (
 // #DEFAULT CASE
 export const handleDefaultCase = async (
   currentStage: Stage,
-  context: string,
+  messages: any[],
   problem: Problem,
   currentCode: string,
   input: string,
@@ -399,7 +420,7 @@ export const handleDefaultCase = async (
 ) => {
   if (currentStage === "CODING") {
     const codingContext = `User is asking a question during coding phase. Provide helpful guidance.
-                          ${context}
+                          Chat transcript: ${JSON.stringify(messages, null, 2)}
                           Problem: ${problem.title}
                           Description: ${problem.problemDescription}
                           Current code: ${currentCode || "No code written yet"}
@@ -415,7 +436,11 @@ export const handleDefaultCase = async (
   } else {
     const fallbackContext = `User's message does not match predefined classifications
                             in this ${currentStage} phase. Maintain the current context.
-                            Recent chat history: ${context}
+                            Recent chat history: ${JSON.stringify(
+      messages.slice(-3),
+      null,
+      2
+    )}
                             Problem: ${problem.title}
                             Description: ${problem.problemDescription}
                             Current code: ${currentCode || "N/A"}`;
