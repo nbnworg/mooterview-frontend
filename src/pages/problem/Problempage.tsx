@@ -8,6 +8,7 @@ import { getProblemById } from "../../utils/handlers/getProblemById";
 import type { Problem } from "mooterview-client";
 import ChatBox from "../../components/chatbox/ChatBox";
 import Loading from "../../components/Loader/Loading";
+import PythonRunner from "../../components/pythonRunner/PythonRunner";
 
 const ProblemPage = () => {
   const location = useLocation();
@@ -112,6 +113,8 @@ const ProblemPage = () => {
             setTimeLeft={setTimeLeft}
             disabled={!isEditorEnabled}
           />
+
+          <PythonRunner code={code} />
 
           <button
             className="verifyCodeButton"
