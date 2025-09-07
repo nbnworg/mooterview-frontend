@@ -13,6 +13,7 @@ import { generateTestCasesWithAI } from "../../utils/generateTestCasesWithAI";
 import ConfirmationModal from "../Confirmationmodal/Confirmationmodal";
 import { clearCachedReport } from "../../utils/localStorageReport";
 import { verifyApproach } from "../../utils/handlers/verifyApproach";
+import { getTokenData } from "../../utils/constants";
 import { IoSend } from "react-icons/io5";
 import { GoMoveToEnd } from "react-icons/go";
 import Loading from "../Loader/Loading";
@@ -357,12 +358,11 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           phaseRef.current = "CODING";
         }
 
-        const commonContext = `Problem: ${problem.title}\n\n${
-          problem.problemDescription
-        }
+        const commonContext = `Problem: ${problem.title}\n\n${problem.problemDescription
+          }
                     Elapsed time: ${Math.floor(
-                      elapsed / 60
-                    )} minutes\nUser's last message: ${input}
+            elapsed / 60
+          )} minutes\nUser's last message: ${input}
                     Current stage: ${stageRef.current}`;
         const prevAnalysisCode = intitalCodeContextRef.current;
 
@@ -681,6 +681,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             approach: userApproach,
             code: currentCode,
             problemTitle: problem.title,
+            userId: getTokenData()?.id || "",
           });
           if (alignmentResult.alignment === "MISMATCH") {
             await addBotMessage(

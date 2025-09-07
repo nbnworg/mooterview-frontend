@@ -13,6 +13,10 @@ export const getPromptResponse = async ({
   promptKey: string;
   modelName: string;
 }) => {
+  const tokenData = getTokenData();
+  if (!tokenData) throw new Error("Token not found");
+  const userId = tokenData.id;
+
   const makeRequest = async (accessToken: string) => {
     const response = await fetch(`${BASE_URL}/prompt/response`, {
       method: "POST",
@@ -20,7 +24,7 @@ export const getPromptResponse = async ({
         "Content-Type": "application/json",
         Authorization: `Bearer ${accessToken}`,
       },
-      body: JSON.stringify({ actor, context, promptKey, modelName }),
+      body: JSON.stringify({ actor, context, promptKey, modelName,userId }),
     });
 
     if (!response.ok) {

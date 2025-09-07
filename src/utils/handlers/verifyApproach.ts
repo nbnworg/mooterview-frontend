@@ -6,6 +6,7 @@ interface VerifyApproachPayload {
   approach: string;
   code: string;
   problemTitle: string;
+  userId: string;
 }
 
 interface VerifyApproachResponse {
@@ -18,7 +19,7 @@ export const verifyApproach = async (
 ): Promise<VerifyApproachResponse> => {
   const makeRequest = async (accessToken: string) => {
     const response = await axios.post(
-      `${BASE_URL}/prompt/verify-approach`, 
+      `${BASE_URL}/prompt/verify-approach`,
       payload,
       { headers: { Authorization: `Bearer ${accessToken}` } }
     );
