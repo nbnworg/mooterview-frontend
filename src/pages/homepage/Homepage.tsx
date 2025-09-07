@@ -49,7 +49,6 @@ export default function Homepage() {
 
     return matchesLevel && matchesSearch && matchesSolve && matchType;
   });
-  console.log(streak);
   
 
     return (
