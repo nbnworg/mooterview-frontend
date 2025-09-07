@@ -790,13 +790,19 @@ const ChatBox: React.FC<ChatBoxProps> = ({
       </div>
 
       <form className="chatInputForm" onSubmit={handleSubmit}>
-        <input
-          type="text"
+        <textarea
           className="chatInput"
           placeholder="Ask for guidance..."
           value={input}
           onChange={(e) => setInput(e.target.value)}
           disabled={isInputDisabled}
+          rows={3}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              handleSubmit(e as unknown as React.FormEvent);
+            }
+          }}
         />
         <div className="buttonsContainer">
           <button type="submit" className="chatSendButton" disabled={loading}>
