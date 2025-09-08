@@ -125,12 +125,13 @@ const ChatBox: React.FC<ChatBoxProps> = ({
   }, [code, problem]);
 
   useEffect(() => {
-    if(stageRef.current = "SESSION_END") {
+    if(stageRef.current === "SESSION_END") {
       setIsInputDisabled(true);
           setTimeout(() => {
             endSession(true, undefined, true);
       }, 1500);
     }
+    console.log("INTEBUEBUBEVUB");
   }, [stageRef.current]);
 
   const addBotMessage = async (text: string, isOffTopic: boolean = false) => {
