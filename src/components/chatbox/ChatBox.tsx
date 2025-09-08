@@ -13,6 +13,7 @@ import { generateTestCasesWithAI } from "../../utils/generateTestCasesWithAI";
 import ConfirmationModal from "../Confirmationmodal/Confirmationmodal";
 import { clearCachedReport } from "../../utils/localStorageReport";
 import { verifyApproach } from "../../utils/handlers/verifyApproach";
+import { getTokenData } from "../../utils/constants";
 import { IoSend } from "react-icons/io5";
 import { GoMoveToEnd } from "react-icons/go";
 import Loading from "../Loader/Loading";
@@ -119,10 +120,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
 
   useEffect(() => {
     if (onEndRef) {
-      onEndRef.current = () => {
-        endSession(true, undefined, false);
-        setLoading(true);
-      };
+      onEndRef.current = () => endSession(true);
     }
   }, [code, problem]);
 
@@ -203,12 +201,36 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     const sessionId = localStorage.getItem("mtv-sessionId");
 
     if (!sessionId) {
-      setLoadingSessionEnd(true);
-      setTimeout(() => {
-        navigate("/home");
-      }, 2000);
+      navigate("/home", { replace: true });
       return;
     }
+
+    const getCleanedEvaluation = async () => {
+      try {
+        const evaluationResponse = await generateEvaluationSummary();
+
+        const evaluationString =
+          typeof evaluationResponse === "string"
+            ? evaluationResponse
+            : JSON.stringify(evaluationResponse);
+
+        const cleanedString = evaluationString
+          .replace(/^```json\s*/, "")
+          .replace(/```$/, "")
+          .trim();
+
+        const parsedEvaluation = JSON.parse(cleanedString);
+        return parsedEvaluation;
+      } catch (error) {
+        console.error(
+          "Failed to parse evaluation summary. Proceeding without it.",
+          error
+        );
+        return {
+          summary: "Could not generate an AI evaluation for this session.",
+        };
+      }
+    };
 
     const wantsSolution = true;
 
@@ -216,9 +238,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
       if (setConfirmationModal) {
         setConfirmationModal({
           text1: "Are you sure?",
-          text2: `This will end your session and ${
-            !sessionId ? `take you to home.` : `take you to the evaluation.`
-          }`,
+          text2: "This will end your session and take you to the evaluation.",
           btn1Text: "Yes, End Session",
           btn2Text: "Cancel",
           btn1Handler: () => {
@@ -233,33 +253,30 @@ const ChatBox: React.FC<ChatBoxProps> = ({
       if (setConfirmationModal) {
         setConfirmationModal({
           text1: "Your time is up!",
-          text2: `This will end your session and ${
-            !sessionId ? `take you to home.` : `take you to the evaluation.`
-          }`,
+          text2: "This will end your session and take you to the evaluation.",
           btn1Text: "OK, Proceed",
           btn2Text: "Cancel",
           btn1Handler: async () => {
             setConfirmationModal(null);
+
             if (
               stageRef.current === "CODING" ||
               stageRef.current === "FOLLOW_UP" ||
               stageRef.current === "SESSION_END"
             ) {
+              setLoadingSessionEnd(true);
+              const evaluation = await getCleanedEvaluation();
+
               await updateSessionById({
                 sessionId,
                 endTime: new Date().toISOString(),
-              });
-
-              setLoadingSessionEnd(true);
-              const evaluation = await generateEvaluationSummary();
-              await updateSessionById({
-                sessionId,
                 notes: [
                   { content: evaluation.summary },
                   { content: codeRef.current.trim() || "No code provided" },
                 ],
               });
 
+              setLoadingSessionEnd(false);
               navigate(`/solution/${encodeURIComponent(problem.title ?? "")}`, {
                 state: { evaluation, sessionId, rubricResult },
                 replace: true,
@@ -270,22 +287,19 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           },
           btn2Handler: () => setConfirmationModal(null),
         });
-        return;
       }
+      return;
     }
 
     try {
       setLoadingSessionEnd(true);
-      await updateSessionById({
-        sessionId,
-        endTime: new Date().toISOString(),
-      });
 
       if (wantsSolution) {
-        const evaluation = await generateEvaluationSummary();
+        const evaluation = await getCleanedEvaluation();
 
         await updateSessionById({
           sessionId,
+          endTime: new Date().toISOString(),
           notes: [
             { content: evaluation.summary },
             {
@@ -299,6 +313,10 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           replace: true,
         });
       } else {
+        await updateSessionById({
+          sessionId,
+          endTime: new Date().toISOString(),
+        });
         navigate("/home", { replace: true });
       }
     } catch (err) {
@@ -307,7 +325,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
       setLoadingSessionEnd(false);
     }
   };
-
   useEffect(() => {
     const explainProblem = async () => {
       if (hasExplainedRef.current) return;
@@ -585,8 +602,8 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           stageRef.current = "SESSION_END";
           setIsInputDisabled(true);
           setTimeout(() => {
-            endSession(false, setConfirmationModal, true);
-          }, 2000);
+            endSession(true, undefined, true);
+          }, 1500);
           break;
         }
 
@@ -665,6 +682,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             approach: userApproach,
             code: currentCode,
             problemTitle: problem.title,
+            userId: getTokenData()?.id || "",
           });
           if (alignmentResult.alignment === "MISMATCH") {
             await addBotMessage(
@@ -776,13 +794,19 @@ const ChatBox: React.FC<ChatBoxProps> = ({
       </div>
 
       <form className="chatInputForm" onSubmit={handleSubmit}>
-        <input
-          type="text"
+        <textarea
           className="chatInput"
           placeholder="Ask for guidance..."
           value={input}
           onChange={(e) => setInput(e.target.value)}
           disabled={isInputDisabled}
+          rows={3}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              handleSubmit(e as unknown as React.FormEvent);
+            }
+          }}
         />
         <div className="buttonsContainer">
           <button type="submit" className="chatSendButton" disabled={loading}>
@@ -793,7 +817,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           </button>
           <button
             className="endSessionButton"
-            onClick={() => endSession(false, setConfirmationModal, true)}
+            onClick={() => endSession(false, setConfirmationModal)}
           >
             <div className="buttonIcon">
               <GoMoveToEnd />
