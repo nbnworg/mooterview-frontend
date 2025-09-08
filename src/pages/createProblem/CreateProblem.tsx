@@ -135,6 +135,11 @@ const CreateProblem = () => {
             <option value="Tries">Tries</option>
             <option value="Heap / Priority Queue">Heap / Priority Queue</option>
             <option value="Backtracking">Backtracking</option>
+            <option value="Dynamic Programming">Dynamic Programming</option>
+            <option value="Graphs">Graphs</option>
+            <option value="Greedy">Greedy</option>
+            <option value="Math & Geometry">Math & Geometry</option>
+            <option value="Bit Manipulation">Bit Manipulation</option>
           </select>
 
           <select
