@@ -131,7 +131,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             endSession(true, undefined, true);
       }, 1500);
     }
-    console.log("INTEBUEBUBEVUB");
   }, [stageRef.current]);
 
   const addBotMessage = async (text: string, isOffTopic: boolean = false) => {
