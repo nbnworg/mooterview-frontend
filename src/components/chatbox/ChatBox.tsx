@@ -13,6 +13,7 @@ import { generateTestCasesWithAI } from "../../utils/generateTestCasesWithAI";
 import ConfirmationModal from "../Confirmationmodal/Confirmationmodal";
 import { clearCachedReport } from "../../utils/localStorageReport";
 import { verifyApproach } from "../../utils/handlers/verifyApproach";
+import { getTokenData } from "../../utils/constants";
 import { IoSend } from "react-icons/io5";
 import { GoMoveToEnd } from "react-icons/go";
 import Loading from "../Loader/Loading";
@@ -123,6 +124,15 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     }
   }, [code, problem]);
 
+  useEffect(() => {
+    if(stageRef.current === "SESSION_END") {
+      setIsInputDisabled(true);
+          setTimeout(() => {
+            endSession(true, undefined, true);
+      }, 1500);
+    }
+  }, [stageRef.current]);
+
   const addBotMessage = async (text: string, isOffTopic: boolean = false) => {
     const newMessage = { actor: Actor.INTERVIEWER, message: text };
     await updateChatsInSession([newMessage]);
@@ -204,6 +214,33 @@ const ChatBox: React.FC<ChatBoxProps> = ({
       return;
     }
 
+    const getCleanedEvaluation = async () => {
+      try {
+        const evaluationResponse = await generateEvaluationSummary();
+
+        const evaluationString =
+          typeof evaluationResponse === "string"
+            ? evaluationResponse
+            : JSON.stringify(evaluationResponse);
+
+        const cleanedString = evaluationString
+          .replace(/^```json\s*/, "")
+          .replace(/```$/, "")
+          .trim();
+
+        const parsedEvaluation = JSON.parse(cleanedString);
+        return parsedEvaluation;
+      } catch (error) {
+        console.error(
+          "Failed to parse evaluation summary. Proceeding without it.",
+          error
+        );
+        return {
+          summary: "Could not generate an AI evaluation for this session.",
+        };
+      }
+    };
+
     const wantsSolution = true;
 
     if (!calledAutomatically) {
@@ -236,21 +273,19 @@ const ChatBox: React.FC<ChatBoxProps> = ({
               stageRef.current === "FOLLOW_UP" ||
               stageRef.current === "SESSION_END"
             ) {
+              setLoadingSessionEnd(true);
+              const evaluation = await getCleanedEvaluation();
+
               await updateSessionById({
                 sessionId,
                 endTime: new Date().toISOString(),
-              });
-
-              const evaluation = await generateEvaluationSummary();
-
-              await updateSessionById({
-                sessionId,
                 notes: [
                   { content: evaluation.summary },
                   { content: codeRef.current.trim() || "No code provided" },
                 ],
               });
 
+              setLoadingSessionEnd(false);
               navigate(`/solution/${encodeURIComponent(problem.title ?? "")}`, {
                 state: { evaluation, sessionId, rubricResult },
                 replace: true,
@@ -262,20 +297,18 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           btn2Handler: () => setConfirmationModal(null),
         });
       }
+      return;
     }
 
     try {
       setLoadingSessionEnd(true);
-      await updateSessionById({
-        sessionId,
-        endTime: new Date().toISOString(),
-      });
 
       if (wantsSolution) {
-        const evaluation = await generateEvaluationSummary();
+        const evaluation = await getCleanedEvaluation();
 
         await updateSessionById({
           sessionId,
+          endTime: new Date().toISOString(),
           notes: [
             { content: evaluation.summary },
             {
@@ -289,6 +322,10 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           replace: true,
         });
       } else {
+        await updateSessionById({
+          sessionId,
+          endTime: new Date().toISOString(),
+        });
         navigate("/home", { replace: true });
       }
     } catch (err) {
@@ -297,7 +334,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
       setLoadingSessionEnd(false);
     }
   };
-
   useEffect(() => {
     const explainProblem = async () => {
       if (hasExplainedRef.current) return;
@@ -331,12 +367,11 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           phaseRef.current = "CODING";
         }
 
-        const commonContext = `Problem: ${problem.title}\n\n${
-          problem.problemDescription
-        }
+        const commonContext = `Problem: ${problem.title}\n\n${problem.problemDescription
+          }
                     Elapsed time: ${Math.floor(
-                      elapsed / 60
-                    )} minutes\nUser's last message: ${input}
+            elapsed / 60
+          )} minutes\nUser's last message: ${input}
                     Current stage: ${stageRef.current}`;
         const prevAnalysisCode = intitalCodeContextRef.current;
 
@@ -500,7 +535,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             addBotMessage
           );
           break;
-        } 
+        }
 
         case "#PROBLEM_EXPLANATIONS": {
           addBotMessage("Okay, you can explain the approach now!");
@@ -630,7 +665,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     const currentCode = codeRef.current;
     const userApproach = approachTextRef.current;
 
-
     if (!currentCode) {
       await addBotMessage(
         "It looks like you haven't written any code yet. Kindly implement your solution."
@@ -656,15 +690,15 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             approach: userApproach,
             code: currentCode,
             problemTitle: problem.title,
+            userId: getTokenData()?.id || "",
           });
           if (alignmentResult.alignment === "MISMATCH") {
             await addBotMessage(
               alignmentResult.feedback +
                 "\nPlease correct your code to match your approach and verify again."
             );
-            return; 
+            return;
           }
-
         } catch (error) {
           console.error("Error verifying approach:", error);
           await addBotMessage(
@@ -739,7 +773,10 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         }
       }
     } catch (error) {
-      console.error("An error occurred during the verification process:", error);
+      console.error(
+        "An error occurred during the verification process:",
+        error
+      );
       await addBotMessage(
         "An unexpected error occurred while verifying your solution. Please try again."
       );
@@ -747,8 +784,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
       setLoading(false);
     }
   };
-
-
 
   return (
     <div className="chatbox">
@@ -764,13 +799,19 @@ const ChatBox: React.FC<ChatBoxProps> = ({
       </div>
 
       <form className="chatInputForm" onSubmit={handleSubmit}>
-        <input
-          type="text"
+        <textarea
           className="chatInput"
           placeholder="Ask for guidance..."
           value={input}
           onChange={(e) => setInput(e.target.value)}
           disabled={isInputDisabled}
+          rows={3}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              handleSubmit(e as unknown as React.FormEvent);
+            }
+          }}
         />
         <div className="buttonsContainer">
           <button type="submit" className="chatSendButton" disabled={loading}>

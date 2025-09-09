@@ -34,8 +34,13 @@ export default function Filters({
     "Binary Search",
     "Trees",
     "Tries",
-    "Heap/Priority Queue",
-    "Backtracking"
+    "Heap / Priority Queue",
+    "Backtracking",
+    "Dynamic Programming",
+    "Graphs",
+    "Greedy",
+    "Math & Geometry",
+    "Bit Manipulation"
   ];
 
 
