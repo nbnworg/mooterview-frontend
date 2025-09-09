@@ -124,6 +124,15 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     }
   }, [code, problem]);
 
+  useEffect(() => {
+    if(stageRef.current === "SESSION_END") {
+      setIsInputDisabled(true);
+          setTimeout(() => {
+            endSession(true, undefined, true);
+      }, 1500);
+    }
+  }, [stageRef.current]);
+
   const addBotMessage = async (text: string, isOffTopic: boolean = false) => {
     const newMessage = { actor: Actor.INTERVIEWER, message: text };
     await updateChatsInSession([newMessage]);
