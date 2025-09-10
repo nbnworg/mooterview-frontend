@@ -467,7 +467,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
       if (classification !== "#OFF_TOPIC") {
         setGptMessages((prev) => [...prev, userMsg]);
       }
-
       switch (classification) {
         case "#UNDERSTOOD_CONFIRMATION": {
           await handleUnderstoodConfirmation(
@@ -522,6 +521,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           break;
         }
 
+
         case "#APPROACH_PROVIDED": {
           await handleApproachProvided(
             stageRef.current,
@@ -554,7 +554,23 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         }
 
         case "#RESPOND": {
-          addBotMessage("Okay, go ahead");
+          const responsed = await getPromptResponse({
+            actor: Actor.INTERVIEWER,
+               context: `User has said confirmation message, acknowledge 
+                the confirmation briefly and then redirect the user back to the current problem.
+                        Current stage: ${currentStage}
+                         Chat transcript: ${JSON.stringify(
+                           messages.slice(-3),
+                           null,
+                           2
+                         )}
+                        Problem: ${problem.title}
+                        Description: ${problem.problemDescription}\n
+                        User's last message: ${input}`,
+    promptKey: "general-respond",
+    modelName: "gpt-3.5-turbo",
+  });
+  await addBotMessage(responsed);
           break;
         }
 

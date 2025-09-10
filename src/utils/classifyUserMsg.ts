@@ -56,7 +56,7 @@ export const classifyUserMessage = async (input: string, currentStage: string, r
            - If user says "I think so", "maybe the answer is X", or other uncertain phrasing → classify as #RIGHT_ANSWER or #WRONG_ANSWER depending on correctness
            - If user gives unrelated or off-topic response → #OFF_TOPIC
            - If user answers "yes, I'll reply" or "yes" after he went off topic last time → #RESPOND
-         
+           
         5. If currentStage is "SESSION_END":
            - If user asks anything in this stage → #INTERVIEW_END
 
@@ -76,6 +76,7 @@ export const classifyUserMessage = async (input: string, currentStage: string, r
         #UNDERSTOOD_CONFIRMATION
         #PROBLEM_EXPLANATION
         #RESPOND
+        #USER_ASKED_QUESTION
         #CONFUSED
         #REQUESTED_EXAMPLE
         #APPROACH_PROVIDED
