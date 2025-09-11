@@ -367,11 +367,12 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           phaseRef.current = "CODING";
         }
 
-        const commonContext = `Problem: ${problem.title}\n\n${problem.problemDescription
-          }
+        const commonContext = `Problem: ${problem.title}\n\n${
+          problem.problemDescription
+        }
                     Elapsed time: ${Math.floor(
-            elapsed / 60
-          )} minutes\nUser's last message: ${input}
+                      elapsed / 60
+                    )} minutes\nUser's last message: ${input}
                     Current stage: ${stageRef.current}`;
         const prevAnalysisCode = intitalCodeContextRef.current;
 
@@ -732,7 +733,10 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         return;
       }
 
-      const rubricResult = await evaluateSolutionWithRubric(currentCode);
+      const rubricResult = await evaluateSolutionWithRubric(
+        currentCode,
+        testCases
+      );
       setrubricResult(rubricResult);
 
       const testCaseText = testCases
