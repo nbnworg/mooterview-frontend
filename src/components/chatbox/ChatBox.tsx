@@ -469,6 +469,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         setGptMessages((prev) => [...prev, userMsg]);
       }
 
+      console.log(classification);
       switch (classification) {
         case "#UNDERSTOOD_CONFIRMATION": {
           await handleUnderstoodConfirmation(
@@ -523,6 +524,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           break;
         }
 
+
         case "#APPROACH_PROVIDED": {
           await handleApproachProvided(
             stageRef.current,
@@ -555,9 +557,49 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         }
 
         case "#RESPOND": {
-          addBotMessage("Okay, go ahead");
+          const responsed = await getPromptResponse({
+            actor: Actor.INTERVIEWER,
+               context: `User has said confirmation message, acknowledge 
+                the confirmation briefly and then redirect the user back to the current problem.
+                        Current stage: ${currentStage}
+                         Chat transcript: ${JSON.stringify(
+                           messages.slice(-3),
+                           null,
+                           2
+                         )}
+                        Problem: ${problem.title}
+                        Description: ${problem.problemDescription}\n
+                        User's last message: ${input}`,
+    promptKey: "general-respond",
+    modelName: "gpt-3.5-turbo",
+  });
+  await addBotMessage(responsed);
           break;
         }
+
+        case "#USER_ASKED_QUESTION" :{
+            const responsed = await getPromptResponse({
+            actor: Actor.INTERVIEWER,
+               context: `The user has asked a conceptual question. Your task is to provide a  
+               general explanation of the concept they asked about WITHOUT relating it to the current 
+               problem or giving away the solution.
+                        Current stage: ${currentStage}
+                         Chat transcript: ${JSON.stringify(
+                           messages.slice(-3),
+                           null,
+                           2
+                         )}
+                        Problem: ${problem.title}
+                        Description: ${problem.problemDescription}\n
+                        User's last message: ${input}`,
+    promptKey: "user-asked",
+    modelName: "gpt-3.5-turbo",
+  });
+  await addBotMessage(responsed);
+          break;
+        }
+
+
 
         case "#CODING_QUESTION": {
           await handleCodingQuestion({
