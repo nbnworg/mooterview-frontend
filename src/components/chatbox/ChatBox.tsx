@@ -120,7 +120,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
 
   useEffect(() => {
     if (onEndRef) {
-      onEndRef.current = () => endSession(true);
+      onEndRef.current = () => endSession(true, undefined, true);
     }
   }, [code, problem]);
 
@@ -472,7 +472,6 @@ const endSession = async (
         setGptMessages((prev) => [...prev, userMsg]);
       }
 
-      console.log(classification);
       switch (classification) {
         case "#UNDERSTOOD_CONFIRMATION": {
           await handleUnderstoodConfirmation(
@@ -741,7 +740,7 @@ const endSession = async (
           if (alignmentResult.alignment === "MISMATCH") {
             await addBotMessage(
               alignmentResult.feedback +
-                "\nPlease correct your code to match your approach and verify again."
+              "\nPlease correct your code to match your approach and verify again."
             );
             return;
           }

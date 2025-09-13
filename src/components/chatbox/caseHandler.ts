@@ -151,10 +151,10 @@ export const handleRequestExampleCase = async (
                  - If the candidate’s last or starting  message  contains a clarifying question, 
 you must briefly answer it (1 sentence max) in addition to following the stage rules.\n
                             Chat transcript : ${JSON.stringify(
-                              messages.slice(-2),
-                              null,
-                              2
-                            )}
+      messages.slice(-2),
+      null,
+      2
+    )}
                             Problem: ${problem.title}
                             Description: ${problem.problemDescription}
                             Current stage: ${currentStage}
@@ -198,7 +198,6 @@ export const handleApproachProvided = async (
       .replace(/^(#CORRECT|#PARTIAL|#WRONG)[:\s]*/, "")
       .replace(/\[SUFFICIENT\]|\[INSUFFICIENT\]/g, "")
       .trim();
-
     if (tag === "#CORRECT") {
       await addBotMessage(
         "Alright, you can start coding now.\nIf you get stuck at any point, feel free to ask for help. Once you've completed your code, click on 'Verify Code' button to check your solution."
@@ -265,10 +264,10 @@ export const handleProblemExplanationCase = async (
     context: `User has ask explanation about the problem.Explain the problem.
                         Current stage: ${currentStage}
                          Chat transcript: ${JSON.stringify(
-                           messages.slice(-3),
-                           null,
-                           2
-                         )}
+      messages.slice(-3),
+      null,
+      2
+    )}
                         Problem: ${problem.title}
                         Description: ${problem.problemDescription}\n
                         User's last message: ${input}`,
@@ -345,10 +344,10 @@ export const handleCodingHelp = async (
 ) => {
   const context = `User needs help with coding/debugging. Provide specific assistance.
                   Chat transcript: ${JSON.stringify(
-                    messages.slice(-5),
-                    null,
-                    2
-                  )}
+    messages.slice(-5),
+    null,
+    2
+  )}
                   Problem: ${problem.title}
                   Description: ${problem.problemDescription}
                   Current code: ${currentCode || "No code written yet"}
@@ -437,10 +436,10 @@ export const handleDefaultCase = async (
     const fallbackContext = `User's message does not match predefined classifications
                             in this ${currentStage} phase. Maintain the current context.
                             Recent chat history: ${JSON.stringify(
-                              messages.slice(-3),
-                              null,
-                              2
-                            )}
+      messages.slice(-3),
+      null,
+      2
+    )}
                             Problem: ${problem.title}
                             Description: ${problem.problemDescription}
                             Current code: ${currentCode || "N/A"}`;
