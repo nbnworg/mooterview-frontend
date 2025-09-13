@@ -59,7 +59,7 @@ export const classifyUserMessage = async (input: string, currentStage: string, r
            - If user asks a question (even phrased as “Can you explain X?”) related to the follow-up → treat as #USER_ASKED_QUESTION (not #OFF_TOPIC).
 
         5. If currentStage is "SESSION_END":
-           - If user asks anything in this stage → #INTERVIEW_END
+           - If user says anything in this stage → #INTERVIEW_END
 
         5. General rules:
            - If user just says "yes", "okay", "sure" and we're NOT in ASK_UNDERSTAND stage → #GENERAL_ACKNOWLEDGMENT
