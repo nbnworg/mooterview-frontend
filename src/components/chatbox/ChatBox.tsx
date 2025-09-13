@@ -30,6 +30,7 @@ import {
   handleGenralAcknowledgement,
   handleOffTopic,
   handleDefaultCase,
+  generateEvaluationSummary,
 } from "./caseHandler";
 
 interface ChatBoxProps {
@@ -160,39 +161,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     }
   };
 
-  const generateEvaluationSummary = async (): Promise<{
-    summary: string;
-    alternativeSolutions: string[];
-  }> => {
-    const promptKey = "generate-summary";
-
-    const response = await getPromptResponse({
-      actor: Actor.INTERVIEWER,
-      context: `Problem: ${problem.title}\n
-            Description: ${problem.problemDescription}
-                
-            Elapsed time: ${elapsedTimeRef.current / 60} minutes
-                
-            Final code:
-            ${codeRef.current?.trim() || "No code was written."}
-                
-            Chat transcript:
-            ${JSON.stringify(messages, null, 2)}`,
-      promptKey,
-      modelName: "gpt-4o",
-    });
-
-    try {
-      return JSON.parse(response);
-    } catch (err) {
-      console.error("Failed to parse evaluation response", response);
-      return {
-        summary: "Evaluation could not be parsed.",
-        alternativeSolutions: [],
-      };
-    }
-  };
-
   const endSession = async (
     calledAutomatically: boolean,
     setConfirmationModal?: React.Dispatch<
@@ -216,7 +184,9 @@ const ChatBox: React.FC<ChatBoxProps> = ({
 
     const getCleanedEvaluation = async () => {
       try {
-        const evaluationResponse = await generateEvaluationSummary();
+        const elapsed = elapsedTimeRef.current;
+        const evaluationResponse = await generateEvaluationSummary(problem, elapsed, messages, codeRef.current.trim());
+        const evaluationReportSolution = "knv";
 
         const evaluationString =
           typeof evaluationResponse === "string"
