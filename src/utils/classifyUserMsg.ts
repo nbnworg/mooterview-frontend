@@ -58,7 +58,7 @@ export const classifyUserMessage = async (input: string, currentStage: string, r
            - If user answers "yes, I'll reply" or "yes" after he went off topic last time → #RESPOND
          
         5. If currentStage is "SESSION_END":
-           - If user asks anything in this stage → #INTERVIEW_END
+           - If user says anything in this stage → #INTERVIEW_END
 
         5. General rules:
            - If user just says "yes", "okay", "sure" and we're NOT in ASK_UNDERSTAND stage → #GENERAL_ACKNOWLEDGMENT
