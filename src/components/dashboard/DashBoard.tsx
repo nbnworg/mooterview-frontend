@@ -7,7 +7,6 @@ import { getUserById } from "../../utils/handlers/getUserInfoById";
 import type { GetUserByIdOutput } from "mooterview-client";
 import "./dashboard.css";
 import { getProblemById } from "../../utils/handlers/getProblemById";
-import type { Problem } from "mooterview-client";
 import Navbar from "../navbar/Navbar";
 import Preparation from "./preparation";
 import PreparationChart from "./PreparationChart";
@@ -103,16 +102,17 @@ const DashBoard = () => {
         ] as string[];
 
         const fetchedProblems: { [key: string]: string } = {};
-        await Promise.all(
-          uniqueProblemIds.map(async (problemId) => {
-            try {
-              const problem: Problem = await getProblemById(problemId);
-              fetchedProblems[problemId] = problem.title || "Untitled";
-            } catch {
-              fetchedProblems[problemId] = "Title not found";
-            }
-          })
+        const results = await Promise.allSettled(
+          uniqueProblemIds.map(id => getProblemById(id))
         );
+
+        results.forEach((result, idx) => {
+          if (result.status === "fulfilled") {
+            fetchedProblems[uniqueProblemIds[idx]] = result.value.title || "Untitled";
+          } else {
+            fetchedProblems[uniqueProblemIds[idx]] = "Title not found";
+          }
+        });
         setProblems(fetchedProblems);
 
         const seenProblems = new Set<string>();
