@@ -31,12 +31,16 @@ export const classifyUserMessage = async (input: string, currentStage: string, r
            - User asks for clarification, "I don't understand" → #CONFUSED
            - User asks for example → #REQUESTED_EXAMPLE
            - User talks about unrelated topics → #OFF_TOPIC
+           -If user says "no" it  must always be interpreted in the context of interviewer’s last question:
+              If last question was “Have you understood?” → #CONFUSED
+              If last question was “Do you have any more questions?” → #GENERAL_ACKNOWLEDGMENT
         
         2. If currentStage is "WAIT_FOR_APPROACH":
            - User explains their solution approach/algorithm → #APPROACH_PROVIDED
            - User asks for example → #REQUESTED_EXAMPLE
            - User talks about unrelated topics → #OFF_TOPIC
            - User was not able to answer, so he was explained the question again and has said yes and it is clear to him now → #UNDERSTOOD_CONFIRMATION
+           - If user seems confused about problem → #CONFUSED
            - User says yes to interviewer's last question → #PROBLEM_EXPLANATIONS
         
         3. If currentStage is "CODING":
