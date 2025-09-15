@@ -79,7 +79,7 @@ const DashBoard = () => {
   useEffect(() => {
     localStorage.removeItem("mtv-sessionId");
   }, []);
-  
+
   useEffect(() => {
     const fetchAll = async () => {
       setPageLoading(true);
@@ -102,17 +102,47 @@ const DashBoard = () => {
           ...new Set(fetchedSessions.map((s) => s.problemId).filter(Boolean)),
         ] as string[];
 
+        const CACHE_KEY = "cachedProblems";
+        const CACHE_DURATION = 2 * 60 * 60 * 1000;
+        const cached = localStorage.getItem(CACHE_KEY);
+        const now = Date.now();
+
+        let problemMap: { [key: string]: string } = {};
         const fetchedProblems: { [key: string]: string } = {};
-        await Promise.all(
-          uniqueProblemIds.map(async (problemId) => {
-            try {
-              const problem: Problem = await getProblemById(problemId);
-              fetchedProblems[problemId] = problem.title || "Untitled";
-            } catch {
-              fetchedProblems[problemId] = "Title not found";
-            }
-          })
-        );
+
+        if (cached) {
+          const { problems: cachedProblems, timestamp } = JSON.parse(cached);
+          if (now - timestamp < CACHE_DURATION) {
+            cachedProblems.forEach((problem: any) => {
+              problemMap[problem.problemId] = problem.title;
+            });
+            uniqueProblemIds.forEach((problemId) => {
+              fetchedProblems[problemId] = problemMap[problemId] || "Title not found";
+            });
+          } else {
+            await Promise.all(
+              uniqueProblemIds.map(async (problemId) => {
+                try {
+                  const problem: Problem = await getProblemById(problemId);
+                  fetchedProblems[problemId] = problem.title || "Untitled";
+                } catch {
+                  fetchedProblems[problemId] = "Title not found";
+                }
+              })
+            );
+          }
+        } else {
+          await Promise.all(
+            uniqueProblemIds.map(async (problemId) => {
+              try {
+                const problem: Problem = await getProblemById(problemId);
+                fetchedProblems[problemId] = problem.title || "Untitled";
+              } catch {
+                fetchedProblems[problemId] = "Title not found";
+              }
+            })
+          );
+        }
         setProblems(fetchedProblems);
 
         const seenProblems = new Set<string>();
