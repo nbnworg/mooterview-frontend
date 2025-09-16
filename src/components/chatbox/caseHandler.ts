@@ -456,7 +456,7 @@ export const handleDefaultCase = async (
 };
 
 // generate-summary
-export const generateEvaluationSummary = async (
+export const generateEvaluationSolution = async (
   problem: Problem,
   elapsedTime: number,
   messages: any[],
@@ -481,7 +481,7 @@ export const generateEvaluationSummary = async (
   });
 
   try {
-      return JSON.parse(response);
+      return response;
     } catch (err) {
       console.error("Failed to parse evaluation response", response);
       return {
@@ -491,13 +491,13 @@ export const generateEvaluationSummary = async (
     }
 }
 
-export const evaluationReportSolution = async (
+export const evaluationReportEval = async (
   problem: Problem,
   elapsedTime: number,
   messages: any[],
   codeSnapshot: string
 ) => {
-  const promptKey = "generate-summary-solution";
+  const promptKey = "generate-summary-eval";
 
   const response = await getPromptResponse({
     actor: Actor.INTERVIEWER,
@@ -516,7 +516,7 @@ export const evaluationReportSolution = async (
   });
 
   try {
-      return JSON.parse(response);
+      return response;
     } catch (err) {
       console.error("Failed to parse evaluation response", response);
       return {

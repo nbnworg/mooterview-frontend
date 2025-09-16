@@ -30,7 +30,8 @@ import {
   handleGenralAcknowledgement,
   handleOffTopic,
   handleDefaultCase,
-  generateEvaluationSummary,
+  generateEvaluationSolution,
+  evaluationReportEval,
 } from "./caseHandler";
 
 interface ChatBoxProps {
@@ -185,21 +186,36 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     const getCleanedEvaluation = async () => {
       try {
         const elapsed = elapsedTimeRef.current;
-        const evaluationResponse = await generateEvaluationSummary(problem, elapsed, messages, codeRef.current.trim());
-        const evaluationReportSolution = "knv";
+        const evaluationResponse = await generateEvaluationSolution(problem, elapsed, messages, codeRef.current.trim());
+        const evaluationReporteval = await evaluationReportEval(problem, elapsed, messages, codeRef.current.trim());
 
-        const evaluationString =
-          typeof evaluationResponse === "string"
-            ? evaluationResponse
-            : JSON.stringify(evaluationResponse);
+        let summaryString: string;
+        let alternativeSolutionsArray: string[] = [];
+              
+        if (typeof evaluationReporteval === "string") {
+          summaryString = evaluationReporteval.trim();
+        } else {
+          summaryString = JSON.stringify(evaluationReporteval);
+        }
+        
+        try {
+          const parsed = typeof evaluationResponse === "string"
+            ? JSON.parse(evaluationResponse)
+            : evaluationResponse;
+        
+          if (parsed && Array.isArray(parsed.alternativeSolutions)) {
+            alternativeSolutionsArray = parsed.alternativeSolutions;
+          }
+        } catch (err) {
+          console.error("Failed to parse alternativeSolutions:", err);
+        }
+        
+        const parsedData = {
+          summary: summaryString,
+          alternativeSolutions: alternativeSolutionsArray,
+        };
 
-        const cleanedString = evaluationString
-          .replace(/^```json\s*/, "")
-          .replace(/```$/, "")
-          .trim();
-
-        const parsedEvaluation = JSON.parse(cleanedString);
-        return parsedEvaluation;
+        return parsedData;
       } catch (error) {
         console.error(
           "Failed to parse evaluation summary. Proceeding without it.",
