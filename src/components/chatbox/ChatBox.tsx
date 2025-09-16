@@ -125,10 +125,10 @@ const ChatBox: React.FC<ChatBoxProps> = ({
   }, [code, problem]);
 
   useEffect(() => {
-    if(stageRef.current === "SESSION_END") {
+    if (stageRef.current === "SESSION_END") {
       setIsInputDisabled(true);
-          setTimeout(() => {
-            endSession(true, undefined, true);
+      setTimeout(() => {
+        endSession(true, undefined, true);
       }, 1500);
     }
   }, [stageRef.current]);
@@ -276,12 +276,15 @@ const ChatBox: React.FC<ChatBoxProps> = ({
               setLoadingSessionEnd(true);
               const evaluation = await getCleanedEvaluation();
 
+              const summaryContent = evaluation?.summary || "No evaluation summary available";
+              const codeContent = codeRef.current.trim() || "No code provided";
+
               await updateSessionById({
                 sessionId,
                 endTime: new Date().toISOString(),
                 notes: [
-                  { content: evaluation.summary },
-                  { content: codeRef.current.trim() || "No code provided" },
+                  { content: summaryContent },
+                  { content: codeContent },
                 ],
               });
 
@@ -306,17 +309,17 @@ const ChatBox: React.FC<ChatBoxProps> = ({
       if (wantsSolution) {
         const evaluation = await getCleanedEvaluation();
 
+        const summaryContent = evaluation?.summary || "No evaluation summary available";
+        const codeContent = codeRef.current.trim() || "No code provided";
+
         await updateSessionById({
           sessionId,
           endTime: new Date().toISOString(),
           notes: [
-            { content: evaluation.summary },
-            {
-              content: codeRef.current.trim() || "No code provided",
-            },
+            { content: summaryContent },
+            { content: codeContent },
           ],
         });
-
         navigate(`/solution/${encodeURIComponent(problem.title ?? "")}`, {
           state: { evaluation, sessionId, rubricResult },
           replace: true,
@@ -367,12 +370,11 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           phaseRef.current = "CODING";
         }
 
-        const commonContext = `Problem: ${problem.title}\n\n${
-          problem.problemDescription
-        }
+        const commonContext = `Problem: ${problem.title}\n\n${problem.problemDescription
+          }
                     Elapsed time: ${Math.floor(
-                      elapsed / 60
-                    )} minutes\nUser's last message: ${input}
+            elapsed / 60
+          )} minutes\nUser's last message: ${input}
                     Current stage: ${stageRef.current}`;
         const prevAnalysisCode = intitalCodeContextRef.current;
 
@@ -558,43 +560,43 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         case "#RESPOND": {
           const responsed = await getPromptResponse({
             actor: Actor.INTERVIEWER,
-               context: `User has said confirmation message, acknowledge 
+            context: `User has said confirmation message, acknowledge 
                 the confirmation briefly and then redirect the user back to the current problem.
                         Current stage: ${currentStage}
                          Chat transcript: ${JSON.stringify(
-                           messages.slice(-3),
-                           null,
-                           2
-                         )}
+              messages.slice(-3),
+              null,
+              2
+            )}
                         Problem: ${problem.title}
                         Description: ${problem.problemDescription}\n
                         User's last message: ${input}`,
-    promptKey: "general-respond",
-    modelName: "gpt-3.5-turbo",
-  });
-  await addBotMessage(responsed);
+            promptKey: "general-respond",
+            modelName: "gpt-3.5-turbo",
+          });
+          await addBotMessage(responsed);
           break;
         }
 
-        case "#USER_ASKED_QUESTION" :{
-            const responsed = await getPromptResponse({
+        case "#USER_ASKED_QUESTION": {
+          const responsed = await getPromptResponse({
             actor: Actor.INTERVIEWER,
-               context: `The user has asked a conceptual question. Your task is to provide a  
+            context: `The user has asked a conceptual question. Your task is to provide a  
                general explanation of the concept they asked about WITHOUT relating it to the current 
                problem or giving away the solution.
                         Current stage: ${currentStage}
                          Chat transcript: ${JSON.stringify(
-                           messages.slice(-3),
-                           null,
-                           2
-                         )}
+              messages.slice(-3),
+              null,
+              2
+            )}
                         Problem: ${problem.title}
                         Description: ${problem.problemDescription}\n
                         User's last message: ${input}`,
-    promptKey: "user-asked",
-    modelName: "gpt-3.5-turbo",
-  });
-  await addBotMessage(responsed);
+            promptKey: "user-asked",
+            modelName: "gpt-3.5-turbo",
+          });
+          await addBotMessage(responsed);
           break;
         }
 
