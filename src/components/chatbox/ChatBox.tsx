@@ -287,6 +287,8 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                   { content: codeContent },
                 ],
               });
+              console.log("Created new session with ID:", codeContent);
+              console.log("Summary:", summaryContent.slice(0, 100));
 
               setLoadingSessionEnd(false);
               navigate(`/solution/${encodeURIComponent(problem.title ?? "")}`, {
@@ -320,6 +322,8 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             { content: codeContent },
           ],
         });
+        console.log("Created new session with ID:", codeContent);
+        console.log("summary  ID:", summaryContent.slice(0, 100));
         navigate(`/solution/${encodeURIComponent(problem.title ?? "")}`, {
           state: { evaluation, sessionId, rubricResult },
           replace: true,
@@ -680,6 +684,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             problemPattern: (problem as any).problemPattern || "",
           });
           localStorage.setItem("mtv-sessionId", sessionId);
+
           clearCachedReport();
           updateChatsInSession(updatedUserMessages);
 
@@ -730,6 +735,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     try {
       let alignmentResult = null;
       if (userApproach) {
+        console.log("Verifying approach against the code...", userApproach, currentCode);
         try {
           alignmentResult = await verifyApproach({
             approach: userApproach,
@@ -737,6 +743,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             problemTitle: problem.title,
             userId: getTokenData()?.id || "",
           });
+          console.log("Alignment result:", alignmentResult);
           if (alignmentResult.alignment === "MISMATCH") {
             await addBotMessage(
               alignmentResult.feedback +
