@@ -30,6 +30,8 @@ import {
   handleGenralAcknowledgement,
   handleOffTopic,
   handleDefaultCase,
+  generateEvaluationSolution,
+  evaluationReportEval,
 } from "./caseHandler";
 
 interface ChatBoxProps {
@@ -160,39 +162,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     }
   };
 
-  const generateEvaluationSummary = async (): Promise<{
-    summary: string;
-    alternativeSolutions: string[];
-  }> => {
-    const promptKey = "generate-summary";
-
-    const response = await getPromptResponse({
-      actor: Actor.INTERVIEWER,
-      context: `Problem: ${problem.title}\n
-            Description: ${problem.problemDescription}
-                
-            Elapsed time: ${elapsedTimeRef.current / 60} minutes
-                
-            Final code:
-            ${codeRef.current?.trim() || "No code was written."}
-                
-            Chat transcript:
-            ${JSON.stringify(messages, null, 2)}`,
-      promptKey,
-      modelName: "gpt-4o",
-    });
-
-    try {
-      return JSON.parse(response);
-    } catch (err) {
-      console.error("Failed to parse evaluation response", response);
-      return {
-        summary: "Evaluation could not be parsed.",
-        alternativeSolutions: [],
-      };
-    }
-  };
-
   const endSession = async (
     calledAutomatically: boolean,
     setConfirmationModal?: React.Dispatch<
@@ -216,20 +185,37 @@ const ChatBox: React.FC<ChatBoxProps> = ({
 
     const getCleanedEvaluation = async () => {
       try {
-        const evaluationResponse = await generateEvaluationSummary();
+        const elapsed = elapsedTimeRef.current;
+        const evaluationResponse = await generateEvaluationSolution(problem, elapsed, messages, codeRef.current.trim());
+        const evaluationReporteval = await evaluationReportEval(problem, elapsed, messages, codeRef.current.trim());
 
-        const evaluationString =
-          typeof evaluationResponse === "string"
-            ? evaluationResponse
-            : JSON.stringify(evaluationResponse);
+        let summaryString: string;
+        let alternativeSolutionsArray: string[] = [];
+              
+        if (typeof evaluationReporteval === "string") {
+          summaryString = evaluationReporteval.trim();
+        } else {
+          summaryString = JSON.stringify(evaluationReporteval);
+        }
+        
+        try {
+          const parsed = typeof evaluationResponse === "string"
+            ? JSON.parse(evaluationResponse)
+            : evaluationResponse;
+        
+          if (parsed && Array.isArray(parsed.alternativeSolutions)) {
+            alternativeSolutionsArray = parsed.alternativeSolutions;
+          }
+        } catch (err) {
+          console.error("Failed to parse alternativeSolutions:", err);
+        }
+        
+        const parsedData = {
+          summary: summaryString,
+          alternativeSolutions: alternativeSolutionsArray,
+        };
 
-        const cleanedString = evaluationString
-          .replace(/^```json\s*/, "")
-          .replace(/```$/, "")
-          .trim();
-
-        const parsedEvaluation = JSON.parse(cleanedString);
-        return parsedEvaluation;
+        return parsedData;
       } catch (error) {
         console.error(
           "Failed to parse evaluation summary. Proceeding without it.",
@@ -322,8 +308,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             { content: codeContent },
           ],
         });
-        console.log("Created new session with ID:", codeContent);
-        console.log("summary  ID:", summaryContent.slice(0, 100));
         navigate(`/solution/${encodeURIComponent(problem.title ?? "")}`, {
           state: { evaluation, sessionId, rubricResult },
           replace: true,
