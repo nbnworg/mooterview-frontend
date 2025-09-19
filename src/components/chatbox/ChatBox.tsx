@@ -122,9 +122,9 @@ const ChatBox: React.FC<ChatBoxProps> = ({
 
   useEffect(() => {
     if (onEndRef) {
-      onEndRef.current = () => endSession(true, undefined, true);
+      onEndRef.current = () => endSession(true, setConfirmationModal);
     }
-  }, [code, problem]);
+  }, [code, problem, onEndRef, setConfirmationModal]);
 
   useEffect(() => {
     if (stageRef.current === "SESSION_END") {
@@ -191,25 +191,24 @@ const ChatBox: React.FC<ChatBoxProps> = ({
 
         let summaryString: string;
         let alternativeSolutionsArray: string[] = [];
-              
+
         if (typeof evaluationReporteval === "string") {
           summaryString = evaluationReporteval.trim();
         } else {
           summaryString = JSON.stringify(evaluationReporteval);
         }
-        
+
         try {
           const parsed = typeof evaluationResponse === "string"
             ? JSON.parse(evaluationResponse)
             : evaluationResponse;
-        
+
           if (parsed && Array.isArray(parsed.alternativeSolutions)) {
             alternativeSolutionsArray = parsed.alternativeSolutions;
           }
         } catch (err) {
           console.error("Failed to parse alternativeSolutions:", err);
         }
-        
         const parsedData = {
           summary: summaryString,
           alternativeSolutions: alternativeSolutionsArray,
@@ -285,7 +284,11 @@ const ChatBox: React.FC<ChatBoxProps> = ({
               navigate("/home", { replace: true });
             }
           },
-          btn2Handler: () => setConfirmationModal(null),
+          btn2Handler: async () => {
+            setConfirmationModal(null);
+            await addBotMessage("Your Time is up!  Kindly End the session.");
+            setIsInputDisabled(true);
+          },
         });
       }
       return;
@@ -458,7 +461,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
       if (classification !== "#OFF_TOPIC") {
         setGptMessages((prev) => [...prev, userMsg]);
       }
-
+      console.log("Classified as:", classification);
       switch (classification) {
         case "#UNDERSTOOD_CONFIRMATION": {
           await handleUnderstoodConfirmation(
@@ -530,7 +533,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         }
 
         case "#PROBLEM_EXPLANATIONS": {
-          addBotMessage("Okay, you can explain the approach now!");
+          addBotMessage("Okay,Can you please explain your approach ?");
           break;
         }
 

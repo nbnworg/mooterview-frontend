@@ -144,7 +144,6 @@ const DashBoard = () => {
           );
         }
         setProblems(fetchedProblems);
-        console.log("all fetched sessions", fetchedSessions);
 
         const seenProblems = new Set<string>();
         const typeMap: { [key: string]: string[] } = {};
