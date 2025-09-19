@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import "./Chatbox.css";
 import { getPromptResponse } from "../../utils/handlers/getPromptResponse";
 import { updateSessionById } from "../../utils/handlers/updateSessionById";
@@ -38,10 +38,13 @@ interface ChatBoxProps {
   problem: Problem;
   code: string;
   elapsedTime: number;
-  onVerifyRef?: React.MutableRefObject<(() => void) | null>;
+  onVerifyRef?: React.MutableRefObject<
+    ((isAutoSubmit?: boolean) => void) | null
+  >;
   userId: string;
   onEndRef?: React.MutableRefObject<(() => void) | null>;
   onApproachCorrectChange?: (isCorrect: boolean) => void;
+  onVerificationSuccess?: () => void;
 }
 
 type Stage =
@@ -66,6 +69,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
   userId,
   onEndRef,
   onApproachCorrectChange,
+  onVerificationSuccess,
 }) => {
   const [messages, setMessages] = useState<any[]>([]);
   const [gptMessages, setGptMessages] = useState<any[]>([]);
@@ -83,9 +87,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
   const intitalCodeContextRef = useRef("");
   const approachAttemptCountRef = useRef(0);
   const hasProvidedApproachRef = useRef(false);
-
   const phaseRef = useRef<Phase>("CODING_NOT_STARTED");
-
   const sessionId = localStorage.getItem("mtv-sessionId");
   const [rubricResult, setrubricResult] = useState<any>();
   const [isInputDisabled, setIsInputDisabled] = useState(true);
@@ -94,6 +96,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
   const [loadingSessionEnd, setLoadingSessionEnd] = useState(false);
 
   const approachTextRef = useRef<string>("");
+  const [loadingMessage, setLoadingMessage] = useState("");
 
   const [confirmationModal, setConfirmationModal] = useState<{
     text1: string;
@@ -121,6 +124,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
   }, [messages]);
 
   useEffect(() => {
+    // triggered when time is : 00 
     if (onEndRef) {
       onEndRef.current = () => endSession(true, setConfirmationModal);
     }
@@ -174,9 +178,13 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         btn2Handler: () => void;
       } | null>
     >,
-    skipAutoAlert?: boolean
+    skipAutoAlert?: boolean,
+    customMessage?: string
+
   ) => {
     const sessionId = localStorage.getItem("mtv-sessionId");
+    const message = customMessage || "Ending session and generating evaluation...";
+    setLoadingMessage(message);
 
     if (!sessionId) {
       navigate("/home", { replace: true });
@@ -239,7 +247,10 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             setConfirmationModal(null);
             endSession(true, undefined, true);
           },
-          btn2Handler: () => setConfirmationModal(null),
+          btn2Handler: () => {
+            setConfirmationModal(null);
+            setLoadingMessage("");
+          },
         });
       }
       return;
@@ -247,7 +258,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
       if (setConfirmationModal) {
         setConfirmationModal({
           text1: "Your time is up!",
-          text2: "This will end your session and take you to the evaluation.",
+          text2: message || "This will end your session and take you to the evaluation.",
           btn1Text: "OK, Proceed",
           btn2Text: "Cancel",
           btn1Handler: async () => {
@@ -259,6 +270,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
               stageRef.current === "SESSION_END"
             ) {
               setLoadingSessionEnd(true);
+              setLoadingMessage(message || "Ending session, preparing evaluation...");
               const evaluation = await getCleanedEvaluation();
 
               const summaryContent = evaluation?.summary || "No evaluation summary available";
@@ -288,9 +300,11 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             setConfirmationModal(null);
             await addBotMessage("Your Time is up!  Kindly End the session.");
             setIsInputDisabled(true);
+            setLoadingMessage("");
           },
         });
       }
+      setLoadingMessage("");
       return;
     }
 
@@ -326,6 +340,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
       console.error("Failed to end session", err);
     } finally {
       setLoadingSessionEnd(false);
+      setLoadingMessage("");
     }
   };
   useEffect(() => {
@@ -698,9 +713,17 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     }
   }, [code, problem]);
 
-  const handleVerifyCode = async () => {
+  const handleVerifyCode = useCallback(async (isAutoSubmit: boolean = false) => {
     const currentCode = codeRef.current;
     const userApproach = approachTextRef.current;
+
+    if (!currentCode && isAutoSubmit) {
+      await addBotMessage(
+        "Time is up! No code was written, proceeding to end the session."
+      );
+      await endSession(true, undefined, true, "Time is Up! proceeding to end the session.");
+      return;
+    }
 
     if (!currentCode) {
       await addBotMessage(
@@ -715,6 +738,13 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         "An unexpected error occurred and I cannot verify your solution right now."
       );
       return;
+    }
+
+    if (isAutoSubmit) {
+      await addBotMessage(
+        "Time is up! Automatically verifying your final code..."
+      );
+      setIsInputDisabled(true);
     }
 
     setLoading(true);
@@ -798,7 +828,9 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         setIsSolutionVerifiedCorrect(true);
         isSolutionVerifiedCorrectRef.current = true;
         stageRef.current = "FOLLOW_UP";
-
+        if (onVerificationSuccess) {
+          onVerificationSuccess();
+        }
         const followUpResponse = await getPromptResponse({
           actor: Actor.INTERVIEWER,
           context,
@@ -824,8 +856,23 @@ const ChatBox: React.FC<ChatBoxProps> = ({
       );
     } finally {
       setLoading(false);
+      if (isAutoSubmit) {
+        console.log("Auto-verification complete. Ending session now.");
+        await endSession(
+          true,
+          undefined,
+          true,
+          "Your code has been submitted. Proceeding to session evaluation."
+        );
+      }
     }
-  };
+  }, [problem, addBotMessage, endSession, onVerificationSuccess]);
+
+  useEffect(() => {
+    if (onVerifyRef) {
+      onVerifyRef.current = handleVerifyCode;
+    }
+  }, [onVerifyRef, handleVerifyCode]);
 
   return (
     <div className="chatbox">
@@ -875,7 +922,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
       </form>
       {loadingSessionEnd && (
         <Loading
-          message="Ending session and generating evaluation..."
+          message={loadingMessage || "Ending session, preparing evaluation..."}
           size="large"
         />
       )}
