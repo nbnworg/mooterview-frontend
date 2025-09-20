@@ -623,6 +623,17 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           break;
         }
 
+        case "#VERIFY_CODE": {
+          if(currentStage === "ASK_UNDERSTAND" || currentStage === "WAIT_FOR_APPROACH") {
+            addBotMessage("You cannot verify code right now, get through the current stage first!");
+          } else if(currentStage === "FOLLOW_UP") {
+            addBotMessage("You already verified your code!");
+          } else {
+            await handleVerifyCode(); 
+          }
+          break;
+        }
+
         case "#OFF_TOPIC": {
           await handleOffTopic(
             stageRef.current,

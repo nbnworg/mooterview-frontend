@@ -51,6 +51,7 @@ export const classifyUserMessage = async (input: string, currentStage: string, r
            - User gives assertive debugging statements like: “It’s not working”, “This gives wrong output”, “I tried recursion but it fails” →  #CODING_HELP
            - User says "I already checked this", "I am handling it", "I wrote this line already" → #CODING_HELP
            - User talks about unrelated topics → #OFF_TOPIC
+           - User says something like "verify my code" → #VERIFY_CODE
 
         4. If currentStage is "FOLLOW_UP":
            - If user answers the follow-up question correctly (see context/transcript for question) → #RIGHT_ANSWER
@@ -89,6 +90,7 @@ export const classifyUserMessage = async (input: string, currentStage: string, r
         #CODING_HELP
         #GENERAL_ACKNOWLEDGMENT
         #OFF_TOPIC
+        #VERIFY_CODE
         #WRONG_ANSWER
         #RIGHT_ANSWER
         #INTERVIEW_END
