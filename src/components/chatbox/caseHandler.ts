@@ -453,3 +453,74 @@ export const handleDefaultCase = async (
     await addBotMessage(response);
   }
 };
+
+// generate-summary
+export const generateEvaluationSolution = async (
+  problem: Problem,
+  elapsedTime: number,
+  messages: any[],
+  codeSnapshot: string
+) => {
+  const promptKey = "generate-summary";
+
+  const response = await getPromptResponse({
+    actor: Actor.INTERVIEWER,
+    context: `Problem: ${problem.title}\n
+            Description: ${problem.problemDescription}
+                
+            Elapsed time: ${elapsedTime / 60} minutes
+                
+            Final code:
+            ${codeSnapshot || "No code was written."}
+                
+            Chat transcript:
+            ${JSON.stringify(messages, null, 2)}`,
+            promptKey: promptKey,
+            modelName: "gpt-4o"
+  });
+
+  try {
+      return response;
+    } catch (err) {
+      console.error("Failed to parse evaluation response", response);
+      return {
+        summary: "Evaluation could not be parsed.",
+        alternativeSolutions: [],
+      };
+    }
+}
+
+export const evaluationReportEval = async (
+  problem: Problem,
+  elapsedTime: number,
+  messages: any[],
+  codeSnapshot: string
+) => {
+  const promptKey = "generate-summary-eval";
+
+  const response = await getPromptResponse({
+    actor: Actor.INTERVIEWER,
+    context: `Problem: ${problem.title}\n
+            Description: ${problem.problemDescription}
+                
+            Elapsed time: ${elapsedTime / 60} minutes
+                
+            Final code:
+            ${codeSnapshot || "No code was written."}
+                
+            Chat transcript:
+            ${JSON.stringify(messages, null, 2)}`,
+            promptKey: promptKey,
+            modelName: "gpt-4o"
+  });
+
+  try {
+      return response;
+    } catch (err) {
+      console.error("Failed to parse evaluation response", response);
+      return {
+        summary: "Evaluation could not be parsed.",
+        alternativeSolutions: [],
+      };
+    }
+}
