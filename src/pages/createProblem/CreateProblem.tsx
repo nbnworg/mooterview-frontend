@@ -162,6 +162,8 @@ const CreateProblem = () => {
             placeholder="Enter Avg. Solve Time (e.g., 5 mins)"
             value={formData.averageSolveTime}
             onChange={handleInputChange}
+            required      // making this field manadatory to fill
+            min = {5}     // having some base value
           />
 
           <textarea
