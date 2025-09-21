@@ -37,7 +37,16 @@ const ProblemPage = () => {
     window.addEventListener("beforeunload", handleUnload);
     return () => window.removeEventListener("beforeunload", handleUnload);
   }, [problem, timeLeft, code]);
-  
+
+  useEffect(() => {
+    if (timeLeft <= 0) return;
+
+    const intervalId = setInterval(() => {
+      setTimeLeft((prevTime) => prevTime - 1);
+    }, 1000);
+
+    return () => clearInterval(intervalId);
+  }, [timeLeft, setTimeLeft]);
 
   useEffect(() => {
     if (timeLeft === 0) {
@@ -69,6 +78,12 @@ const ProblemPage = () => {
     localStorage.removeItem("mtv-sessionId");
   }, []);
 
+  const formatTime = (seconds: number) => {
+    const mins = String(Math.floor(seconds / 60)).padStart(2, "0");
+    const secs = String(seconds % 60).padStart(2, "0");
+    return `${mins}:${secs}`;
+  };
+
   if (!problemId) {
     return <Navigate to="/home" replace />;
   }
@@ -88,11 +103,13 @@ const ProblemPage = () => {
   return (
     <>
       <Navbar />
-      <section className="problemSection" id="problemSection">
-        <div className="problemDetailAndChatContainer">
-          <h1>{problem.title}</h1>
-          <p>{problem.problemDescription}</p>
-          <ChatBox
+      <section className={`problemSection ${isEditorEnabled ? 'editor-enabled' : 'editor-disabled'}`} id="problemSection">
+        <div className={`problem-description ${isEditorEnabled ? 'editor-enabled' : ''}`}>
+            <h1>{problem.title}</h1>
+            <p>{problem.problemDescription}</p>
+        </div>
+
+        <ChatBox
             problem={problem}
             elapsedTime={(problem.averageSolveTime ?? 15) * 60 - timeLeft}
             onVerifyRef={verifySolutionRef}
@@ -100,34 +117,33 @@ const ProblemPage = () => {
             code={code}
             onEndRef={endSessionRef}
             onApproachCorrectChange={(isCorrect) => setIsEditorEnabled(isCorrect)}
-          />
-        </div>
-
-        <div className="verticalLine"></div>
-
+        />
+        
         <div className="codeEditorAndOptionsContainer">
-          <CodeEditor
-            code={code}
-            setCode={setCode}
-            timeLeft={timeLeft}
-            setTimeLeft={setTimeLeft}
-            disabled={!isEditorEnabled}
-          />
-
-          <button
-            className="verifyCodeButton"
-            onClick={async () => {
-              if (verifySolutionRef.current) {
-                setVerifyLoading(true);
-                await verifySolutionRef.current();
-                setVerifyLoading(false);
-              }
-            }}
-            disabled={verifyLoading}
-          >
-            {verifyLoading ? "Verifying..." : "Verify Code"}
-          </button>
+          {isEditorEnabled && (
+            <>
+              <CodeEditor
+                code={code}
+                setCode={setCode}
+              />
+              <button
+                className="verifyCodeButton"
+                onClick={async () => {
+                  if (verifySolutionRef.current) {
+                    setVerifyLoading(true);
+                    await verifySolutionRef.current();
+                    setVerifyLoading(false);
+                  }
+                }}
+                disabled={verifyLoading}
+              >
+                {verifyLoading ? "Verifying..." : "Verify Code"}
+              </button>
+            </>
+          )}
         </div>
+        <div className="timer-display">{formatTime(timeLeft)}</div>
+        <div className="verticalLine"></div>
       </section>
       {loading && (
         <Loading message="Loading Evaluation..." size="large" />

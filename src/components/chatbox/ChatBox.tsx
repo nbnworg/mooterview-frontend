@@ -848,15 +848,15 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           }}
         />
         <div className="buttonsContainer">
-          <button type="submit" className="chatSendButton" disabled={loading}>
-            <div className="buttonIcon">
+          <button type="submit" className="chatSendButton" disabled={loading || isInputDisabled}>
+            <div className="buttonIcon"> 
               <IoSend />
             </div>
             Send
           </button>
           <button
             className="endSessionButton"
-            onClick={() => endSession(false, setConfirmationModal)}
+            onClick={(e) => { e.preventDefault(); endSession(false, setConfirmationModal); }}
           >
             <div className="buttonIcon">
               <GoMoveToEnd />

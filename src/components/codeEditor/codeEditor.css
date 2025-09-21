@@ -7,19 +7,6 @@
   overflow: hidden;
 }
 
-.languageAndTimerContainer {
-  padding: 0vw 1vw;
-  display: flex;
-  justify-content: space-between;
-}
-
-.timerContainer {
-  font-size: 1.2vw;
-  font-family: "montserrat";
-  font-weight: 700;
-  color: var(--primary);
-}
-
 .codeEditor {
   flex: 1;
   overflow: auto;
@@ -38,10 +25,4 @@
   border: 0.1vw solid var(--border);
   border-radius: 0.5vw;
   outline: none;
-}
-
-.disabled-editor {
-  position: relative;
-  opacity: 0.9;
-  pointer-events: none;
 }
