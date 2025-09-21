@@ -6,29 +6,13 @@ import "./codeEditor.css";
 interface CodeEditorProps {
   code: string;
   setCode: React.Dispatch<React.SetStateAction<string>>;
-  timeLeft: number;
-  setTimeLeft: React.Dispatch<React.SetStateAction<number>>;
-  disabled?: boolean;
 }
 
 const CodeEditor: React.FC<CodeEditorProps> = ({
   code,
   setCode,
-  timeLeft,
-  setTimeLeft,
-  disabled,
 }) => {
   const editorRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (timeLeft <= 0) return;
-
-    const intervalId = setInterval(() => {
-      setTimeLeft((prevTime) => prevTime - 1);
-    }, 1000);
-
-    return () => clearInterval(intervalId);
-  }, [timeLeft, setTimeLeft]);
 
   useEffect(() => {
     if (editorRef.current) {
@@ -36,21 +20,11 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
     }
   }, [code]);
 
-  const formatTime = (seconds: number) => {
-    const mins = String(Math.floor(seconds / 60)).padStart(2, "0");
-    const secs = String(seconds % 60).padStart(2, "0");
-    return `${mins}:${secs}`;
-  };
-
   return (
     <div className="codeEditorContainer">
-      <div className="languageAndTimerContainer">
-        <div className="timerContainer">{formatTime(timeLeft)}</div>
-      </div>
-
       <div
         ref={editorRef}
-        className={`codeEditor ${disabled ? "disabled-editor" : ""}`}
+        className="codeEditor"
       >
         {" "}
         <Editor
@@ -63,7 +37,6 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
             placeholder: "Write your python code here ...",
             fontSize: 16,
             minimap: { enabled: false },
-            readOnly: disabled,
           }}
         />
       </div>
