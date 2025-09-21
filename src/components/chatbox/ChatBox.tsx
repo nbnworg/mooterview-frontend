@@ -13,6 +13,7 @@ import { generateTestCasesWithAI } from "../../utils/generateTestCasesWithAI";
 import ConfirmationModal from "../Confirmationmodal/Confirmationmodal";
 import { clearCachedReport } from "../../utils/localStorageReport";
 import { verifyApproach } from "../../utils/handlers/verifyApproach";
+import { updateUserById } from "../../utils/handlers/updateUserInfoById";
 import { getTokenData } from "../../utils/constants";
 import { IoSend } from "react-icons/io5";
 import { GoMoveToEnd } from "react-icons/go";
@@ -302,7 +303,11 @@ const ChatBox: React.FC<ChatBoxProps> = ({
 
   try {
     setLoadingSessionEnd(true);
-
+      try {
+        await updateUserById({ userId });
+      } catch (streakError) {
+        console.error("Failed to update streak:", streakError);
+      }
       if (wantsSolution) {
         const evaluation = await getCleanedEvaluation();
 
