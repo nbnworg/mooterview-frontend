@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect, useRef } from "react";
 import "./Chatbox.css";
@@ -9,7 +8,6 @@ import { useNavigate } from "react-router-dom";
 import { createSession } from "../../utils/handlers/createSession";
 import { classifyUserMessage } from "../../utils/classifyUserMsg";
 import { evaluateSolutionWithRubric } from "../../utils/evaluateSolutionWithRubric";
-import { generateTestCasesWithAI } from "../../utils/generateTestCasesWithAI";
 import ConfirmationModal from "../Confirmationmodal/Confirmationmodal";
 import { clearCachedReport } from "../../utils/localStorageReport";
 import { verifyApproach } from "../../utils/handlers/verifyApproach";
@@ -42,6 +40,7 @@ interface ChatBoxProps {
   userId: string;
   onEndRef?: React.MutableRefObject<(() => void) | null>;
   onApproachCorrectChange?: (isCorrect: boolean) => void;
+  testCases: { input: any; expected: any; explanation?: string }[];
 }
 
 type Stage =
@@ -66,6 +65,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
   userId,
   onEndRef,
   onApproachCorrectChange,
+  testCases,
 }) => {
   const [messages, setMessages] = useState<any[]>([]);
   const [gptMessages, setGptMessages] = useState<any[]>([]);
@@ -186,30 +186,41 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     const getCleanedEvaluation = async () => {
       try {
         const elapsed = elapsedTimeRef.current;
-        const evaluationResponse = await generateEvaluationSolution(problem, elapsed, messages, codeRef.current.trim());
-        const evaluationReporteval = await evaluationReportEval(problem, elapsed, messages, codeRef.current.trim());
+        const evaluationResponse = await generateEvaluationSolution(
+          problem,
+          elapsed,
+          messages,
+          codeRef.current.trim()
+        );
+        const evaluationReporteval = await evaluationReportEval(
+          problem,
+          elapsed,
+          messages,
+          codeRef.current.trim()
+        );
 
         let summaryString: string;
         let alternativeSolutionsArray: string[] = [];
-              
+
         if (typeof evaluationReporteval === "string") {
           summaryString = evaluationReporteval.trim();
         } else {
           summaryString = JSON.stringify(evaluationReporteval);
         }
-        
+
         try {
-          const parsed = typeof evaluationResponse === "string"
-            ? JSON.parse(evaluationResponse)
-            : evaluationResponse;
-        
+          const parsed =
+            typeof evaluationResponse === "string"
+              ? JSON.parse(evaluationResponse)
+              : evaluationResponse;
+
           if (parsed && Array.isArray(parsed.alternativeSolutions)) {
             alternativeSolutionsArray = parsed.alternativeSolutions;
           }
         } catch (err) {
           console.error("Failed to parse alternativeSolutions:", err);
         }
-        
+
         const parsedData = {
           summary: summaryString,
           alternativeSolutions: alternativeSolutionsArray,
@@ -262,16 +273,14 @@ const ChatBox: React.FC<ChatBoxProps> = ({
               setLoadingSessionEnd(true);
               const evaluation = await getCleanedEvaluation();
 
-              const summaryContent = evaluation?.summary || "No evaluation summary available";
+              const summaryContent =
+                evaluation?.summary || "No evaluation summary available";
               const codeContent = codeRef.current.trim() || "No code provided";
 
               await updateSessionById({
                 sessionId,
                 endTime: new Date().toISOString(),
-                notes: [
-                  { content: summaryContent },
-                  { content: codeContent },
-                ],
+                notes: [{ content: summaryContent }, { content: codeContent }],
               });
 
               setLoadingSessionEnd(false);
@@ -295,16 +304,14 @@ const ChatBox: React.FC<ChatBoxProps> = ({
       if (wantsSolution) {
         const evaluation = await getCleanedEvaluation();
 
-        const summaryContent = evaluation?.summary || "No evaluation summary available";
+        const summaryContent =
+          evaluation?.summary || "No evaluation summary available";
         const codeContent = codeRef.current.trim() || "No code provided";
 
         await updateSessionById({
           sessionId,
           endTime: new Date().toISOString(),
-          notes: [
-            { content: summaryContent },
-            { content: codeContent },
-          ],
+          notes: [{ content: summaryContent }, { content: codeContent }],
         });
         navigate(`/solution/${encodeURIComponent(problem.title ?? "")}`, {
           state: { evaluation, sessionId, rubricResult },
@@ -356,11 +363,12 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           phaseRef.current = "CODING";
         }
 
-        const commonContext = `Problem: ${problem.title}\n\n${problem.problemDescription
-          }
+        const commonContext = `Problem: ${problem.title}\n\n${
+          problem.problemDescription
+        }
                     Elapsed time: ${Math.floor(
-            elapsed / 60
-          )} minutes\nUser's last message: ${input}
+                      elapsed / 60
+                    )} minutes\nUser's last message: ${input}
                     Current stage: ${stageRef.current}`;
         const prevAnalysisCode = intitalCodeContextRef.current;
 
@@ -511,7 +519,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           break;
         }
 
-
         case "#APPROACH_PROVIDED": {
           await handleApproachProvided(
             stageRef.current,
@@ -550,10 +557,10 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                 the confirmation briefly and then redirect the user back to the current problem.
                         Current stage: ${currentStage}
                          Chat transcript: ${JSON.stringify(
-              messages.slice(-3),
-              null,
-              2
-            )}
+                           messages.slice(-3),
+                           null,
+                           2
+                         )}
                         Problem: ${problem.title}
                         Description: ${problem.problemDescription}\n
                         User's last message: ${input}`,
@@ -572,10 +579,10 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                problem or giving away the solution.
                         Current stage: ${currentStage}
                          Chat transcript: ${JSON.stringify(
-              messages.slice(-3),
-              null,
-              2
-            )}
+                           messages.slice(-3),
+                           null,
+                           2
+                         )}
                         Problem: ${problem.title}
                         Description: ${problem.problemDescription}\n
                         User's last message: ${input}`,
@@ -585,8 +592,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           await addBotMessage(responsed);
           break;
         }
-
-
 
         case "#CODING_QUESTION": {
           await handleCodingQuestion({
@@ -668,7 +673,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           localStorage.setItem("mtv-sessionId", sessionId);
           clearCachedReport();
           updateChatsInSession(updatedUserMessages);
-
         }
       }
     } catch (err) {
@@ -695,6 +699,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
   const handleVerifyCode = async () => {
     const currentCode = codeRef.current;
     const userApproach = approachTextRef.current;
+    const problemTitle = problem.title;
 
     if (!currentCode) {
       await addBotMessage(
@@ -726,7 +731,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           if (alignmentResult.alignment === "MISMATCH") {
             await addBotMessage(
               alignmentResult.feedback +
-              "\nPlease correct your code to match your approach and verify again."
+                "\nPlease correct your code to match your approach and verify again."
             );
             return;
           }
@@ -738,17 +743,10 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         }
       }
 
-      const testCases = await generateTestCasesWithAI(problem);
-      if (!testCases || testCases.length === 0) {
-        await addBotMessage(
-          "⚠️ AI couldn't generate test cases. Please try again later."
-        );
-        return;
-      }
-
       const rubricResult = await evaluateSolutionWithRubric(
         currentCode,
-        testCases
+        testCases,
+        problemTitle
       );
       setrubricResult(rubricResult);
 
