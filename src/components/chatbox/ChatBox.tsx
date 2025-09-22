@@ -717,12 +717,37 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     const currentCode = codeRef.current;
     const userApproach = approachTextRef.current;
 
+
     if (!currentCode && isAutoSubmit) {
-      await addBotMessage(
-        "Time is up! No code was written, proceeding to end the session."
-      );
-      await endSession(true, undefined, true, "Time is Up! proceeding to end the session.");
-      return;
+      if (stageRef.current === "EXPLAIN_PROBLEM" || stageRef.current === "ASK_UNDERSTAND" || stageRef.current === "WAIT_FOR_APPROACH") {
+
+        setConfirmationModal({
+          text1: "Time is up!",
+          text2: "You haven't started coding. This session will now end.",
+          btn1Text: "OK, Go to Home",
+          btn2Text: "Cancel",
+          btn1Handler: () => {
+            setConfirmationModal(null);
+            navigate("/home", { replace: true });
+          },
+          btn2Handler: () => {
+            setConfirmationModal(null);
+            setIsInputDisabled(true);
+            addBotMessage("Time is up! Kindly End the session.");
+          },
+        });
+
+        return;
+
+      } else {
+        await endSession(
+          true,
+          undefined,
+          true,
+          "Time is up! No code was written, proceeding to session evaluation."
+        );
+        return;
+      }
     }
 
     if (!currentCode) {
