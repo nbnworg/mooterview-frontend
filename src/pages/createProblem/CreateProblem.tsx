@@ -162,6 +162,7 @@ const CreateProblem = () => {
             placeholder="Enter Avg. Solve Time (e.g., 5 mins)"
             value={formData.averageSolveTime}
             onChange={handleInputChange}
+            required
           />
 
           <textarea
@@ -170,6 +171,7 @@ const CreateProblem = () => {
             value={formData.sampleInput}
             onChange={handleInputChange}
             rows={2}
+            required
           />
 
           <textarea
@@ -178,6 +180,7 @@ const CreateProblem = () => {
             value={formData.sampleOutput}
             onChange={handleInputChange}
             rows={2}
+            required
           />
 
           <textarea
@@ -186,6 +189,7 @@ const CreateProblem = () => {
             value={formData.example}
             onChange={handleInputChange}
             rows={2}
+            required
           />
 
           <button type="submit" className="submitButton">
