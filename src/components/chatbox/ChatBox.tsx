@@ -284,9 +284,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                   { content: codeContent },
                 ],
               });
-              console.log("Created new session with ID:", codeContent);
-              console.log("Summary:", summaryContent.slice(0, 100));
-
+          
               setLoadingSessionEnd(false);
               navigate(`/solution/${encodeURIComponent(problem.title ?? "")}`, {
                 state: { evaluation, sessionId, rubricResult },
@@ -476,7 +474,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
       if (classification !== "#OFF_TOPIC") {
         setGptMessages((prev) => [...prev, userMsg]);
       }
-      console.log("Classified as:", classification);
       switch (classification) {
         case "#UNDERSTOOD_CONFIRMATION": {
           await handleUnderstoodConfirmation(
@@ -777,7 +774,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     try {
       let alignmentResult = null;
       if (userApproach) {
-        console.log("Verifying approach against the code...", userApproach, currentCode);
         try {
           alignmentResult = await verifyApproach({
             approach: userApproach,
@@ -785,7 +781,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             problemTitle: problem.title,
             userId: getTokenData()?.id || "",
           });
-          console.log("Alignment result:", alignmentResult);
           if (alignmentResult.alignment === "MISMATCH") {
             await addBotMessage(
               alignmentResult.feedback +
@@ -882,7 +877,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     } finally {
       setLoading(false);
       if (isAutoSubmit) {
-        console.log("Auto-verification complete. Ending session now.");
         await endSession(
           true,
           undefined,

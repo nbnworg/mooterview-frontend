@@ -43,13 +43,11 @@ const ProblemPage = () => {
   useEffect(() => {
     if (timeLeft === 0) {
       if (isVerified) {
-        console.log("Time is up! Solution was already verified. Ending session.");
         if (endSessionRef.current) {
           endSessionRef.current();
         }
       } else {
         if (verifySolutionRef.current) {
-          console.log("Time is up! Auto-submitting code for verification...");
           verifySolutionRef.current(true);
         }
       }
