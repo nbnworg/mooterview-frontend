@@ -200,7 +200,7 @@ export const handleApproachProvided = async (
       .trim();
     if (tag === "#CORRECT") {
       await addBotMessage(
-        "Alright, you can start coding now.\nIf you get stuck at any point, feel free to ask for help. Once you've completed your code, click on 'Verify Code' button to check your solution."
+        "Alright, you can start coding now.\nIf you get stuck at any point, feel free to ask for help. Once you've completed your code, click on 'Verify Code' button or ask to verify your code to check your solution."
       );
       approachTextRef.current = input;
       stageRef.current = "CODING";
