@@ -51,7 +51,7 @@ export const classifyUserMessage = async (input: string, currentStage: string, r
            - User gives assertive debugging statements like: “It’s not working”, “This gives wrong output”, “I tried recursion but it fails” →  #CODING_HELP
            - User says "I already checked this", "I am handling it", "I wrote this line already" → #CODING_HELP
            - User talks about unrelated topics → #OFF_TOPIC
-           - User says something like "verify my code" → #VERIFY_CODE
+           
 
         4. If currentStage is "FOLLOW_UP":
            - If user answers the follow-up question correctly (see context/transcript for question) → #RIGHT_ANSWER
@@ -73,6 +73,7 @@ export const classifyUserMessage = async (input: string, currentStage: string, r
            - If user asks about problem examples → #REQUESTED_EXAMPLE
            - If user seems confused about problem → #CONFUSED
            - If user talks about unrelated topics → #OFF_TOPIC
+           - If the user says something like "verify my code" → #VERIFY_CODE
            - If user asks "where do i start or how should i do it" in WAIT_FOR_APPROACH -> #CODING_QUESTION
            - If the user is in WAIT_FOR_APPROACH and asks something out of context or not related to coding problem -> #CODING_QUESTION
            - If user is in FOLLOW_UP stage NEVER return #CONFUSED.
