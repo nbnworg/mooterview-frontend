@@ -29,8 +29,12 @@ const ProblemPage = () => {
     []
   );
 
-  const verifySolutionRef = useRef<() => void | null>(null);
+  const verifySolutionRef = useRef<((isAutoSubmit?: boolean) => void) | null>(
+    null
+  );
   const endSessionRef = useRef<() => void | null>(null);
+  const [isVerified, setIsVerified] = useState(false);
+
   useEffect(() => {
     const handleUnload = (e: BeforeUnloadEvent) => {
       if (problem || timeLeft > 0 || code.trim() !== "") {
@@ -47,9 +51,17 @@ const ProblemPage = () => {
 
   useEffect(() => {
     if (timeLeft === 0) {
-      endSessionRef.current?.();
+      if (isVerified) {
+        if (endSessionRef.current) {
+          endSessionRef.current();
+        }
+      } else {
+        if (verifySolutionRef.current) {
+          verifySolutionRef.current(true);
+        }
+      }
     }
-  }, [timeLeft]);
+  }, [timeLeft, isVerified]);
 
   useEffect(() => {
     if (!problem) return;
@@ -128,6 +140,7 @@ const ProblemPage = () => {
               setIsEditorEnabled(isCorrect)
             }
             testCases={testCases}
+            onVerificationSuccess={() => setIsVerified(true)}
           />
         </div>
 
