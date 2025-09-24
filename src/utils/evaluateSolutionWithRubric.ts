@@ -17,7 +17,7 @@ export interface RubricResult {
 }
 
 export interface TestCase {
-  input: any[];
+  input: any;
   expected: any;
   explanation?: string;
 }
@@ -25,37 +25,31 @@ export interface TestCase {
 const JUDGE0_URL = "https://ce.judge0.com";
 const PYTHON_ID = 109;
 
-function extractFunctionName(code: string): string | null {
-  const matches = [...code.matchAll(/^( *)def\s+([a-zA-Z_]\w*)\s*\(/gm)];
-  if (!matches.length) return null;
-  const topLevel = matches
-    .filter((m) => m[1].length === 0)
-    .map((m) => m[2])
-    .filter((name) => !(name.startsWith("__") && name.endsWith("__")));
-
-  if (topLevel.length > 0) {
-    return topLevel[topLevel.length - 1];
-  }
-
-  const nonDunder = matches
-    .map((m) => m[2])
-    .filter((name) => !(name.startsWith("__") && name.endsWith("__")));
-
-  return nonDunder.length ? nonDunder[nonDunder.length - 1] : null;
+function extractFunctionName(problemTitle: string): string {
+  return problemTitle.replace(/\s+/g, "_").toLowerCase();
 }
 
-async function executeCode(code: string, stdin: string): Promise<string> {
+async function executeCode(
+  code: string,
+  stdin: string,
+  problemTitle: string
+): Promise<string> {
   try {
-    const functionName = extractFunctionName(code);
+    const functionName = extractFunctionName(problemTitle);
     if (!functionName) throw new Error("No function definition found in code.");
 
     const harness = `
 import sys, json
 data = json.loads(sys.stdin.read())
 try:
-    result = ${functionName}(*data)
-except TypeError:
-    result = ${functionName}(data)
+  if isinstance(data, dict):
+    result = ${functionName}(**data)  
+  elif isinstance(data, list):
+    result = ${functionName}(*data)    
+  else:
+    result = ${functionName}(data)     
+except Exception as e:
+    result = f"Error: {str(e)}"
 print(result)
 `.trim();
 
@@ -96,7 +90,8 @@ print(result)
 
 export const evaluateSolutionWithRubric = async (
   code: string,
-  testCases: TestCase[]
+  testCases: TestCase[],
+  problemTitle?: string
 ): Promise<RubricResult> => {
   let passed = 0;
   const failedCases: string[] = [];
@@ -107,18 +102,41 @@ export const evaluateSolutionWithRubric = async (
 
   for (const t of testCases) {
     const stdin = JSON.stringify(t.input);
-    const output = await executeCode(code, stdin);
-    const expectedStr = String(t.expected);
-    if (output === expectedStr) {
+    const rawOutput = await executeCode(
+      code,
+      stdin,
+      problemTitle || "solution"
+    );
+    const expectedStr = t.expected;
+
+    let parsedOutput: any = rawOutput;
+    try {
+      parsedOutput = JSON.parse(rawOutput);
+    } catch {
+      try {
+        parsedOutput = JSON.parse(rawOutput.trim());
+      } catch {
+        parsedOutput = rawOutput.trim();
+      }
+    }
+
+    const isMatch =
+      JSON.stringify(parsedOutput) === JSON.stringify(expectedStr);
+
+    if (isMatch) {
       passed++;
     } else {
       failedCases.push(
         `❌ Input=${JSON.stringify(
           t.input
-        )} | Expected=${expectedStr} | Got=${output}`
+        )} | Expected=${expectedStr} | Got=${parsedOutput}`
       );
     }
+    console.log(rawOutput);
+    console.log(expectedStr);
   }
+
+  console.log(passed);
 
   const correctness: EvaluationScore =
     passed === testCases.length ? "strong" : passed > 0 ? "mixed" : "weak";

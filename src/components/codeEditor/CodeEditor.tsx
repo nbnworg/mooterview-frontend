@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useEffect, useRef } from "react";
 import Editor from "@monaco-editor/react";
 
@@ -9,6 +10,16 @@ interface CodeEditorProps {
   timeLeft: number;
   setTimeLeft: React.Dispatch<React.SetStateAction<number>>;
   disabled?: boolean;
+  problemTitle?: string;
+  testCases: { input: any; expected: any; explanation?: string }[];
+}
+
+function inferParamsFromInput(input: any): string {
+  if (Array.isArray(input))
+    return input.map((_, i) => `arg${i + 1}`).join(", ");
+  else if (typeof input === "object" && input !== null)
+    return Object.keys(input).join(", ");
+  else return "input_data";
 }
 
 const CodeEditor: React.FC<CodeEditorProps> = ({
@@ -17,6 +28,8 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
   timeLeft,
   setTimeLeft,
   disabled,
+  problemTitle,
+  testCases,
 }) => {
   const editorRef = useRef<HTMLDivElement>(null);
 
@@ -35,6 +48,16 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
       editorRef.current.scrollTop = editorRef.current.scrollHeight;
     }
   }, [code]);
+
+  useEffect(() => {
+    if (!code.trim() && testCases && testCases.length > 0) {
+      const defaultFuncName = problemTitle?.replace(/\s+/g, "_").toLowerCase();
+      const params = inferParamsFromInput(testCases[0].input);
+      const starterCode = `def ${defaultFuncName}(${params}):\n    # TODO: implement solution\n    pass\n`;
+      setCode(starterCode);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [problemTitle, testCases]);
 
   const formatTime = (seconds: number) => {
     const mins = String(Math.floor(seconds / 60)).padStart(2, "0");

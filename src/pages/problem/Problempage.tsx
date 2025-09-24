@@ -8,11 +8,13 @@ import { getProblemById } from "../../utils/handlers/getProblemById";
 import type { Problem } from "mooterview-client";
 import ChatBox from "../../components/chatbox/ChatBox";
 import Loading from "../../components/Loader/Loading";
+import { generateTestCasesWithAI } from "../../utils/generateTestCasesWithAI";
 
 const ProblemPage = () => {
   const location = useLocation();
   const userData = JSON.parse(localStorage.getItem("userData") || "{}");
-  const problemId = location.state?.problemId || sessionStorage.getItem("mtv-problemId");
+  const problemId =
+    location.state?.problemId || sessionStorage.getItem("mtv-problemId");
   const userId = location.state?.userId || userData.id;
   const [loading, setloading] = useState(true);
 
@@ -23,13 +25,22 @@ const ProblemPage = () => {
   const [verifyLoading, setVerifyLoading] = useState(false);
   const [isEditorEnabled, setIsEditorEnabled] = useState(false);
 
-  const verifySolutionRef = useRef<() => void | null>(null);
+  const [testCases, setTestCases] = useState<{ input: any; expected: any }[]>(
+    []
+  );
+
+  const verifySolutionRef = useRef<((isAutoSubmit?: boolean) => void) | null>(
+    null
+  );
   const endSessionRef = useRef<() => void | null>(null);
+  const [isVerified, setIsVerified] = useState(false);
+
   useEffect(() => {
     const handleUnload = (e: BeforeUnloadEvent) => {
       if (problem || timeLeft > 0 || code.trim() !== "") {
         e.preventDefault();
-        (e as any).returnValue = "You have unsaved changes. Are you sure you want to leave?";
+        (e as any).returnValue =
+          "You have unsaved changes. Are you sure you want to leave?";
         return "You have unsaved changes. Are you sure you want to leave?";
       }
     };
@@ -37,13 +48,39 @@ const ProblemPage = () => {
     window.addEventListener("beforeunload", handleUnload);
     return () => window.removeEventListener("beforeunload", handleUnload);
   }, [problem, timeLeft, code]);
-  
 
   useEffect(() => {
     if (timeLeft === 0) {
-      endSessionRef.current?.();
+      if (isVerified) {
+        if (endSessionRef.current) {
+          endSessionRef.current();
+        }
+      } else {
+        if (verifySolutionRef.current) {
+          verifySolutionRef.current(true);
+        }
+      }
     }
-  }, [timeLeft]);
+  }, [timeLeft, isVerified]);
+
+  useEffect(() => {
+    if (!problem) return;
+
+    const fetchTestCases = async () => {
+      try {
+        const generated = await generateTestCasesWithAI(problem);
+        if (generated && generated.length > 0) {
+          setTestCases(generated);
+        } else {
+          console.warn("AI could not generate test cases");
+        }
+      } catch (err) {
+        console.error("Failed to generate test cases", err);
+      }
+    };
+
+    fetchTestCases();
+  }, [problem]);
 
   useEffect(() => {
     if (!problemId) return;
@@ -99,7 +136,11 @@ const ProblemPage = () => {
             userId={userId}
             code={code}
             onEndRef={endSessionRef}
-            onApproachCorrectChange={(isCorrect) => setIsEditorEnabled(isCorrect)}
+            onApproachCorrectChange={(isCorrect) =>
+              setIsEditorEnabled(isCorrect)
+            }
+            testCases={testCases}
+            onVerificationSuccess={() => setIsVerified(true)}
           />
         </div>
 
@@ -112,6 +153,8 @@ const ProblemPage = () => {
             timeLeft={timeLeft}
             setTimeLeft={setTimeLeft}
             disabled={!isEditorEnabled}
+            problemTitle={problem.title}
+            testCases={testCases}
           />
 
           <button
@@ -129,9 +172,7 @@ const ProblemPage = () => {
           </button>
         </div>
       </section>
-      {loading && (
-        <Loading message="Loading Evaluation..." size="large" />
-      )}
+      {loading && <Loading message="Loading Evaluation..." size="large" />}
     </>
   );
 };
