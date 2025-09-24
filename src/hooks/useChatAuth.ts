@@ -39,10 +39,10 @@ export const useChatAuth = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { login } = useAuth();
-
   const chatEndRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
+ 
   useEffect(() => {
     const timeouts: (number | undefined)[] = [];
 
@@ -62,6 +62,7 @@ export const useChatAuth = ({
     };
   }, [initialMessages]);
 
+
   useEffect(() => {
     if (introComplete && stepIndex < steps.length) {
       const question = steps[stepIndex].question;
@@ -74,6 +75,24 @@ export const useChatAuth = ({
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chat]);
+
+ 
+  const addChatMessage = (message: ChatMessage) => {
+    setChat((prev) => [...prev, message]);
+  };
+
+ 
+  const goToStep = (stepId: string) => {
+    const index = steps.findIndex((s) => s.id === stepId);
+    if (index !== -1) {
+      setStepIndex(index);
+      setFormData((prev) => ({
+        ...prev,
+        [stepId]: "",
+      }));
+      setInput("");
+    }
+  };
 
   const handleSubmit = async () => {
     if (!input.trim()) return;
@@ -93,7 +112,6 @@ export const useChatAuth = ({
     };
 
     setFormData(updatedFormData);
-
     setInput("");
     const nextIndex = stepIndex + 1;
     setStepIndex(nextIndex);
@@ -117,13 +135,11 @@ export const useChatAuth = ({
       const response = await axios.post(`${BASE_URL}${apiEndpoint}`, data);
       if (apiEndpoint === "/users/login") {
         const result = response.data.AuthenticationResult;
-
         tokens = {
           accessToken: result.AccessToken,
           idToken: result.IdToken,
           refreshToken: result.RefreshToken,
         };
-
         const decodedToken = jwtDecode<{ sub: string }>(result.IdToken);
         resUserId = decodedToken.sub;
       } else {
@@ -148,7 +164,7 @@ export const useChatAuth = ({
       );
       login();
 
-      setChat((prev) => [...prev, { from: "Moo", text: successMessage }]);
+      addChatMessage({ from: "Moo", text: successMessage });
       setFinalSubmissionComplete(true);
       setTimeout(handleRouteToHome, 1000);
     } catch (error: any) {
@@ -165,17 +181,10 @@ export const useChatAuth = ({
         resetStepId = stepId;
       }
 
-      setChat((prev) => [...prev, { from: "Moo", text: userMessage }]);
+      addChatMessage({ from: "Moo", text: `❌ ${userMessage}` });
 
       if (resetStepId) {
-        const index = steps.findIndex((step) => step.id === resetStepId);
-        if (index !== -1) {
-          setStepIndex(index);
-          setFormData((prev) => ({
-            ...prev,
-            [resetStepId]: "",
-          }));
-        }
+        goToStep(resetStepId);
       }
     } finally {
       setIsSubmitting(false);
@@ -198,5 +207,7 @@ export const useChatAuth = ({
     handleFinalSubmit,
     handleRouteToHome,
     isSubmitting,
+    addChatMessage,
+    goToStep,
   };
 };

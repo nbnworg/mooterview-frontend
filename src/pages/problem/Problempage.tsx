@@ -23,8 +23,10 @@ const ProblemPage = () => {
   const [verifyLoading, setVerifyLoading] = useState(false);
   const [isEditorEnabled, setIsEditorEnabled] = useState(false);
 
-  const verifySolutionRef = useRef<() => void | null>(null);
+  const verifySolutionRef = useRef<((isAutoSubmit?: boolean) => void) | null>(null);
   const endSessionRef = useRef<() => void | null>(null);
+  const [isVerified, setIsVerified] = useState(false);
+
   useEffect(() => {
     const handleUnload = (e: BeforeUnloadEvent) => {
       if (problem || timeLeft > 0 || code.trim() !== "") {
@@ -37,13 +39,20 @@ const ProblemPage = () => {
     window.addEventListener("beforeunload", handleUnload);
     return () => window.removeEventListener("beforeunload", handleUnload);
   }, [problem, timeLeft, code]);
-  
 
   useEffect(() => {
     if (timeLeft === 0) {
-      endSessionRef.current?.();
+      if (isVerified) {
+        if (endSessionRef.current) {
+          endSessionRef.current();
+        }
+      } else {
+        if (verifySolutionRef.current) {
+          verifySolutionRef.current(true);
+        }
+      }
     }
-  }, [timeLeft]);
+  }, [timeLeft, isVerified]); 
 
   useEffect(() => {
     if (!problemId) return;
@@ -100,6 +109,7 @@ const ProblemPage = () => {
             code={code}
             onEndRef={endSessionRef}
             onApproachCorrectChange={(isCorrect) => setIsEditorEnabled(isCorrect)}
+            onVerificationSuccess={() => setIsVerified(true)}
           />
         </div>
 
