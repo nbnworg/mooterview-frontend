@@ -250,15 +250,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
 
   const wantsSolution = true;
 
-  const buildNotesArray = (evaluationSummary: string) => {
-    const rawNotes = [
-      { content: evaluationSummary },
-      { content: codeRef.current.trim() || "No code provided" },
-    ];
-    return rawNotes.filter(
-      (note) => note && note.content && note.content.trim() !== ""
-    );
-  };
 
     if (!calledAutomatically) {
       if (setConfirmationModal) {
