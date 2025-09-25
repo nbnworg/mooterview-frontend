@@ -167,7 +167,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     }
   };
 
- 
+
   const endSession = async (
     calledAutomatically: boolean,
     setConfirmationModal?: React.Dispatch<
@@ -188,10 +188,10 @@ const ChatBox: React.FC<ChatBoxProps> = ({
       customMessage || "Ending session and generating evaluation...";
     setLoadingMessage(message);
 
-  if (!sessionId) {
-    navigate("/home", { replace: true });
-    return;
-  }
+    if (!sessionId) {
+      navigate("/home", { replace: true });
+      return;
+    }
 
     const getCleanedEvaluation = async () => {
       try {
@@ -208,7 +208,8 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           messages,
           codeRef.current.trim()
         );
-
+        console.log("summary: ", evaluationReporteval);
+        console.log("code", evaluationResponse);
         let summaryString: string;
         let alternativeSolutionsArray: string[] = [];
 
@@ -248,7 +249,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
       }
     };
 
-  const wantsSolution = true;
+    const wantsSolution = true;
 
 
     if (!calledAutomatically) {
@@ -323,8 +324,8 @@ const ChatBox: React.FC<ChatBoxProps> = ({
       return;
     }
 
-  try {
-    setLoadingSessionEnd(true);
+    try {
+      setLoadingSessionEnd(true);
       try {
         await updateUserById({ userId });
       } catch (streakError) {
@@ -393,12 +394,11 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           phaseRef.current = "CODING";
         }
 
-        const commonContext = `Problem: ${problem.title}\n\n${
-          problem.problemDescription
-        }
+        const commonContext = `Problem: ${problem.title}\n\n${problem.problemDescription
+          }
                     Elapsed time: ${Math.floor(
-                      elapsed / 60
-                    )} minutes\nUser's last message: ${input}
+            elapsed / 60
+          )} minutes\nUser's last message: ${input}
                     Current stage: ${stageRef.current}`;
         const prevAnalysisCode = intitalCodeContextRef.current;
 
@@ -586,10 +586,10 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                 the confirmation briefly and then redirect the user back to the current problem.
                         Current stage: ${currentStage}
                          Chat transcript: ${JSON.stringify(
-                           messages.slice(-3),
-                           null,
-                           2
-                         )}
+              messages.slice(-3),
+              null,
+              2
+            )}
                         Problem: ${problem.title}
                         Description: ${problem.problemDescription}\n
                         User's last message: ${input}`,
@@ -608,10 +608,10 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                problem or giving away the solution.
                         Current stage: ${currentStage}
                          Chat transcript: ${JSON.stringify(
-                           messages.slice(-3),
-                           null,
-                           2
-                         )}
+              messages.slice(-3),
+              null,
+              2
+            )}
                         Problem: ${problem.title}
                         Description: ${problem.problemDescription}\n
                         User's last message: ${input}`,
@@ -658,12 +658,12 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         }
 
         case "#VERIFY_CODE": {
-          if(currentStage === "ASK_UNDERSTAND" || currentStage === "WAIT_FOR_APPROACH") {
+          if (currentStage === "ASK_UNDERSTAND" || currentStage === "WAIT_FOR_APPROACH") {
             addBotMessage("You cannot verify code right now, get through the current stage first!");
-          } else if(currentStage === "FOLLOW_UP") {
+          } else if (currentStage === "FOLLOW_UP") {
             addBotMessage("You already verified your code!");
           } else {
-            await handleVerifyCode(); 
+            await handleVerifyCode();
           }
           break;
         }
@@ -814,7 +814,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             if (alignmentResult.alignment === "MISMATCH") {
               await addBotMessage(
                 alignmentResult.feedback +
-                  "\nPlease correct your code to match your approach and verify again."
+                "\nPlease correct your code to match your approach and verify again."
               );
               return;
             }
