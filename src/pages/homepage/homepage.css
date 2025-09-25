@@ -16,7 +16,42 @@
 }
 
 .seperationLine {
-  width: 30%;
+  width: 100%;
+}
+
+.progressContent {
+  margin-top: 2vw;
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center;
+  flex-grow: 1;
+}
+
+.streakAndRandomButton {
+  display: flex;
+  flex-direction: column;
+  gap: 3vw;
+  justify-content: space-evenly;
+}
+
+.streakCountContainer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.streakCountContainer > :nth-child(2) {
+  margin-right: 7vw;
+}
+
+.streakContent {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.streakImage {
+  width: 4vw;
 }
 
 .graphContainer {

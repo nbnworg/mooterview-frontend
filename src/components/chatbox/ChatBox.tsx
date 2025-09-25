@@ -11,6 +11,7 @@ import { evaluateSolutionWithRubric } from "../../utils/evaluateSolutionWithRubr
 import ConfirmationModal from "../Confirmationmodal/Confirmationmodal";
 import { clearCachedReport } from "../../utils/localStorageReport";
 import { verifyApproach } from "../../utils/handlers/verifyApproach";
+import { updateUserById } from "../../utils/handlers/updateUserInfoById";
 import { getTokenData } from "../../utils/constants";
 import { IoSend } from "react-icons/io5";
 import { GoMoveToEnd } from "react-icons/go";
@@ -166,6 +167,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     }
   };
 
+ 
   const endSession = async (
     calledAutomatically: boolean,
     setConfirmationModal?: React.Dispatch<
@@ -186,10 +188,10 @@ const ChatBox: React.FC<ChatBoxProps> = ({
       customMessage || "Ending session and generating evaluation...";
     setLoadingMessage(message);
 
-    if (!sessionId) {
-      navigate("/home", { replace: true });
-      return;
-    }
+  if (!sessionId) {
+    navigate("/home", { replace: true });
+    return;
+  }
 
     const getCleanedEvaluation = async () => {
       try {
@@ -246,7 +248,17 @@ const ChatBox: React.FC<ChatBoxProps> = ({
       }
     };
 
-    const wantsSolution = true;
+  const wantsSolution = true;
+
+  const buildNotesArray = (evaluationSummary: string) => {
+    const rawNotes = [
+      { content: evaluationSummary },
+      { content: codeRef.current.trim() || "No code provided" },
+    ];
+    return rawNotes.filter(
+      (note) => note && note.content && note.content.trim() !== ""
+    );
+  };
 
     if (!calledAutomatically) {
       if (setConfirmationModal) {
@@ -320,9 +332,13 @@ const ChatBox: React.FC<ChatBoxProps> = ({
       return;
     }
 
-    try {
-      setLoadingSessionEnd(true);
-
+  try {
+    setLoadingSessionEnd(true);
+      try {
+        await updateUserById({ userId });
+      } catch (streakError) {
+        console.error("Failed to update streak:", streakError);
+      }
       if (wantsSolution) {
         const evaluation = await getCleanedEvaluation();
 

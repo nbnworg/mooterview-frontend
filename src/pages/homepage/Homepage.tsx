@@ -10,12 +10,15 @@ import Filters from "./components/Filters";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Footer from "../../components/footer/Footer";
+import streakImage from "../../assets/landingPage/streak.jpg";
 import Randomizer from "./components/Randomizer";
+import { useStreak } from "../../hooks/useStreak";
 
 export default function Homepage() {
-  const { problems, loading, error } = useProblems();
-  const solvedIds = useSolvedProblems();
-  const progressData = useProgressData(problems, solvedIds);
+    const { problems, loading, error } = useProblems();
+    const { streak } = useStreak();
+    const solvedIds = useSolvedProblems();
+    const progressData = useProgressData(problems, solvedIds);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedLevel, setSelectedLevel] = useState("All");
@@ -46,44 +49,59 @@ export default function Homepage() {
 
     return matchesLevel && matchesSearch && matchesSolve && matchType;
   });
+  
 
-  return (
-    <>
-      <Navbar />
-      <ProgressSection progressData={progressData} />
-      <div className="randomizerButtonDiv">
-        <Randomizer problems={problems}/>
-      </div>
-      <div className="seperationLineContainer">
-        <hr className="seperationLine" />
-      </div>
-      <div className="homepageContainer">
-        <section className="homepage" id="homePage">
-          {loading ? (
-            <div className="loaderContainer">
-              <div className="loader"></div>
+    return (
+        <>
+            <Navbar />
+            <div className="progressContent">
+                <ProgressSection progressData={progressData} />
+                <div className="streakAndRandomButton">
+                    <div className="streakCountContainer">
+                        <img
+                            className="streakImage"
+                            src={streakImage}
+                            alt="User's streak fire"
+                        />
+                        <h1>{streak?.currentStreak || 0}</h1>
+                    </div>
+                    <Randomizer problems={problems} />
+                </div>
             </div>
-          ) : error ? (
-            <p className="error">{error}</p>
-          ) : filteredProblems.length === 0 ? (
-            <p>No problems available.</p>
-          ) : (
-            <ProblemTable problems={filteredProblems} solvedIds={solvedIds} />
-          )}
-        </section>
-        <Filters
-          searchTerm={searchTerm}
-          setSearchTerm={setSearchTerm}
-          selectedLevel={selectedLevel}
-          setSelectedLevel={setSelectedLevel}
-          solved={solved}
-          setSolved={setSolved}
-          selectedTypes={selectedTypes}
+            <div className="randomizerButtonDiv"></div>
+            <div className="seperationLineContainer">
+                <hr className="seperationLine" />
+            </div>
+            <div className="homepageContainer">
+                <section className="homepage" id="homePage">
+                    {loading ? (
+                        <div className="loaderContainer">
+                            <div className="loader"></div>
+                        </div>
+                    ) : error ? (
+                        <p className="error">{error}</p>
+                    ) : filteredProblems.length === 0 ? (
+                        <p>No problems available.</p>
+                    ) : (
+                        <ProblemTable
+                            problems={filteredProblems}
+                            solvedIds={solvedIds}
+                        />
+                    )}
+                </section>
+                <Filters
+                    searchTerm={searchTerm}
+                    setSearchTerm={setSearchTerm}
+                    selectedLevel={selectedLevel}
+                    setSelectedLevel={setSelectedLevel}
+                    solved={solved}
+                    setSolved={setSolved}
+                    selectedTypes={selectedTypes}
           setSelectedTypes={setSelectedTypes}
           onAddProblem={() => navigate("/create-a-problem")}
-        />
-      </div>
-      <Footer />
-    </>
-  );
+                />
+            </div>
+            <Footer />
+        </>
+    );
 }
