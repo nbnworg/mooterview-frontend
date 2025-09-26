@@ -16,7 +16,7 @@ interface CodeEditorProps {
 
 function inferParamsFromInput(input: any): string {
   if (Array.isArray(input))
-    return input.map((_, i) => `arg${i + 1}`).join(", ");
+    return input.join(", ");
   else if (typeof input === "object" && input !== null)
     return Object.keys(input).join(", ");
   else return "input_data";
