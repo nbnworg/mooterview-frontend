@@ -43,7 +43,7 @@ const Navbar = () => {
 
             {isLoggedIn ? (
                 <div className="navMenu">
-                    {location === "/home" && (
+                    {(location === "/dashboard" || location === "/dashboard/") && (
                         <div className="streakContainer">
                             <img
                                 src={streakImage}
