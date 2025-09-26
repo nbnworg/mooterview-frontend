@@ -103,13 +103,32 @@ const ProblemPage = () => {
   return (
     <>
       <Navbar />
-      <section className={`problemSection ${isEditorEnabled ? 'editor-enabled' : 'editor-disabled'}`} id="problemSection">
-        <div className={`problem-description ${isEditorEnabled ? 'editor-enabled' : ''}`}>
+      <section
+        className={`problemSection ${
+          isEditorEnabled ? "editor-enabled" : "editor-disabled"
+        }`}
+        id="problemSection"
+      >
+        <div className={`problem-description-container`}>
+          <div className="problem-description-content">
             <h1>{problem.title}</h1>
             <p>{problem.problemDescription}</p>
+          </div>
+          {isEditorEnabled && (
+            <ChatBox
+              problem={problem}
+              elapsedTime={(problem.averageSolveTime ?? 15) * 60 - timeLeft}
+              onVerifyRef={verifySolutionRef}
+              userId={userId}
+              code={code}
+              onEndRef={endSessionRef}
+              onApproachCorrectChange={(isCorrect) => setIsEditorEnabled(isCorrect)}
+            />
+          )}
         </div>
-
-        <ChatBox
+        
+        {!isEditorEnabled && (
+          <ChatBox
             problem={problem}
             elapsedTime={(problem.averageSolveTime ?? 15) * 60 - timeLeft}
             onVerifyRef={verifySolutionRef}
@@ -117,15 +136,13 @@ const ProblemPage = () => {
             code={code}
             onEndRef={endSessionRef}
             onApproachCorrectChange={(isCorrect) => setIsEditorEnabled(isCorrect)}
-        />
-        
+          />
+        )}
+
         <div className="codeEditorAndOptionsContainer">
           {isEditorEnabled && (
             <>
-              <CodeEditor
-                code={code}
-                setCode={setCode}
-              />
+              <CodeEditor code={code} setCode={setCode} />
               <button
                 className="verifyCodeButton"
                 onClick={async () => {
@@ -145,9 +162,7 @@ const ProblemPage = () => {
         <div className="timer-display">{formatTime(timeLeft)}</div>
         <div className="verticalLine"></div>
       </section>
-      {loading && (
-        <Loading message="Loading Evaluation..." size="large" />
-      )}
+      {loading && <Loading message="Loading Evaluation..." size="large" />}
     </>
   );
 };

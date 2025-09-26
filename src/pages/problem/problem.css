@@ -5,31 +5,28 @@
   padding: 2vw;
 }
 
-.problem-description {
-  grid-area: problem;
-  overflow: auto;
-  min-width: 0; 
-}
-.chatbox {
-  grid-area: chat;
-  min-width: 0; 
-}
-.codeEditorAndOptionsContainer {
-  grid-area: editor;
+.problem-description-container { grid-area: problem; }
+.chatbox { grid-area: chat; }
+.codeEditorAndOptionsContainer { grid-area: editor; }
+.timer-display { grid-area: timer; }
+.verticalLine { grid-area: line; }
+
+.problem-description-container, .chatbox, .codeEditorAndOptionsContainer {
   display: flex;
   flex-direction: column;
-  min-width: 0; 
-}
-.timer-display {
-  grid-area: timer;
-}
-.verticalLine {
-  grid-area: line;
-  border-left: 0.1vw solid black;
+  min-width: 0;
+  min-height: 0; 
+  overflow: hidden; 
 }
 
+.problem-description-content {
+  overflow-y: auto; 
+  padding-right: 1em;
+}
+
+
 .problemSection.editor-disabled {
-  grid-template-columns: 1fr auto 1fr; 
+  grid-template-columns: 1fr auto 1fr;
   grid-template-rows: auto 1fr;
   grid-template-areas:
     "problem line timer"
@@ -38,22 +35,33 @@
 .problemSection.editor-disabled .codeEditorAndOptionsContainer {
   display: none;
 }
-.problemSection.editor-disabled .problem-description {
+.problemSection.editor-disabled .problem-description-content {
   font-size: 1.2rem;
   line-height: 1.6;
 }
 
 .problemSection.editor-enabled {
-  grid-template-columns: 1fr auto 1fr; 
-  grid-template-rows: auto 1fr;
+  grid-template-columns: 1fr auto 1fr;
+  grid-template-rows: min-content 1fr; 
   grid-template-areas:
     "problem line timer"
-    "chat    line editor";
+    "problem line editor";
+  
 }
-.problem-description.editor-enabled {
-  font-size: initial;
-  line-height: initial;
-  margin-bottom: 1rem;
+
+.problemSection.editor-enabled .problem-description-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.problemSection.editor-enabled .problem-description-content {
+  height: 50%; 
+  flex-shrink: 0; 
+}
+
+.problemSection.editor-enabled .chatbox {
+  height: 50%; 
+  border-top: 0.1vw solid black; 
 }
 
 .timer-display {
@@ -63,18 +71,6 @@
   color: var(--primary);
   text-align: right;
   margin-bottom: 0.5rem;
-}
-
-.timeUpMessage {
-  position: fixed;
-  top: 10vh;
-  left: 50%;
-  transform: translateX(-50%);
-  background-color: rgba(0, 0, 0, 0.8);
-  color: white;
-  padding: 1rem 2rem;
-  border-radius: 8px;
-  z-index: 1000;
 }
 
 .verifyCodeButton {
