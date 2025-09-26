@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-
 import axios from "axios";
+import isEqual from "lodash/isequal";
 
 type EvaluationScore = "strong" | "mixed" | "weak";
 
@@ -38,20 +38,22 @@ async function executeCode(
     const functionName = extractFunctionName(problemTitle);
     if (!functionName) throw new Error("No function definition found in code.");
 
-    const harness = `
+   const harness = `
 import sys, json
 data = json.loads(sys.stdin.read())
 try:
-  if isinstance(data, dict):
-    result = ${functionName}(**data)  
-  elif isinstance(data, list):
-    result = ${functionName}(*data)    
-  else:
-    result = ${functionName}(data)     
+    if isinstance(data, dict):
+        result = ${functionName}(**data)
+    elif isinstance(data, list):
+        result = ${functionName}(*data)
+    else:
+        result = ${functionName}(data)
 except Exception as e:
     result = f"Error: {str(e)}"
-print(result)
+
+print(json.dumps(result))  # ✅ ensures proper JSON output
 `.trim();
+
 
     const completedCode = code + "\n" + harness;
 
@@ -120,8 +122,19 @@ export const evaluateSolutionWithRubric = async (
       }
     }
 
-    const isMatch =
-      JSON.stringify(parsedOutput) === JSON.stringify(expectedStr);
+    function normalize(val: any): any {
+  if (typeof val === "string") {
+    try {
+      return JSON.parse(val); 
+    } catch {
+      return val.trim();
+    }
+  }
+  return val;
+}
+
+   const isMatch = isEqual(normalize(parsedOutput), normalize(expectedStr));
+
 
     if (isMatch) {
       passed++;
