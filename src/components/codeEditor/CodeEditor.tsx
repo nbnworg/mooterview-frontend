@@ -11,16 +11,24 @@ interface CodeEditorProps {
   setTimeLeft: React.Dispatch<React.SetStateAction<number>>;
   disabled?: boolean;
   problemTitle?: string;
-  testCases: { input: any; expected: any; explanation?: string; argument: any }[];
+  testCases: { input: any; expected: any; explanation?: string; argumentNames?: string[] }[];
 }
+function inferParamsFromInput(
+  argument: any,
+  argumentNames?: string[]
+): string {
+  // Prefer argumentNames if provided
+  if (argumentNames && argumentNames.length > 0) {
+    return argumentNames.join(", ");
+  }
 
-function inferParamsFromInput(argument: any): string {
-  if (Array.isArray(argument))
-    return argument.join(", ");
+  // Otherwise infer from the data itself (old behavior)
+  if (Array.isArray(argument)) return argument.join(", ");
   else if (typeof argument === "object" && argument !== null)
     return Object.keys(argument).join(", ");
   else return "input_data";
 }
+
 
 const CodeEditor: React.FC<CodeEditorProps> = ({
   code,
@@ -49,15 +57,19 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
     }
   }, [code]);
 
-  useEffect(() => {
-    if (!code.trim() && testCases && testCases.length > 0) {
-      const defaultFuncName = problemTitle?.replace(/\s+/g, "_").toLowerCase();
-      const params = inferParamsFromInput(testCases[0].argument);
-      const starterCode = `def ${defaultFuncName}(${params}):\n    # TODO: implement solution\n    pass\n`;
-      setCode(starterCode);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [problemTitle, testCases]);
+ useEffect(() => {
+  if (!code.trim() && testCases && testCases.length > 0) {
+    const defaultFuncName = problemTitle?.replace(/\s+/g, "_").toLowerCase();
+    const firstTestCase = testCases[0];
+    const params = inferParamsFromInput(
+      firstTestCase.input,
+      firstTestCase.argumentNames // 👈 use names if present
+    );
+    const starterCode = `def ${defaultFuncName}(${params}):\n    # TODO: implement solution\n    pass\n`;
+    setCode(starterCode);
+  }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [problemTitle, testCases]);
 
   const formatTime = (seconds: number) => {
     const mins = String(Math.floor(seconds / 60)).padStart(2, "0");
