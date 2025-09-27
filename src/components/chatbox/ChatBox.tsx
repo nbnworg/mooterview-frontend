@@ -865,7 +865,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         const isCorrect = rubricResult.isCorrect;
 
         if (isCorrect) {
-          await addBotMessage("your code is  correct ");
+          await addBotMessage("Your code is  correct acording to your approach. /n Let's move ahead");
           setIsSolutionVerifiedCorrect(true);
           isSolutionVerifiedCorrectRef.current = true;
           stageRef.current = "FOLLOW_UP";
@@ -884,7 +884,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             const combinedFeedback = `Your implementation faithfully reflects the described approach. However, your solution is incorrect. `;
             await addBotMessage(combinedFeedback);
           } else {
-            await addBotMessage("correctnessResponse");
+            await addBotMessage("Your code doesnot match your approach");
           }
         }
       } catch (error) {
