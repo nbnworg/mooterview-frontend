@@ -6,7 +6,7 @@ export interface TestCase {
   input: any;
   expected: any;
   explanation?: string;
-  argument?: any;
+  argumentNames?: string[];
 }
 
 export const generateTestCasesWithAI = async (
