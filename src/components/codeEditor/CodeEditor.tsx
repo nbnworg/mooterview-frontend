@@ -11,14 +11,14 @@ interface CodeEditorProps {
   setTimeLeft: React.Dispatch<React.SetStateAction<number>>;
   disabled?: boolean;
   problemTitle?: string;
-  testCases: { input: any; expected: any; explanation?: string }[];
+  testCases: { input: any; expected: any; explanation?: string; argument: any }[];
 }
 
-function inferParamsFromInput(input: any): string {
-  if (Array.isArray(input))
-    return input.map((_, i) => `arg${i + 1}`).join(", ");
-  else if (typeof input === "object" && input !== null)
-    return Object.keys(input).join(", ");
+function inferParamsFromInput(argument: any): string {
+  if (Array.isArray(argument))
+    return argument.join(", ");
+  else if (typeof argument === "object" && argument !== null)
+    return Object.keys(argument).join(", ");
   else return "input_data";
 }
 
@@ -52,7 +52,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
   useEffect(() => {
     if (!code.trim() && testCases && testCases.length > 0) {
       const defaultFuncName = problemTitle?.replace(/\s+/g, "_").toLowerCase();
-      const params = inferParamsFromInput(testCases[0].input);
+      const params = inferParamsFromInput(testCases[0].argument);
       const starterCode = `def ${defaultFuncName}(${params}):\n    # TODO: implement solution\n    pass\n`;
       setCode(starterCode);
     }
