@@ -14,6 +14,8 @@ export const generateTestCasesWithAI = async (
   const prompt = `
 Problem Title: ${problem.title}
 Description: ${problem.problemDescription}
+
+IMPORTANT: Output MUST be ONLY a valid JSON array with no additional text, markdown, or code fences.
 `;
 
   const response = await getPromptResponse({

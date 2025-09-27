@@ -100,7 +100,7 @@ export const evaluateSolutionWithRubric = async (
   const failedCases: string[] = [];
 
   const hasLoops = /\b(for|while)\b/.test(code);
-  const hasEdgeHandling = /if .*len|if .*==.*|return \[\]/.test(code);
+ // const hasEdgeHandling = /if .*len|if .*==.*|return \[\]/.test(code);
   const isShort = code.length <= 600;
 
 
@@ -137,6 +137,9 @@ for (const t of testCases) {
   });
 }
 
+const edgeCaseResults = testResults.slice(0, 3); // first two cases
+
+
 
 // after you’ve built testResults:
 const response = await getPromptResponse({
@@ -147,21 +150,36 @@ Problem Description: ${problemdescription}
 Test Results:
 ${JSON.stringify(testResults, null, 2)}
   `,
-  promptKey: "evaluate-test-results",
+  promptKey: "check-testcase",
   modelName: "gpt-4o",
 });
 
+const edgeresponse = await getPromptResponse({
+  actor: Actor.AI,
+  context: `
+Problem Description: ${problemdescription}
 
+Test Results:
+${JSON.stringify(edgeCaseResults, null, 2)}
+  `,
+  promptKey: "check-testcase",
+  modelName: "gpt-4o",
+});
+
+const edgecount = Number(edgeresponse.trim());
 
 const passedCount = Number(response.trim());
 
 
+
   const correctness: EvaluationScore =
-   passedCount === testCases.length ? "strong" : passedCount > 3 ? "mixed" : "weak";
+   passedCount === testCases.length ? "strong" : passedCount >= 3 ? "mixed" : "weak";
+
+   const hasEdgeHandling :EvaluationScore = edgecount == edgeCaseResults.length ?"strong" : edgecount >= 2 ? "mixed":"weak"; 
 
   const rubricScores: RubricResult["rubricScores"] = {
     correctness,
-    edgeCases: hasEdgeHandling ? "strong" : "mixed",
+    edgeCases: hasEdgeHandling ,
     performance: hasLoops ? "strong" : "mixed",
     structureChoice: "mixed",
     readability: isShort ? "strong" : "mixed",
