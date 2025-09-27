@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import axios from "axios";
+import { getPromptResponse } from "./handlers/getPromptResponse";
+import { Actor } from "mooterview-client";
 
 type EvaluationScore = "strong" | "mixed" | "weak";
 
@@ -91,7 +93,8 @@ print(result)
 export const evaluateSolutionWithRubric = async (
   code: string,
   testCases: TestCase[],
-  problemTitle?: string
+  problemTitle?: string,
+  problemdescription?:any
 ): Promise<RubricResult> => {
   let passed = 0;
   const failedCases: string[] = [];
@@ -100,46 +103,61 @@ export const evaluateSolutionWithRubric = async (
   const hasEdgeHandling = /if .*len|if .*==.*|return \[\]/.test(code);
   const isShort = code.length <= 600;
 
-  for (const t of testCases) {
-    const stdin = JSON.stringify(t.input);
-    const rawOutput = await executeCode(
-      code,
-      stdin,
-      problemTitle || "solution"
-    );
-    const expectedStr = t.expected;
 
-    let parsedOutput: any = rawOutput;
+  const testResults: {
+  input: any;
+  expected: any;
+  got: any;
+}[] = [];
+
+for (const t of testCases) {
+  const stdin = JSON.stringify(t.input);
+  const rawOutput = await executeCode(
+    code,
+    stdin,
+    problemTitle || "solution"
+  );
+
+  let parsedOutput: any = rawOutput;
+  try {
+    parsedOutput = JSON.parse(rawOutput);
+  } catch {
     try {
-      parsedOutput = JSON.parse(rawOutput);
+      parsedOutput = JSON.parse(rawOutput.trim());
     } catch {
-      try {
-        parsedOutput = JSON.parse(rawOutput.trim());
-      } catch {
-        parsedOutput = rawOutput.trim();
-      }
+      parsedOutput = rawOutput.trim();
     }
-
-    const isMatch =
-      JSON.stringify(parsedOutput) === JSON.stringify(expectedStr);
-
-    if (isMatch) {
-      passed++;
-    } else {
-      failedCases.push(
-        `❌ Input=${JSON.stringify(
-          t.input
-        )} | Expected=${expectedStr} | Got=${parsedOutput}`
-      );
-    }
-    console.log(rawOutput);
-    console.log(expectedStr);
   }
 
-  console.log(passed);
+  // just collect input/expected/got
+  testResults.push({
+    input: t.input,
+    expected: t.expected,
+    got: parsedOutput,
+  });
+}
+
+
+// after you’ve built testResults:
+const response = await getPromptResponse({
+  actor: Actor.AI,
+  context: `
+Problem Description: ${problemdescription}
+
+Test Results:
+${JSON.stringify(testResults, null, 2)}
+  `,
+  promptKey: "evaluate-test-results",
+  modelName: "gpt-4o",
+});
+
+
+
+const passedCount = Number(response.trim());
+
 
   const correctness: EvaluationScore =
-    passed === testCases.length ? "strong" : passed > 0 ? "mixed" : "weak";
+   passedCount === testCases.length ? "strong" : passedCount > 3 ? "mixed" : "weak";
 
   const rubricScores: RubricResult["rubricScores"] = {
     correctness,
