@@ -11,7 +11,7 @@ interface CodeEditorProps {
   setTimeLeft: React.Dispatch<React.SetStateAction<number>>;
   disabled?: boolean;
   problemTitle?: string;
-  testCases: { input: any; expected: any; explanation?: string; argument: any }[];
+  testCases: { input: any; expected: any; explanation?: string; argument?: any }[];
 }
 
 function inferParamsFromInput(argument: any): string {

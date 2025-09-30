@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import type { Problem } from "mooterview-client";
+// import type { Problem } from "mooterview-client";
+import type { ProblemLevel } from "mooterview-client";
 import { getPromptResponse } from "./handlers/getPromptResponse";
 
 export interface TestCase {
@@ -7,6 +8,18 @@ export interface TestCase {
   expected: any;
   explanation?: string;
   argument?: any;
+}
+
+export interface Problem {
+  title: string | undefined;
+  problemDescription: string | undefined;
+  example: string[] | undefined;
+  problemId: string | undefined;
+  problemStatement: string | undefined;
+  level: ProblemLevel | undefined;
+  problemPattern: string | undefined;
+  averageSolveTime: number | undefined;
+  totalUsersAttempted: number | undefined;
 }
 
 export const generateTestCasesWithAI = async (
