@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// import type { Problem } from "mooterview-client";
 import type { ProblemLevel } from "mooterview-client";
 import { getPromptResponse } from "./handlers/getPromptResponse";
 

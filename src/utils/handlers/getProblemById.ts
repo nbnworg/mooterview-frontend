@@ -2,7 +2,6 @@
 import axios from "axios";
 import { BASE_URL, getTokenData } from "../constants";
 import { refreshAccessToken } from "../refreshAccessToken";
-// import type { Problem } from "mooterview-client";
 import type { Problem } from "../generateTestCasesWithAI";
 
 export const getProblemById = async (problemId: string): Promise<Problem> => {
