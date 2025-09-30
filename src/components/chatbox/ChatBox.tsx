@@ -865,7 +865,8 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         const isCorrect = rubricResult.isCorrect;
 
         if (isCorrect) {
-          await addBotMessage("Your code is  correct acording to your approach. /n Let's move ahead");
+          await addBotMessage("Your code is  correct acording to your approach.");
+          await addBotMessage("Let's move ahead");
           setIsSolutionVerifiedCorrect(true);
           isSolutionVerifiedCorrectRef.current = true;
           stageRef.current = "FOLLOW_UP";

@@ -13,6 +13,7 @@ interface CodeEditorProps {
   problemTitle?: string;
   testCases: { input: any; expected: any; explanation?: string; argumentNames?: string[] }[];
 }
+/*
 function inferParamsFromInput(
   argument: any,
   argumentNames?: string[]
@@ -28,6 +29,42 @@ function inferParamsFromInput(
     return Object.keys(argument).join(", ");
   else return "input_data";
 }
+  */
+
+function inferParamsFromInput(argument: any, argumentNames?: string[]): string {
+  if (argumentNames && argumentNames.length > 0) return argumentNames.join(", ");
+
+  // Default naming if array
+  if (Array.isArray(argument)) return argument.map((_, idx) => `arg${idx + 1}`).join(", ");
+
+  if (typeof argument === "object" && argument !== null) return Object.keys(argument).join(", ");
+
+  return "input_data";
+}
+
+function detectDataStructure(testCase: { input: any; argumentNames?: string[] }): string {
+  // Use the first argument in the input array
+  const firstArg = Array.isArray(testCase.input) ? testCase.input[0] : testCase.input;
+
+  // Use the first argument name if provided, else fallback to 'input_data'
+  const paramName = testCase.argumentNames && testCase.argumentNames.length > 0
+    ? testCase.argumentNames[0]
+    : "input_data";
+
+  if (firstArg && typeof firstArg === "object") {
+    // Detect linked list
+    if ("val" in firstArg && "next" in firstArg) {
+      return `    # ${paramName} is a ListNode with fields: val, next\n`;
+    }
+    // Detect binary tree
+    if ("val" in firstArg && ("left" in firstArg || "right" in firstArg)) {
+      return `    # ${paramName} is a TreeNode with fields: val, left, right\n`;
+    }
+  }
+
+  return "";
+}
+
 
 
 const CodeEditor: React.FC<CodeEditorProps> = ({
@@ -57,7 +94,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
     }
   }, [code]);
 
- useEffect(() => {
+ /*useEffect(() => {
   if (!code.trim() && testCases && testCases.length > 0) {
     const defaultFuncName = problemTitle?.replace(/\s+/g, "_").toLowerCase();
     const firstTestCase = testCases[0];
@@ -70,6 +107,26 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
   }
   // eslint-disable-next-line react-hooks/exhaustive-deps
 }, [problemTitle, testCases]);
+*/
+useEffect(() => {
+  if (!code.trim() && testCases && testCases.length > 0) {
+    const defaultFuncName = problemTitle?.replace(/\s+/g, "_").toLowerCase();
+    
+    // Use 4th test case for hints (edge case)
+    const edgeCaseTest = testCases[4] || testCases[0];
+
+    // Determine parameters using inferParamsFromInput
+    const params = inferParamsFromInput(edgeCaseTest.input, edgeCaseTest.argumentNames);
+
+    // Get hint for data structure
+    const hints = detectDataStructure(edgeCaseTest);
+
+    const starterCode = `def ${defaultFuncName}(${params}):\n${hints}    # TODO: implement solution\n    pass\n`;
+    setCode(starterCode);
+  }
+}, [problemTitle, testCases]);
+
+
 
   const formatTime = (seconds: number) => {
     const mins = String(Math.floor(seconds / 60)).padStart(2, "0");

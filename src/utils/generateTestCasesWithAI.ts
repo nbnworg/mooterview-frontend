@@ -24,8 +24,16 @@ Description: ${problem.problemDescription}
     modelName: "gpt-4o",
   });
 
+// strip markdown code fences if present
+let raw = response.trim();
+
+// remove leading ```json or ```
+raw = raw.replace(/^```(?:json)?\s*/i, "");
+// remove trailing ```
+raw = raw.replace(/```$/, "");
+
   try {
-    const parsed = JSON.parse(response);
+    const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed)) throw new Error("Invalid format");
     console.log(parsed);
     return parsed;

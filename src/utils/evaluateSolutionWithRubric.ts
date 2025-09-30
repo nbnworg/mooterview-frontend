@@ -40,7 +40,7 @@ async function executeCode(
     const functionName = extractFunctionName(problemTitle);
     if (!functionName) throw new Error("No function definition found in code.");
 
-    const harness = `
+    /*const harness = `
 import sys, json
 data = json.loads(sys.stdin.read())
 try:
@@ -53,6 +53,76 @@ try:
 except Exception as e:
     result = f"Error: {str(e)}"
 print(result)
+`.trim();
+*/
+const harness = `
+import sys, json
+
+# ===== Data Structures =====
+class ListNode:
+    def __init__(self, val=0, next=None):
+        self.val = val
+        self.next = next
+
+class TreeNode:
+    def __init__(self, val=0, left=None, right=None):
+        self.val = val
+        self.left = left
+        self.right = right
+
+# ===== Converters =====
+def dict_to_listnode(d):
+    if not d: return None
+    return ListNode(d['val'], dict_to_listnode(d.get('next')))
+
+def dict_to_treenode(d):
+    if not d: return None
+    return TreeNode(d['val'], dict_to_treenode(d.get('left')), dict_to_treenode(d.get('right')))
+
+def convert_input(x):
+    if isinstance(x, dict):
+        if 'val' in x and 'next' in x:
+            return dict_to_listnode(x)
+        elif 'val' in x and ('left' in x or 'right' in x):
+            return dict_to_treenode(x)
+        else:
+            return {k: convert_input(v) for k,v in x.items()}
+    elif isinstance(x, list):
+        return [convert_input(i) for i in x]
+    else:
+        return x
+
+# ===== Serializer =====
+def serialize(obj):
+    if obj is None:
+        return None
+    if isinstance(obj, ListNode):
+        return {"val": obj.val, "next": serialize(obj.next)}
+    if isinstance(obj, TreeNode):
+        return {"val": obj.val, "left": serialize(obj.left), "right": serialize(obj.right)}
+    if isinstance(obj, (list, tuple, set)):
+        return [serialize(x) for x in obj]
+    if isinstance(obj, dict):
+        return {k: serialize(v) for k,v in obj.items()}
+    return obj
+
+# ===== Load input =====
+data = json.loads(sys.stdin.read())
+data = convert_input(data)
+
+# ===== Execute user function =====
+try:
+    if isinstance(data, dict):
+        result = ${functionName}(**data)
+    elif isinstance(data, list):
+        result = ${functionName}(*data)
+    else:
+        result = ${functionName}(data)
+except Exception as e:
+    result = f"Error: {str(e)}"
+
+# ===== Output =====
+print(json.dumps(serialize(result)))
 `.trim();
 
     const completedCode = code + "\n" + harness;
@@ -68,7 +138,7 @@ print(result)
     );
 
     const token = submissionRes.data.token;
-
+/*
     let result;
     while (true) {
       const res = await axios.get(
@@ -76,6 +146,27 @@ print(result)
       );
       await new Promise((r) => setTimeout(r, 1000));
       result = await res.data;
+
+      if (result.status && result.status.id >= 3) break;
+    }
+
+    return (result.stdout || "").trim();
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      console.error("Judge0 API error:", error.response?.data);
+      throw new Error(`Execution service unavailable: ${error.message}`);
+    }
+    throw error;
+  }
+}
+*/
+ let result;
+    while (true) {
+      const res = await axios.get(
+        `${JUDGE0_URL}/submissions/${token}?base64_encoded=false`
+      );
+      await new Promise((r) => setTimeout(r, 1000));
+      result = res.data;
 
       if (result.status && result.status.id >= 3) break;
     }
@@ -139,7 +230,7 @@ for (const t of testCases) {
 
 const edgeCaseResults = testResults.slice(0, 3); // first two cases
 
-
+console.log("test",testResults);
 
 // after you’ve built testResults:
 const response = await getPromptResponse({
@@ -170,10 +261,10 @@ const edgecount = Number(edgeresponse.trim());
 
 const passedCount = Number(response.trim());
 
-
+console.log(passedCount);
 
   const correctness: EvaluationScore =
-   passedCount === testCases.length ? "strong" : passedCount >= 3 ? "mixed" : "weak";
+   passedCount >= testCases.length - 1? "strong" : passedCount >= 3 ? "mixed" : "weak";
 
    const hasEdgeHandling :EvaluationScore = edgecount == edgeCaseResults.length ?"strong" : edgecount >= 2 ? "mixed":"weak"; 
 
