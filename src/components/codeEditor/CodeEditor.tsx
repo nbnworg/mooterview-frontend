@@ -42,28 +42,66 @@ function inferParamsFromInput(argument: any, argumentNames?: string[]): string {
   return "input_data";
 }
 
-function detectDataStructure(testCase: { input: any; argumentNames?: string[] }): string {
-  // Use the first argument in the input array
-  const firstArg = Array.isArray(testCase.input) ? testCase.input[0] : testCase.input;
 
-  // Use the first argument name if provided, else fallback to 'input_data'
-  const paramName = testCase.argumentNames && testCase.argumentNames.length > 0
-    ? testCase.argumentNames[0]
-    : "input_data";
+
+function detectDataStructure(testCase: { input: any; argumentNames?: string[] }): string {
+  // get the "first" value from the input, regardless of shape
+  let firstArg: any;
+
+  if (Array.isArray(testCase.input)) {
+    firstArg = testCase.input[0];
+  } else if (typeof testCase.input === "object" && testCase.input !== null) {
+    // unwrap the first property value (head/root/list1/list2…)
+    const firstKey = Object.keys(testCase.input)[0];
+    firstArg = testCase.input[firstKey];
+  } else {
+    firstArg = testCase.input;
+  }
+
+  // detect binary tree level-order array
+ if (Array.isArray(firstArg) && firstArg.includes(null)) {
+    return (
+`# Definition for a binary tree node.
+# class TreeNode:
+#     def __init__(self, val=0, left=None, right=None):
+#         self.val = val
+#         self.left = left
+#         self.right = right
+
+`
+      );
+    }
+  
 
   if (firstArg && typeof firstArg === "object") {
-    // Detect linked list
     if ("val" in firstArg && "next" in firstArg) {
-      return `    # ${paramName} is a ListNode with fields: val, next\n`;
+      return (
+`# Definition for singly-linked list.
+# class ListNode:
+#     def __init__(self, val=0, next=None):
+#         self.val = val
+#         self.next = next
+
+`
+      );
     }
-    // Detect binary tree
     if ("val" in firstArg && ("left" in firstArg || "right" in firstArg)) {
-      return `    # ${paramName} is a TreeNode with fields: val, left, right\n`;
+      return (
+`# Definition for a binary tree node.
+# class TreeNode:
+#     def __init__(self, val=0, left=None, right=None):
+#         self.val = val
+#         self.left = left
+#         self.right = right
+
+`
+      );
     }
   }
 
   return "";
 }
+
 
 
 
@@ -111,20 +149,18 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
 useEffect(() => {
   if (!code.trim() && testCases && testCases.length > 0) {
     const defaultFuncName = problemTitle?.replace(/\s+/g, "_").toLowerCase();
-    
-    // Use 4th test case for hints (edge case)
     const edgeCaseTest = testCases[4] || testCases[0];
-
-    // Determine parameters using inferParamsFromInput
     const params = inferParamsFromInput(edgeCaseTest.input, edgeCaseTest.argumentNames);
 
-    // Get hint for data structure
-    const hints = detectDataStructure(edgeCaseTest);
+    // get snippet first
+    const snippet = detectDataStructure(edgeCaseTest);
 
-    const starterCode = `def ${defaultFuncName}(${params}):\n${hints}    # TODO: implement solution\n    pass\n`;
+    // put snippet at top before def line
+    const starterCode = `${snippet}def ${defaultFuncName}(${params}):\n    # TODO: implement solution\n    pass\n`;
     setCode(starterCode);
   }
 }, [problemTitle, testCases]);
+
 
 
 
