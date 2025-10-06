@@ -741,7 +741,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     async (isAutoSubmit: boolean = false) => {
       const currentCode = codeRef.current;
       const userApproach = approachTextRef.current;
-      const problemTitle = problem.title;
+      const problemTitle=problem.title;
       const problemdescription = problem.problemDescription;
 
       if (!currentCode && isAutoSubmit) {
@@ -830,7 +830,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         const rubricResult = await evaluateSolutionWithRubric(
           currentCode,
           testCases,
-          problemTitle,
+         problemTitle,
           problemdescription
         );
         setrubricResult(rubricResult);
@@ -858,9 +858,9 @@ const ChatBox: React.FC<ChatBoxProps> = ({
       AI-Generated Test Cases:
       ${testCaseText}
       `.trim();
+    
 
-
-        // const correctnessResponse =rubricResult.isCorrect;
+       // const correctnessResponse =rubricResult.isCorrect;
 
         const isCorrect = rubricResult.isCorrect;
 

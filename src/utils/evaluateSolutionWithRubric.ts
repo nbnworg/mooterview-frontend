@@ -40,22 +40,6 @@ async function executeCode(
     const functionName = extractFunctionName(problemTitle);
     if (!functionName) throw new Error("No function definition found in code.");
 
-    /*const harness = `
-import sys, json
-data = json.loads(sys.stdin.read())
-try:
-  if isinstance(data, dict):
-    result = ${functionName}(**data)  
-  elif isinstance(data, list):
-    result = ${functionName}(*data)    
-  else:
-    result = ${functionName}(data)     
-except Exception as e:
-    result = f"Error: {str(e)}"
-print(result)
-`.trim();
-*/
-
     const harness = `import sys, json
 from collections import deque
 
@@ -194,28 +178,7 @@ print(json.dumps(serialize(result)))
     );
 
     const token = submissionRes.data.token;
-    /*
-        let result;
-        while (true) {
-          const res = await axios.get(
-            `${JUDGE0_URL}/submissions/${token}?base64_encoded=false`
-          );
-          await new Promise((r) => setTimeout(r, 1000));
-          result = await res.data;
-    
-          if (result.status && result.status.id >= 3) break;
-        }
-    
-        return (result.stdout || "").trim();
-      } catch (error) {
-        if (axios.isAxiosError(error)) {
-          console.error("Judge0 API error:", error.response?.data);
-          throw new Error(`Execution service unavailable: ${error.message}`);
-        }
-        throw error;
-      }
-    }
-    */
+
     let result;
     while (true) {
       const res = await axios.get(
@@ -224,12 +187,23 @@ print(json.dumps(serialize(result)))
       await new Promise((r) => setTimeout(r, 1000));
       result = res.data;
 
-      if (result.status && result.status.id >= 3) break;
+      if (result.status && result.status.id >= 3) {
+        // Check for TLE immediately when status is ready
+        if (result.status.id === 5) {
+          throw new Error("Time limit exceeded - possible infinite loop or inefficient algorithm");
+        }
+        break;
+      }
     }
     if (result.status.id === 5) {
       throw new Error("Time limit exceeded - possible infinite loop or inefficient algorithm");
     }
-
+    if (result.status.id === 6) {
+      throw new Error(`Compilation Error: ${result.compile_output}`);
+    }
+    if (result.status.id >= 7 && result.status.id <= 12) {
+      throw new Error(`Runtime Error: ${result.stderr || result.status.description}`);
+    }
 
     return (result.stdout || "").trim();
   } catch (error) {
@@ -265,44 +239,36 @@ export const evaluateSolutionWithRubric = async (
   }[] = [];
 
   for (const t of testCases) {
-    try {
-      const stdin = JSON.stringify(t.input);
-      const rawOutput = await executeCode(
-        code,
-        stdin,
-        problemTitle || "solution"
-      );
+    const stdin = JSON.stringify(t.input);
+    const rawOutput = await executeCode(
+      code,
+      stdin,
+      problemTitle || "solution"
+    );
 
-      let parsedOutput: any = rawOutput;
+    let parsedOutput: any = rawOutput;
+    try {
+      parsedOutput = JSON.parse(rawOutput);
+    } catch {
       try {
-        parsedOutput = JSON.parse(rawOutput);
+        parsedOutput = JSON.parse(rawOutput.trim());
       } catch {
         parsedOutput = rawOutput.trim();
       }
-
-      testResults.push({
-        input: t.input,
-        expected: t.expected,
-        got: parsedOutput,
-      });
-    } catch (error) {
-      // If it's a timeout error, propagate it immediately
-      if (error instanceof Error && error.message.includes("Time limit exceeded")) {
-        throw error; // Re-throw to stop all test execution
-      }
-
-      // For other errors, collect them
-      testResults.push({
-        input: t.input,
-        expected: t.expected,
-        got: `ERROR: ${error instanceof Error ? error.message : String(error)}`,
-      });
     }
+
+    // just collect input/expected/got
+    testResults.push({
+      input: t.input,
+      expected: t.expected,
+      got: parsedOutput,
+    });
   }
 
   const edgeCaseResults = testResults.slice(0, 3); // first two cases
 
   console.log("test", testResults);
+
   // after you’ve built testResults:
   const response = await getPromptResponse({
     actor: Actor.AI,
@@ -332,7 +298,7 @@ ${JSON.stringify(edgeCaseResults, null, 2)}
 
   const passedCount = Number(response.trim());
 
-  console.log("testcases passed:::", passedCount);
+  console.log(passedCount);
 
   const correctness: EvaluationScore =
     passedCount >= testCases.length - 1 ? "strong" : passedCount >= 3 ? "mixed" : "weak";
