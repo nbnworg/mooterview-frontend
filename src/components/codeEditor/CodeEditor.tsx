@@ -13,23 +13,7 @@ interface CodeEditorProps {
   problemTitle?: string;
   testCases: { input: any; expected: any; explanation?: string; argumentNames?: string[] }[];
 }
-/*
-function inferParamsFromInput(
-  argument: any,
-  argumentNames?: string[]
-): string {
-  // Prefer argumentNames if provided
-  if (argumentNames && argumentNames.length > 0) {
-    return argumentNames.join(", ");
-  }
 
-<<<<<<< HEAD
-  // Otherwise infer from the data itself (old behavior)
-  if (Array.isArray(argument)) return argument.join(", ");
-  else if (typeof argument === "object" && argument !== null)
-    return Object.keys(argument).join(", ");
-  else return "input_data";
-=======
 
 function inferParamsFromInput(argument: any, argumentNames?: string[]): string {
   if (argumentNames && argumentNames.length > 0) return argumentNames.join(", ");
@@ -39,83 +23,7 @@ function inferParamsFromInput(argument: any, argumentNames?: string[]): string {
   if (typeof argument === "object" && argument !== null) return Object.keys(argument).join(", ");
 
   return "input_data";
->>>>>>> 4d5fc5f3146f2b02efeb7ece5c86be65fa919476
 }
-  */
-
-function inferParamsFromInput(argument: any, argumentNames?: string[]): string {
-  if (argumentNames && argumentNames.length > 0) return argumentNames.join(", ");
-
-  // Default naming if array
-  if (Array.isArray(argument)) return argument.map((_, idx) => `arg${idx + 1}`).join(", ");
-
-  if (typeof argument === "object" && argument !== null) return Object.keys(argument).join(", ");
-
-  return "input_data";
-}
-
-
-
-function detectDataStructure(testCase: { input: any; argumentNames?: string[] }): string {
-  // get the "first" value from the input, regardless of shape
-  let firstArg: any;
-
-  if (Array.isArray(testCase.input)) {
-    firstArg = testCase.input[0];
-  } else if (typeof testCase.input === "object" && testCase.input !== null) {
-    // unwrap the first property value (head/root/list1/list2…)
-    const firstKey = Object.keys(testCase.input)[0];
-    firstArg = testCase.input[firstKey];
-  } else {
-    firstArg = testCase.input;
-  }
-
-  // detect binary tree level-order array
- if (Array.isArray(firstArg) && firstArg.includes(null)) {
-    return (
-`# Definition for a binary tree node.
-# class TreeNode:
-#     def __init__(self, val=0, left=None, right=None):
-#         self.val = val
-#         self.left = left
-#         self.right = right
-
-`
-      );
-    }
-  
-
-  if (firstArg && typeof firstArg === "object") {
-    if ("val" in firstArg && "next" in firstArg) {
-      return (
-`# Definition for singly-linked list.
-# class ListNode:
-#     def __init__(self, val=0, next=None):
-#         self.val = val
-#         self.next = next
-
-`
-      );
-    }
-    if ("val" in firstArg && ("left" in firstArg || "right" in firstArg)) {
-      return (
-`# Definition for a binary tree node.
-# class TreeNode:
-#     def __init__(self, val=0, left=None, right=None):
-#         self.val = val
-#         self.left = left
-#         self.right = right
-
-`
-      );
-    }
-  }
-
-  return "";
-}
-
-
-
 
 
 
@@ -207,23 +115,6 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
     }
   }, [code]);
 
-<<<<<<< HEAD
- /*useEffect(() => {
-  if (!code.trim() && testCases && testCases.length > 0) {
-    const defaultFuncName = problemTitle?.replace(/\s+/g, "_").toLowerCase();
-    const firstTestCase = testCases[0];
-    const params = inferParamsFromInput(
-      firstTestCase.input,
-      firstTestCase.argumentNames // 👈 use names if present
-    );
-    const starterCode = `def ${defaultFuncName}(${params}):\n    # TODO: implement solution\n    pass\n`;
-    setCode(starterCode);
-  }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-}, [problemTitle, testCases]);
-*/
-=======
->>>>>>> 4d5fc5f3146f2b02efeb7ece5c86be65fa919476
 useEffect(() => {
   if (!code.trim() && testCases && testCases.length > 0) {
     const defaultFuncName = problemTitle?.replace(/\s+/g, "_").toLowerCase();
