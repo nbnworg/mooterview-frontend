@@ -40,22 +40,6 @@ async function executeCode(
     const functionName = extractFunctionName(problemTitle);
     if (!functionName) throw new Error("No function definition found in code.");
 
-    /*const harness = `
-import sys, json
-data = json.loads(sys.stdin.read())
-try:
-  if isinstance(data, dict):
-    result = ${functionName}(**data)  
-  elif isinstance(data, list):
-    result = ${functionName}(*data)    
-  else:
-    result = ${functionName}(data)     
-except Exception as e:
-    result = f"Error: {str(e)}"
-print(result)
-`.trim();
-*/
-
 const harness = `import sys, json
 from collections import deque
 
@@ -191,28 +175,7 @@ print(json.dumps(serialize(result)))
     );
 
     const token = submissionRes.data.token;
-/*
-    let result;
-    while (true) {
-      const res = await axios.get(
-        `${JUDGE0_URL}/submissions/${token}?base64_encoded=false`
-      );
-      await new Promise((r) => setTimeout(r, 1000));
-      result = await res.data;
 
-      if (result.status && result.status.id >= 3) break;
-    }
-
-    return (result.stdout || "").trim();
-  } catch (error) {
-    if (axios.isAxiosError(error)) {
-      console.error("Judge0 API error:", error.response?.data);
-      throw new Error(`Execution service unavailable: ${error.message}`);
-    }
-    throw error;
-  }
-}
-*/
  let result;
     while (true) {
       const res = await axios.get(
