@@ -11,16 +11,82 @@ interface CodeEditorProps {
   setTimeLeft: React.Dispatch<React.SetStateAction<number>>;
   disabled?: boolean;
   problemTitle?: string;
-  testCases: { input: any; expected: any; explanation?: string; argument?: any }[];
+  testCases: { input: any; expected: any; explanation?: string; argumentNames?: string[] }[];
 }
 
-function inferParamsFromInput(argument: any): string {
-  if (Array.isArray(argument))
-    return argument.join(", ");
-  else if (typeof argument === "object" && argument !== null)
-    return Object.keys(argument).join(", ");
-  else return "input_data";
+
+function inferParamsFromInput(argument: any, argumentNames?: string[]): string {
+  if (argumentNames && argumentNames.length > 0) return argumentNames.join(", ");
+
+  if (Array.isArray(argument)) return argument.map((_, idx) => `arg${idx + 1}`).join(", ");
+
+  if (typeof argument === "object" && argument !== null) return Object.keys(argument).join(", ");
+
+  return "input_data";
 }
+
+
+
+function detectDataStructure(testCase: { input: any; argumentNames?: string[] }): string {
+  
+  let firstArg: any;
+
+  if (Array.isArray(testCase.input)) {
+    firstArg = testCase.input[0];
+  } else if (typeof testCase.input === "object" && testCase.input !== null) {
+   
+    const firstKey = Object.keys(testCase.input)[0];
+    firstArg = testCase.input[firstKey];
+  } else {
+    firstArg = testCase.input;
+  }
+
+ 
+ if (Array.isArray(firstArg) && firstArg.includes(null)) {
+    return (
+`# Definition for a binary tree node.
+# class TreeNode:
+#     def __init__(self, val=0, left=None, right=None):
+#         self.val = val
+#         self.left = left
+#         self.right = right
+
+`
+      );
+    }
+  
+
+  if (firstArg && typeof firstArg === "object") {
+    if ("val" in firstArg && "next" in firstArg) {
+      return (
+`# Definition for singly-linked list.
+# class ListNode:
+#     def __init__(self, val=0, next=None):
+#         self.val = val
+#         self.next = next
+
+`
+      );
+    }
+    if ("val" in firstArg && ("left" in firstArg || "right" in firstArg)) {
+      return (
+`# Definition for a binary tree node.
+# class TreeNode:
+#     def __init__(self, val=0, left=None, right=None):
+#         self.val = val
+#         self.left = left
+#         self.right = right
+
+`
+      );
+    }
+  }
+
+  return "";
+}
+
+
+
 
 const CodeEditor: React.FC<CodeEditorProps> = ({
   code,
@@ -49,15 +115,23 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
     }
   }, [code]);
 
-  useEffect(() => {
-    if (!code.trim() && testCases && testCases.length > 0) {
-      const defaultFuncName = problemTitle?.replace(/\s+/g, "_").toLowerCase();
-      const params = inferParamsFromInput(testCases[0].argument);
-      const starterCode = `def ${defaultFuncName}(${params}):\n    # TODO: implement solution\n    pass\n`;
-      setCode(starterCode);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [problemTitle, testCases]);
+useEffect(() => {
+  if (!code.trim() && testCases && testCases.length > 0) {
+    const defaultFuncName = problemTitle?.replace(/\s+/g, "_").toLowerCase();
+    const edgeCaseTest = testCases[4] || testCases[0];
+    const params = inferParamsFromInput(edgeCaseTest.input, edgeCaseTest.argumentNames);
+
+    // get snippet first
+    const snippet = detectDataStructure(edgeCaseTest);
+
+    // put snippet at top before def line
+    const starterCode = `${snippet}def ${defaultFuncName}(${params}):\n    # TODO: implement solution\n    pass\n`;
+    setCode(starterCode);
+  }
+}, [problemTitle, testCases]);
+
+
+
 
   const formatTime = (seconds: number) => {
     const mins = String(Math.floor(seconds / 60)).padStart(2, "0");

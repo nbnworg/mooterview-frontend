@@ -741,7 +741,8 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     async (isAutoSubmit: boolean = false) => {
       const currentCode = codeRef.current;
       const userApproach = approachTextRef.current;
-      const problemTitle = problem.title;
+      const problemTitle=problem.title;
+      const problemdescription = problem.problemDescription;
 
       if (!currentCode && isAutoSubmit) {
         if (
@@ -829,7 +830,8 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         const rubricResult = await evaluateSolutionWithRubric(
           currentCode,
           testCases,
-          problemTitle
+         problemTitle,
+          problemdescription
         );
         setrubricResult(rubricResult);
 
@@ -856,18 +858,15 @@ const ChatBox: React.FC<ChatBoxProps> = ({
       AI-Generated Test Cases:
       ${testCaseText}
       `.trim();
+    
 
-        const correctnessResponse = await getPromptResponse({
-          actor: Actor.INTERVIEWER,
-          context,
-          promptKey: "verify-code",
-          modelName: "gpt-4o",
-        });
+       // const correctnessResponse =rubricResult.isCorrect;
 
-        const isCorrect = correctnessResponse.trim().startsWith("Correct");
+        const isCorrect = rubricResult.isCorrect;
 
         if (isCorrect) {
-          await addBotMessage(correctnessResponse);
+          await addBotMessage("Your code is  correct acording to your approach.");
+          await addBotMessage("Let's move ahead");
           setIsSolutionVerifiedCorrect(true);
           isSolutionVerifiedCorrectRef.current = true;
           stageRef.current = "FOLLOW_UP";
@@ -883,10 +882,10 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           await addBotMessage(followUpResponse);
         } else {
           if (alignmentResult?.alignment === "MATCH") {
-            const combinedFeedback = `Your implementation faithfully reflects the described approach. However, your solution is incorrect. ${correctnessResponse}`;
+            const combinedFeedback = `Your implementation faithfully reflects the described approach. However, your solution is incorrect. `;
             await addBotMessage(combinedFeedback);
           } else {
-            await addBotMessage(correctnessResponse);
+            await addBotMessage("Your code doesnot match your approach");
           }
         }
       } catch (error) {
