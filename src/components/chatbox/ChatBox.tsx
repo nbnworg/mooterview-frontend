@@ -741,7 +741,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     async (isAutoSubmit: boolean = false) => {
       const currentCode = codeRef.current;
       const userApproach = approachTextRef.current;
-      const problemTitle=problem.title;
+      const problemTitle = problem.title;
       const problemdescription = problem.problemDescription;
 
       if (!currentCode && isAutoSubmit) {
@@ -830,7 +830,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         const rubricResult = await evaluateSolutionWithRubric(
           currentCode,
           testCases,
-         problemTitle,
+          problemTitle,
           problemdescription
         );
         setrubricResult(rubricResult);
@@ -858,9 +858,9 @@ const ChatBox: React.FC<ChatBoxProps> = ({
       AI-Generated Test Cases:
       ${testCaseText}
       `.trim();
-    
 
-       // const correctnessResponse =rubricResult.isCorrect;
+
+        // const correctnessResponse =rubricResult.isCorrect;
 
         const isCorrect = rubricResult.isCorrect;
 
@@ -893,9 +893,19 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           "An error occurred during the verification process:",
           error
         );
-        await addBotMessage(
-          "An unexpected error occurred while verifying your solution. Please try again."
-        );
+
+        if (error instanceof Error && error.message.includes("Time limit exceeded")) {
+          await addBotMessage(
+            "⚠️ Your code exceeded the time limit. This usually means:\n" +
+            "• Your code has an infinite loop\n" +
+            "• Your algorithm is too inefficient\n" +
+            "Please review your code and fix the issue before verifying again."
+          );
+        } else {
+          await addBotMessage(
+            "An unexpected error occurred while verifying your solution. Please try again."
+          );
+        }
       } finally {
         setLoading(false);
         if (isAutoSubmit) {
