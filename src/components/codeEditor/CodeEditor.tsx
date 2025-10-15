@@ -149,7 +149,7 @@ useEffect(() => {
         ref={editorRef}
         className={`codeEditor ${disabled ? "disabled-editor" : ""}`}
       >
-        {" "}
+    
         <Editor
           height="60vh"
           value={code}
@@ -163,6 +163,14 @@ useEffect(() => {
             readOnly: disabled,
           }}
         />
+         {disabled && (
+          <div className="disabledOverlay">
+            <div className="disabledMessage">
+              <div className="disabledIcon">🔒</div>
+              <p>Code Editor is Locked. Answer the Interview Question to open.</p>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
