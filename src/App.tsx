@@ -13,13 +13,13 @@ import NotFound from "./pages/notFound/NotFound";
 import DashBoard from "./pages/dashboard/Dashboard";
 import SessionOfProblem from "./components/sessionInfo/SessionOfProblem";
 import Solution from "./pages/solution/Solution";
-
+import MobileWarning from "./pages/homepage/components/MobileWarning";
 
 function App() {
   return (
     <>
+      <MobileWarning />
       <Routes>
-
         <Route path={"/"} element={<AuthRedirect />} />
         <Route path={"/sign-up"} element={<Signup />} />
         <Route path={"/log-in"} element={<Login />} />
