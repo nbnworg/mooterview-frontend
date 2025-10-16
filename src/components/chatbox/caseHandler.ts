@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Actor, type Problem } from "mooterview-client";
+import { Actor } from "mooterview-client";
 import { getPromptResponse } from "../../utils/handlers/getPromptResponse";
+import type { Problem } from "../../utils/types/problem.types";
 
 type Stage =
   | "EXPLAIN_PROBLEM"
