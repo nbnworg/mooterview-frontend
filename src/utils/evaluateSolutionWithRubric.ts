@@ -223,10 +223,6 @@ export const evaluateSolutionWithRubric = async (
   const failedCases: string[] = [];
 
   const hasLoops = /\b(for|while)\b/.test(code);
-<<<<<<< HEAD
-  // const hasEdgeHandling = /if .*len|if .*==.*|return \[\]/.test(code);
-=======
->>>>>>> 6d4835be640d5f0b3654c0dce4566e2f3c04efc0
   const isShort = code.length <= 600;
 
   const testResults: {
