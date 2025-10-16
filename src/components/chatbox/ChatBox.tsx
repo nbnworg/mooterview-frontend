@@ -865,14 +865,10 @@ const ChatBox: React.FC<ChatBoxProps> = ({
       ${testCaseText}
       `.trim();
 
-
-        // const correctnessResponse =rubricResult.isCorrect;
-
         const isCorrect = rubricResult.isCorrect;
 
         if (isCorrect) {
-          await addBotMessage("Your code is  correct acording to your approach.");
-          await addBotMessage("Let's move ahead");
+          await addBotMessage("Your code is correct according to your approach.\nLet's proceed to follow-up questions.");
           setIsSolutionVerifiedCorrect(true);
           isSolutionVerifiedCorrectRef.current = true;
           stageRef.current = "FOLLOW_UP";
@@ -891,7 +887,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             const combinedFeedback = `Your implementation faithfully reflects the described approach. However, your solution is incorrect. `;
             await addBotMessage(combinedFeedback);
           } else {
-            await addBotMessage("Your code doesnot match your approach");
+            await addBotMessage("Your code doesn't match your approach");
           }
         }
       } catch (error) {
