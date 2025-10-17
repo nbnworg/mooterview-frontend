@@ -40,7 +40,7 @@ async function executeCode(
     const functionName = extractFunctionName(problemTitle);
     if (!functionName) throw new Error("No function definition found in code.");
 
-const harness = `import sys, json
+    const harness = `import sys, json
 from collections import deque
 
 # ===== Data Structures =====
@@ -164,19 +164,23 @@ print(json.dumps(serialize(result)))
 
     const completedCode = code + "\n" + harness;
 
+
     const submissionRes = await axios.post(
       `${JUDGE0_URL}/submissions/?base64_encoded=false&wait=false`,
       {
         source_code: completedCode,
         language_id: PYTHON_ID,
         stdin,
+        cpu_time_limit: 5.0,
+        wall_time_limit: 10.0,
+        memory_limit: 256000,
       },
       { headers: { "Content-Type": "application/json" } }
     );
 
     const token = submissionRes.data.token;
 
- let result;
+    let result;
     while (true) {
       const res = await axios.get(
         `${JUDGE0_URL}/submissions/${token}?base64_encoded=false`
@@ -184,7 +188,19 @@ print(json.dumps(serialize(result)))
       await new Promise((r) => setTimeout(r, 1000));
       result = res.data;
 
-      if (result.status && result.status.id >= 3) break;
+      if (result.status && result.status.id >= 3) {
+        break; // Exit when processing is complete
+      }
+    }
+
+    if (result.status.id === 5) {
+      throw new Error("Time limit exceeded - possible infinite loop or inefficient algorithm");
+    }
+    if (result.status.id === 6) {
+      throw new Error(`Compilation Error: ${result.compile_output}`);
+    }
+    if (result.status.id >= 7 && result.status.id <= 12) {
+      throw new Error(`Runtime Error: ${result.stderr || result.status.description}`);
     }
 
     return (result.stdout || "").trim();
@@ -201,7 +217,7 @@ export const evaluateSolutionWithRubric = async (
   code: string,
   testCases: TestCase[],
   problemTitle?: string,
-  problemdescription?:any
+  problemdescription?: any
 ): Promise<RubricResult> => {
   let passed = 0;
   const failedCases: string[] = [];
@@ -210,81 +226,81 @@ export const evaluateSolutionWithRubric = async (
   const isShort = code.length <= 600;
 
   const testResults: {
-  input: any;
-  expected: any;
-  got: any;
-}[] = [];
+    input: any;
+    expected: any;
+    got: any;
+  }[] = [];
 
-for (const t of testCases) {
-  const stdin = JSON.stringify(t.input);
-  const rawOutput = await executeCode(
-    code,
-    stdin,
-    problemTitle || "solution"
-  );
+  for (const t of testCases) {
+    const stdin = JSON.stringify(t.input);
+    const rawOutput = await executeCode(
+      code,
+      stdin,
+      problemTitle || "solution"
+    );
 
-  let parsedOutput: any = rawOutput;
-  try {
-    parsedOutput = JSON.parse(rawOutput);
-  } catch {
+    let parsedOutput: any = rawOutput;
     try {
-      parsedOutput = JSON.parse(rawOutput.trim());
+      parsedOutput = JSON.parse(rawOutput);
     } catch {
-      parsedOutput = rawOutput.trim();
+      try {
+        parsedOutput = JSON.parse(rawOutput.trim());
+      } catch {
+        parsedOutput = rawOutput.trim();
+      }
     }
+
+    // just collect input/expected/got
+    testResults.push({
+      input: t.input,
+      expected: t.expected,
+      got: parsedOutput,
+    });
   }
 
-  // just collect input/expected/got
-  testResults.push({
-    input: t.input,
-    expected: t.expected,
-    got: parsedOutput,
-  });
-}
+  const edgeCaseResults = testResults.slice(0, 3); // first two cases
 
-const edgeCaseResults = testResults.slice(0, 3); // first two cases
+  console.log("test", testResults);
 
-console.log("test",testResults);
-
-// after you’ve built testResults:
-const response = await getPromptResponse({
-  actor: Actor.AI,
-  context: `
+  // after you’ve built testResults:
+  const response = await getPromptResponse({
+    actor: Actor.AI,
+    context: `
 Problem Description: ${problemdescription}
 
 Test Results:
 ${JSON.stringify(testResults, null, 2)}
   `,
-  promptKey: "check-testcase",
-  modelName: "gpt-4o",
-});
+    promptKey: "check-testcase",
+    modelName: "gpt-4o",
+  });
 
-const edgeresponse = await getPromptResponse({
-  actor: Actor.AI,
-  context: `
+  const edgeresponse = await getPromptResponse({
+    actor: Actor.AI,
+    context: `
 Problem Description: ${problemdescription}
 
 Test Results:
 ${JSON.stringify(edgeCaseResults, null, 2)}
   `,
-  promptKey: "check-testcase",
-  modelName: "gpt-4o",
-});
+    promptKey: "check-testcase",
+    modelName: "gpt-4o",
+  });
 
-const edgecount = Number(edgeresponse.trim());
+  const edgecount = Number(edgeresponse.trim());
 
-const passedCount = Number(response.trim());
+  const passedCount = Number(response.trim());
 
-console.log(passedCount);
+  console.log(passedCount);
 
   const correctness: EvaluationScore =
-   passedCount >= testCases.length - 1? "strong" : passedCount >= 3 ? "mixed" : "weak";
+    passedCount >= testCases.length - 1 ? "strong" : passedCount >= 3 ? "mixed" : "weak";
 
-   const hasEdgeHandling :EvaluationScore = edgecount == edgeCaseResults.length ?"strong" : edgecount >= 2 ? "mixed":"weak"; 
+  const hasEdgeHandling: EvaluationScore = edgecount == edgeCaseResults.length ? "strong" : edgecount >= 2 ? "mixed" : "weak";
 
   const rubricScores: RubricResult["rubricScores"] = {
     correctness,
-    edgeCases: hasEdgeHandling ,
+    edgeCases: hasEdgeHandling,
     performance: hasLoops ? "strong" : "mixed",
     structureChoice: "mixed",
     readability: isShort ? "strong" : "mixed",
@@ -295,7 +311,7 @@ console.log(passedCount);
   const feedback = isCorrect
     ? `✅ All ${testCases.length} test cases passed. Great job!`
     : `Ran ${testCases.length} test cases: ${passed} passed.\n` +
-      (failedCases.length > 0 ? failedCases.join("\n") : "");
+    (failedCases.length > 0 ? failedCases.join("\n") : "");
 
   return {
     isCorrect,

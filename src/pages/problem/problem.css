@@ -3,20 +3,85 @@
   gap: 1vw;
   height: 89vh;
   padding: 2vw;
+  overflow: hidden; 
 }
 
 .problemDetailAndChatContainer {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; 
+  max-height: 100%;
+}
+
+.problemDetailAndChatContainer h1 {
+  flex-shrink: 0; 
+  margin-bottom: 0.5rem;
+  margin-top: 0;
+}
+
+.problemDetailAndChatContainer > * {
+  flex-shrink: 0;
+}
+
+.problemDetailAndChatContainer {
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.problemDetailAndChatContainer::-webkit-scrollbar {
+  width: 0px;
+  background: transparent;
+}
+
+.problemDetailAndChatContainer {
+  scrollbar-width: none;
+}
+
+.problemDetailAndChatContainer {
+  -ms-overflow-style: none;
+}
+
+.problemDetailAndChatContainer p {
+  font-family: 'Segoe UI', 'Inter', 'Roboto', system-ui, -apple-system, sans-serif;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: #000000;
+  margin: 0.5rem 0;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  background-color: #d9dce0;
+  padding: 0.8rem;
+  border-radius: 0.5rem;
+}
+
+.problemDetailAndChatContainer p strong {
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.problemDetailAndChatContainer p code,
+.problemDetailAndChatContainer code {
+  background-color: #2d2d2d;
+  color: #e8e8e8;
+  padding: 0.15rem 0.4rem;
+  border-radius: 0.25rem;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 0.9em;
+  font-weight: 500;
 }
 
 .codeEditorAndOptionsContainer {
-  flex: auto;
+  flex: 1;
   display: flex;
   flex-direction: column;
+  overflow: hidden; 
+  max-height: 100%;
 }
 
 .verticalLine {
   border: 0.1vw solid black;
+  flex-shrink: 0;
 }
 
 .timeUpMessage {
@@ -39,8 +104,15 @@
   background-color: var(--secondary);
   color: #fff;
   cursor: pointer;
+  margin-top: 0.5rem;
+  flex-shrink: 0;
 }
 
 .verifyCodeButton:hover {
   background-color: #0b6e4d;
+}
+
+.verifyCodeButton:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
 }
