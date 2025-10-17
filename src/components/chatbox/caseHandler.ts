@@ -147,7 +147,7 @@ export const handleRequestExampleCase = async (
     actor: Actor.INTERVIEWER,
     context: `User asked for an example or to rephrase the question. 
                   IMPORTANT: 
-                  - If the candidate explicitly asks for an example , provide one (stage rules apply). 
+                  - If the candidate explicitly asks for an example , provide one from the Example's mentioned testcases(stage rules apply). 
                   - Otherwise, respond directly to their clarifying question according to the current stage. 
                  - If the candidate’s last or starting  message  contains a clarifying question, 
 you must briefly answer it (1 sentence max) in addition to following the stage rules.\n
@@ -159,6 +159,7 @@ you must briefly answer it (1 sentence max) in addition to following the stage r
                             Problem: ${problem.title}
                             Description: ${problem.problemDescription}
                             Current stage: ${currentStage}
+                            Example: ${problem.example}
                             User's last message: ${input}
                             `,
     promptKey: "provide-example",

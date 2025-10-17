@@ -5,7 +5,7 @@ import "./problem.css";
 import CodeEditor from "../../components/codeEditor/CodeEditor";
 import { useEffect, useRef, useState } from "react";
 import { getProblemById } from "../../utils/handlers/getProblemById";
-import type { Problem } from "../../utils/generateTestCasesWithAI";
+import type { Problem } from "../../utils/types/problem.types";
 import ChatBox from "../../components/chatbox/ChatBox";
 import Loading from "../../components/Loader/Loading";
 import { generateTestCasesWithAI } from "../../utils/generateTestCasesWithAI";
