@@ -88,7 +88,7 @@ const ProblemPage = () => {
     const fetchProblem = async () => {
       try {
         const fetchedProblem = await getProblemById(problemId);
-        setProblem(fetchedProblem);
+        setProblem(fetchedProblem);        
         sessionStorage.setItem("mtv-problemId", problemId);
         const fullTime = Number(fetchedProblem.averageSolveTime ?? 15) * 60;
         setTimeLeft(fullTime);

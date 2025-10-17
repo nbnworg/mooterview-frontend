@@ -45,3 +45,53 @@
   opacity: 0.9;
   pointer-events: none;
 }
+
+
+.disabled-wrapper {
+  position: relative;
+}
+
+
+.disabledOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 62vh;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  border-radius: 0.5vw;
+}
+.disabledMessage {
+  text-align: center;
+  color: white;
+  font-family: "montserrat", sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.disabledIcon {
+  font-size: 3rem;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.disabledMessage p {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 0;
+  letter-spacing: 0.5px;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}

@@ -216,12 +216,12 @@ input[type="radio"]:checked::before {
 .loader {
   width: 60px;
   aspect-ratio: 2;
-  --_g: no-repeat
-    radial-gradient(circle closest-side, var(--primary) 90%, #0000);
+  --_g: no-repeat radial-gradient(circle closest-side, var(--primary) 90%, #0000);
   background: var(--_g) 0% 50%, var(--_g) 50% 50%, var(--_g) 100% 50%;
   background-size: calc(100% / 3) 50%;
   animation: l3 1s infinite linear;
 }
+
 @keyframes l3 {
   20% {
     background-position: 0% 0%, 50% 50%, 100% 50%;
@@ -240,7 +240,26 @@ input[type="radio"]:checked::before {
 .problemTableWrapper {
   max-height: 100%;
   overflow-y: auto;
-  scrollbar-width: none;
+  scrollbar-width: thin;
+  scrollbar-color: #888 #f1f1f1;
+}
+
+.problemTableWrapper::-webkit-scrollbar {
+  width: 8px;
+}
+
+.problemTableWrapper::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.problemTableWrapper::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 10px;
+}
+
+.problemTableWrapper::-webkit-scrollbar-thumb:hover {
+  background: #555;
 }
 
 .problemTable {
@@ -289,6 +308,7 @@ input[type="radio"]:checked::before {
 .tableRow:hover {
   background-color: #e2e2e2;
 }
+
 .multiSelectContainer {
   margin-bottom: 1rem;
   position: relative;
@@ -438,15 +458,320 @@ input[type="radio"]:checked::before {
   animation: slideDown 0.3s ease forwards;
 }
 
+@media (max-width: 1024px) {
+  .progressContent {
+    flex-direction: column;
+    gap: 3vw;
+    margin-top: 4vw;
+  }
+
+  .pieGraphsContainer {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .streakImage {
+    width: 6vw;
+  }
+
+  .homepageContainer {
+    flex-direction: column;
+  }
+
+  .homepage {
+    width: 100%;
+    padding: 0 4vw;
+    height: auto;
+    min-height: 50vh;
+  }
+
+  .filterContainer {
+    width: 100%;
+    border-left: none;
+    border-top: 2px solid #bebebe;
+    padding: 3vw 4vw;
+    gap: 2vw;
+  }
+
+  .searchBar {
+    padding: 2vw 3vw;
+    font-size: 14px;
+  }
+
+  .filterHeading {
+    font-size: 16px;
+    margin-bottom: 1vw;
+  }
+
+  .radioButton {
+    grid-template-columns: 20px auto;
+    gap: 2vw;
+    font-size: 14px;
+  }
+
+  .radioButton + .radioButton {
+    margin-top: 1.5vw;
+  }
+
+  .problemTable th,
+  .problemTable td {
+    padding: 2vw;
+    font-size: 14px;
+  }
+
+  .problemTable thead {
+    font-size: 14px;
+  }
+
+  .tableProblemLevel {
+    font-size: 13px;
+  }
+
+  .createProblemButton {
+    width: 100%;
+    padding: 10px 16px;
+    font-size: 14px;
+  }
+
+  .streakAndRandomButton {
+    width: 100%;
+    align-items: center;
+  }
+
+  .streakCountContainer > :nth-child(2) {
+    margin-right: 10vw;
+  }
+}
+
+/* Mobile Styles (max-width: 768px) */
+@media (max-width: 768px) {
+  .progressContent {
+    margin-top: 6vw;
+    padding: 0 4vw;
+  }
+
+  .graphContainer {
+    padding: 4vw 2vw;
+  }
+
+  .pieGraphsContainer {
+    flex-direction: column;
+    align-items: center;
+    gap: 4vw;
+  }
+
+  .pieGraph {
+    width: 150px;
+  }
+
+  .streakImage {
+    width: 40px;
+  }
+
+  .streakCountContainer {
+    gap: 2vw;
+  }
+
+  .streakCountContainer > :nth-child(2) {
+    margin-right: 0;
+    font-size: 24px;
+  }
+
+  .streakAndRandomButton {
+    gap: 4vw;
+  }
+
+  .seperationLineContainer {
+    padding: 4vw 3vw;
+  }
+
+  .homepage {
+    padding: 0 3vw;
+  }
+
+  .filterContainer {
+    padding: 4vw 3vw;
+    gap: 3vw;
+  }
+
+  .searchBar {
+    padding: 12px 16px;
+    font-size: 16px;
+    border-radius: 8px;
+  }
+
+  .filterHeading {
+    font-size: 18px;
+    margin-bottom: 12px;
+  }
+
+  .radioButton {
+    grid-template-columns: 24px auto;
+    gap: 12px;
+    font-size: 16px;
+    padding: 4px 0;
+  }
+
+  input[type="radio"] {
+    width: 1.3em;
+    height: 1.3em;
+  }
+
+  .radioButton + .radioButton {
+    margin-top: 12px;
+  }
+
+  .problemTable {
+    font-size: 14px;
+  }
+
+  .problemTable th,
+  .problemTable td {
+    padding: 12px 8px;
+  }
+
+  .problemTable thead {
+    font-size: 13px;
+  }
+
+  .tableProblemTitle {
+    font-size: 14px;
+  }
+
+  .tableProblemLevel {
+    font-size: 12px;
+  }
+
+  .createProblemButton {
+    padding: 12px 20px;
+    font-size: 16px;
+    width: 100%;
+  }
+
+  .dropdownHeader {
+    padding: 12px;
+    font-size: 16px;
+  }
+
+  .checkboxOption {
+    padding: 12px;
+    font-size: 16px;
+  }
+
+  .selectedTag {
+    padding: 8px 12px;
+    font-size: 14px;
+  }
+
+  .dropdownOptions.open {
+    max-height: 250px;
+  }
+
+  .loaderContainer {
+    padding: 40px 0;
+  }
+}
+
+/* Small Mobile Styles (max-width: 480px) */
+@media (max-width: 480px) {
+  .progressContent {
+    margin-top: 8vw;
+  }
+
+  .pieGraph {
+    width: 120px;
+  }
+
+  .streakImage {
+    width: 32px;
+  }
+
+  .streakCountContainer > :nth-child(2) {
+    font-size: 20px;
+  }
+
+  .homepage {
+    padding: 0 2vw;
+  }
+
+  .filterContainer {
+    padding: 4vw 2vw;
+  }
+
+  .searchBar {
+    padding: 10px 12px;
+    font-size: 14px;
+  }
+
+  .filterHeading {
+    font-size: 16px;
+  }
+
+  .radioButton {
+    font-size: 14px;
+    gap: 10px;
+  }
+
+  .problemTable th,
+  .problemTable td {
+    padding: 10px 6px;
+    font-size: 12px;
+  }
+
+  .problemTable thead {
+    font-size: 12px;
+  }
+
+  .tableProblemTitle {
+    font-size: 13px;
+  }
+
+  .tableProblemLevel {
+    font-size: 11px;
+  }
+
+  .createProblemButton {
+    padding: 10px 16px;
+    font-size: 14px;
+  }
+
+  .dropdownHeader {
+    padding: 10px;
+    font-size: 14px;
+  }
+
+  .checkboxOption {
+    padding: 10px;
+    font-size: 14px;
+  }
+
+  .selectedTag {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+
+  .dropdownOptions.open {
+    max-height: 200px;
+  }
+
+  .problemTableWrapper {
+    overflow-x: auto;
+  }
+
+  .problemTable {
+    min-width: 500px;
+  }
+}
+
 @media (max-width: 48rem) {
   .dropdownOptions.open {
     max-height: 12.5rem;
   }
-  
+
   .selectedTags {
     gap: 0.375rem;
   }
-  
+
   .selectedTag {
     padding: 0.25rem 0.5rem;
     font-size: 0.8125rem;
@@ -457,11 +782,11 @@ input[type="radio"]:checked::before {
   .dropdownHeader {
     padding: 0.5rem;
   }
-  
+
   .checkboxOption {
     padding: 0.5rem;
   }
-  
+
   .dropdownOptions.open {
     max-height: 10rem;
   }
