@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import "./Chatbox.css";
 import { getPromptResponse } from "../../utils/handlers/getPromptResponse";
 import { updateSessionById } from "../../utils/handlers/updateSessionById";
-import { Actor, type Problem } from "mooterview-client";
+import { Actor } from "mooterview-client";
 import { useNavigate } from "react-router-dom";
 import { createSession } from "../../utils/handlers/createSession";
 import { classifyUserMessage } from "../../utils/classifyUserMsg";
@@ -32,6 +32,7 @@ import {
   generateEvaluationSolution,
   evaluationReportEval,
 } from "./caseHandler";
+import type { Problem } from "../../utils/types/problem.types";
 
 interface ChatBoxProps {
   problem: Problem;

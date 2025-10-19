@@ -49,6 +49,7 @@
 
 .chatInputForm {
   display: flex;
+  width: 100%;
   border-top: 1px solid #ccc;
 }
 
@@ -57,7 +58,6 @@
   border: none;
   padding: 0.75rem;
   font-size: 1rem;
-  resize: none;
 }
 
 .chatInput:focus {
@@ -88,12 +88,12 @@
 }
 
 .chatSendButton {
-  border: 2px solid #0066ff;
+  border: .2vw solid #0066ff;
   color: #0066ff;
 }
 
 .endSessionButton {
-  border: 2px solid #e74c3c;
+  border: .2vw solid #e74c3c;
   color: #e74c3c;
 }
 
@@ -103,5 +103,5 @@
 }
 .endSessionButton:hover {
   background-color: #e74c3c;
-  color: #fff;
+  color: white;
 }

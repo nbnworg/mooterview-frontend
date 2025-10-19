@@ -2,7 +2,7 @@
 import axios from "axios";
 import { BASE_URL, getTokenData } from "../constants";
 import { refreshAccessToken } from "../refreshAccessToken";
-import type { Problem } from "../generateTestCasesWithAI";
+import type { Problem } from "../types/problem.types";
 
 export const getProblemById = async (problemId: string): Promise<Problem> => {
   try {
