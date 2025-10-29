@@ -885,7 +885,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           await addBotMessage(followUpResponse);
         } else {
           if (alignmentResult?.alignment === "MATCH") {
-            const combinedFeedback = `Your implementation faithfully reflects the described approach. However, your solution is incorrect. `;
+            const combinedFeedback = `Your implementation faithfully reflects the described approach. However, your solution is incorrect ${rubricResult.feedback}. `;
             await addBotMessage(combinedFeedback);
           } else {
             await addBotMessage("Your code doesn't match your approach");

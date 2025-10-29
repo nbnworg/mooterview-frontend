@@ -219,8 +219,7 @@ export const evaluateSolutionWithRubric = async (
   problemTitle?: string,
   problemdescription?: any
 ): Promise<RubricResult> => {
-  let passed = 0;
-  const failedCases: string[] = [];
+  
 
   const hasLoops = /\b(for|while)\b/.test(code);
   const isShort = code.length <= 600;
@@ -287,6 +286,21 @@ ${JSON.stringify(edgeCaseResults, null, 2)}
     modelName: "gpt-4o",
   });
 
+  const failedResponse = await getPromptResponse({
+  actor: Actor.AI,
+  context: `
+Problem Description: ${problemdescription}
+
+Test Results:
+${JSON.stringify(testResults, null, 2)}
+`,
+  promptKey: "find-first-failed",
+  modelName: "gpt-4o",
+});
+  const failedIndex = Number(failedResponse.trim());
+  const failedCase = testCases[failedIndex];
+  const failedResult = testResults[failedIndex];
+
   const edgecount = Number(edgeresponse.trim());
 
   const passedCount = Number(response.trim());
@@ -308,10 +322,17 @@ ${JSON.stringify(edgeCaseResults, null, 2)}
 
   const isCorrect = correctness === "strong";
 
-  const feedback = isCorrect
-    ? `✅ All ${testCases.length} test cases passed. Great job!`
-    : `Ran ${testCases.length} test cases: ${passed} passed.\n` +
-    (failedCases.length > 0 ? failedCases.join("\n") : "");
+ let feedback: string;
+  if (isCorrect || failedIndex === -1) {
+    feedback = `✅ All test cases passed. Great job!`;
+  } else if (failedCase && failedResult) {
+    feedback = `❌ Last Test Case Failed:\n\n` +
+      `Input: ${JSON.stringify(failedCase.input, null, 2)}\n` +
+      `Expected: ${JSON.stringify(failedCase.expected, null, 2)}\n` +
+      `Got: ${JSON.stringify(failedResult.got, null, 2)}`;
+  } else {
+    feedback = `⚠️ Some test cases failed.`;
+  }
 
   return {
     isCorrect,
