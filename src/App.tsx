@@ -14,6 +14,9 @@ import DashBoard from "./pages/dashboard/Dashboard";
 import SessionOfProblem from "./components/sessionInfo/SessionOfProblem";
 import Solution from "./pages/solution/Solution";
 import MobileWarning from "./pages/homepage/components/MobileWarning";
+import PrivacyPolicy from "./pages/legalPages/privacyPolicy/PrivacyPolicy";
+import TermsAndConditions from "./pages/legalPages/T&C/T&C";
+import FAQ from "./pages/legalPages/FAQ/FAQ";
 
 function App() {
   return (
@@ -85,6 +88,10 @@ function App() {
           }
         />
         <Route path="*" element={<NotFound />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
+        <Route path="/FAQ" element={<FAQ />} />
+
       </Routes>
     </>
   );

@@ -1,0 +1,51 @@
+.terms-container {
+  background: #ffffff;
+  display: flex;
+  justify-content: center;
+}
+
+.terms-wrapper {
+  padding: 2vw 15vw;
+  text-align: justify;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5vw;
+}
+
+.terms-heading {
+  text-align: center;
+  font-size: 2vw;
+  font-weight: bold;
+  margin-bottom: 2vw;
+}
+
+.terms-section h2 {
+  font-size: 1.25vw;
+  font-weight: bold;
+}
+
+.terms-section p,
+.terms-section li {
+  font-size: 1.15vw;
+}
+
+.terms-section ul {
+  margin-top: 0.5vw;
+  padding-left: 1.5vw;
+}
+
+@media (max-width: 768px) {
+  .terms-heading {
+    font-size: 6vw;
+  }
+
+  .terms-section h2,
+  .terms-section p,
+  .terms-section li {
+    font-size: 4vw;
+  }
+
+  .terms-wrapper {
+    padding: 4vw;
+  }
+}

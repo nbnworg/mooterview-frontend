@@ -45,6 +45,15 @@ footer {
   cursor: pointer;
 }
 
+.footerlinks {
+  text-decoration: none;
+  color: #fff;
+}
+
+.footerlinks:hover {
+  text-decoration: underline;
+}
+
 .copyrightText {
   text-align: end;
   color: #fff;
